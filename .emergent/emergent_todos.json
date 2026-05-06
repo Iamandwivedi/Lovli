@@ -36,15 +36,15 @@
     "status": "completed"
   },
   {
-    "content": "Phase 3: End-to-end testing with testing_agent_v3 (all user stories)",
-    "status": "in_progress"
+    "content": "Phase 3: End-to-end testing with testing_agent_v3 (backend 100%, frontend 95%, no critical bugs)",
+    "status": "completed"
   },
   {
-    "content": "Phase 3: Fix all bugs reported by testing agent and re-test",
-    "status": "pending"
+    "content": "Phase 3: Harden LLM with auto-fallback Anthropic→Emergent on transient errors (529/overload/rate-limit)",
+    "status": "completed"
   },
   {
     "content": "Phase 4: Final delivery summary via finish tool",
-    "status": "pending"
+    "status": "in_progress"
   }
 ]

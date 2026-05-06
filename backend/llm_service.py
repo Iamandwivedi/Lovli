@@ -268,22 +268,71 @@ def _parse_with_validation(raw: str) -> dict:
 async def generate_replies(req: LovliRequest) -> dict:
     """Generate 3 Lovli replies. Auto-retries once on JSON parse/validation failure.
 
+    Provider routing:
+      - LLM_PROVIDER=auto      : prefer direct Anthropic if ANTHROPIC_API_KEY is set;
+                                 if Anthropic returns a transient error (overload /
+                                 5xx / rate-limit), automatically fall back to Emergent.
+      - LLM_PROVIDER=anthropic : force direct Anthropic.
+      - LLM_PROVIDER=emergent  : force Emergent.
+
     Raises LovliLlmError on hard failure (caller should return 503).
     """
-    provider = _resolve_provider()
+    explicit = (os.environ.get("LLM_PROVIDER") or "auto").lower().strip()
+    has_anthropic_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
+    has_emergent_key = bool(os.environ.get("EMERGENT_LLM_KEY"))
 
-    async def _run(retry: bool) -> dict:
+    if explicit == "auto":
+        primary = "anthropic" if has_anthropic_key else "emergent"
+        # Only fall back if we actually have a different second provider available
+        fallback = (
+            "emergent"
+            if primary == "anthropic" and has_emergent_key
+            else None
+        )
+    else:
+        primary = explicit
+        fallback = None
+
+    async def _try(provider: str, retry: bool) -> dict:
         if provider == "anthropic":
             return await _generate_anthropic(req, retry=retry)
         if provider == "emergent":
             return await _generate_emergent(req, retry=retry)
-        raise LovliLlmError(f"unknown LLM_PROVIDER={provider!r}")
+        raise LovliLlmError(f"unknown provider {provider!r}")
+
+    async def _attempt(provider: str) -> dict:
+        try:
+            return await _try(provider, retry=False)
+        except (LovliValidationError, json.JSONDecodeError):
+            # bad JSON / schema — one stricter retry on same provider
+            return await _try(provider, retry=True)
 
     try:
-        return await _run(retry=False)
-    except LovliValidationError:
-        # bad JSON / schema — retry with stricter prompt
-        return await _run(retry=True)
-    except json.JSONDecodeError:
-        return await _run(retry=True)
-    # other LovliLlmError exceptions propagate to caller
+        return await _attempt(primary)
+    except LovliLlmError as primary_err:
+        if fallback is None:
+            raise
+        # Only fall back on errors that look transient (overload / 5xx / rate-limit)
+        msg = str(primary_err).lower()
+        transient_markers = (
+            "overload",
+            "529",
+            "rate limit",
+            "ratelimit",
+            "rate_limit",
+            "503",
+            "502",
+            "504",
+            "timeout",
+            "timed out",
+            "connection",
+        )
+        if not any(m in msg for m in transient_markers):
+            raise
+        try:
+            return await _attempt(fallback)
+        except LovliLlmError as fb_err:
+            raise LovliLlmError(
+                f"primary({primary}) failed: {primary_err}; "
+                f"fallback({fallback}) failed: {fb_err}"
+            ) from fb_err
