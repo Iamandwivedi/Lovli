@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import EarlyAccessForm from '@/components/EarlyAccessForm';
 import GlassCard from '@/components/GlassCard';
+import ChipGroup from '@/components/ChipGroup';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,16 +20,28 @@ import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 import { BrainCircuit, Plus, Pencil, Trash2, Lock } from 'lucide-react';
 
+const GOAL_OPTIONS = ['Friendship', 'Talking', 'Dating', 'Serious', 'Impress first'];
+const SITUATION_OPTIONS = [
+  'Not connected yet',
+  'Texting',
+  'Talking',
+  'Dating',
+  'Complicated',
+];
+
 const BLANK = {
   nickname: '',
+  goal: '',
+  current_situation: '',
   relationship_stage: '',
   where_met: '',
-  notes: '',
   likes: '',
   dislikes: '',
   communication_style: '',
   inside_jokes: '',
   important_dates: '',
+  best_approach: '',
+  notes: '',
   boundaries: '',
 };
 
@@ -37,10 +50,11 @@ function MemoryFormDialog({ open, onOpenChange, initial, onSaved }) {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    setForm(initial || BLANK);
+    setForm({ ...BLANK, ...(initial || {}) });
   }, [initial, open]);
 
   const isEdit = Boolean(initial?.id);
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   const submit = async () => {
     if (!form.nickname.trim()) {
@@ -66,20 +80,23 @@ function MemoryFormDialog({ open, onOpenChange, initial, onSaved }) {
     }
   };
 
-  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border-white/12 bg-[#0B0D1A]/90 backdrop-blur-2xl"
+        className="max-w-md max-h-[88vh] overflow-y-auto rounded-2xl border-white/12 bg-[#0B0D1A]/90 backdrop-blur-2xl"
         data-testid="memory-form"
       >
         <DialogHeader>
-          <DialogTitle className="text-white">{isEdit ? 'Edit memory' : 'Save a memory'}</DialogTitle>
+          <DialogTitle className="text-white">
+            {isEdit ? 'Edit memory' : 'Save a memory'}
+          </DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
+
+        <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-white/80" htmlFor="nickname">Nickname</Label>
+            <Label className="text-white/80" htmlFor="nickname">
+              Nickname
+            </Label>
             <Input
               id="nickname"
               value={form.nickname}
@@ -89,13 +106,36 @@ function MemoryFormDialog({ open, onOpenChange, initial, onSaved }) {
               className="bg-white/[0.05] border-white/10 text-white placeholder:text-white/40"
             />
           </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-white/80">What do you want with this person?</Label>
+            <ChipGroup
+              options={GOAL_OPTIONS}
+              value={form.goal}
+              onChange={(v) => set('goal', v)}
+              testId="memory-form-goal-toggle"
+              ariaLabel="Goal"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-white/80">Current situation</Label>
+            <ChipGroup
+              options={SITUATION_OPTIONS}
+              value={form.current_situation}
+              onChange={(v) => set('current_situation', v)}
+              testId="memory-form-situation-toggle"
+              ariaLabel="Current situation"
+            />
+          </div>
+
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label className="text-white/80">Relationship stage</Label>
               <Input
                 value={form.relationship_stage}
                 onChange={(e) => set('relationship_stage', e.target.value)}
-                placeholder="Talking, dating, friends…"
+                placeholder="Optional"
                 className="bg-white/[0.05] border-white/10 text-white placeholder:text-white/40"
                 data-testid="memory-form-stage-input"
               />
@@ -105,12 +145,13 @@ function MemoryFormDialog({ open, onOpenChange, initial, onSaved }) {
               <Input
                 value={form.where_met}
                 onChange={(e) => set('where_met', e.target.value)}
-                placeholder="Hinge, friend’s party…"
+                placeholder="Hinge, friend's party…"
                 className="bg-white/[0.05] border-white/10 text-white placeholder:text-white/40"
                 data-testid="memory-form-where-input"
               />
             </div>
           </div>
+
           <div className="space-y-1.5">
             <Label className="text-white/80">Likes</Label>
             <Input
@@ -121,6 +162,7 @@ function MemoryFormDialog({ open, onOpenChange, initial, onSaved }) {
               data-testid="memory-form-likes-input"
             />
           </div>
+
           <div className="space-y-1.5">
             <Label className="text-white/80">Avoid</Label>
             <Input
@@ -131,6 +173,7 @@ function MemoryFormDialog({ open, onOpenChange, initial, onSaved }) {
               data-testid="memory-form-avoid-input"
             />
           </div>
+
           <div className="space-y-1.5">
             <Label className="text-white/80">Communication style</Label>
             <Input
@@ -141,26 +184,41 @@ function MemoryFormDialog({ open, onOpenChange, initial, onSaved }) {
               data-testid="memory-form-style-input"
             />
           </div>
+
           <div className="space-y-1.5">
             <Label className="text-white/80">Inside jokes</Label>
             <Input
               value={form.inside_jokes}
               onChange={(e) => set('inside_jokes', e.target.value)}
-              placeholder="world domination…"
+              placeholder="optional"
               className="bg-white/[0.05] border-white/10 text-white placeholder:text-white/40"
               data-testid="memory-form-jokes-input"
             />
           </div>
+
           <div className="space-y-1.5">
             <Label className="text-white/80">Important dates / context</Label>
             <Input
               value={form.important_dates}
               onChange={(e) => set('important_dates', e.target.value)}
-              placeholder="interview on Friday, birthday next month…"
+              placeholder="interview Friday, birthday next month…"
               className="bg-white/[0.05] border-white/10 text-white placeholder:text-white/40"
               data-testid="memory-form-important-input"
             />
           </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-white/80">Best approach (optional)</Label>
+            <Textarea
+              value={form.best_approach}
+              onChange={(e) => set('best_approach', e.target.value)}
+              rows={2}
+              placeholder="e.g. Light, respectful, playful — let her lead the pace."
+              className="bg-white/[0.05] border-white/10 text-white placeholder:text-white/40"
+              data-testid="memory-form-approach-textarea"
+            />
+          </div>
+
           <div className="space-y-1.5">
             <Label className="text-white/80">Notes</Label>
             <Textarea
@@ -172,11 +230,14 @@ function MemoryFormDialog({ open, onOpenChange, initial, onSaved }) {
               data-testid="memory-form-notes-textarea"
             />
           </div>
+
           <p className="text-[11px] text-white/45">
-            Memory is private by design. You control what gets saved.
+            Memory is private by design. You control what gets saved — and you can edit any
+            field anytime.
           </p>
         </div>
-        <DialogFooter>
+
+        <DialogFooter className="mt-2">
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
@@ -198,27 +259,42 @@ function MemoryFormDialog({ open, onOpenChange, initial, onSaved }) {
   );
 }
 
+function MemoryCardRow({ label, value, full = false }) {
+  if (!value) return null;
+  return (
+    <p className={full ? 'sm:col-span-2 break-words' : 'break-words'}>
+      <span className="text-white/55">{label} — </span>
+      <span className="text-white/90">{value}</span>
+    </p>
+  );
+}
+
 function MemoryListItem({ card, onEdit, onDelete }) {
   return (
     <GlassCard className="p-4" data-testid="memory-card-item">
       <div className="relative">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-display text-base font-semibold text-white" data-testid="memory-card-nickname">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3
+                className="font-display text-base font-semibold text-white break-words"
+                data-testid="memory-card-nickname"
+              >
                 {card.nickname}
               </h3>
-              {card.relationship_stage && (
-                <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[11px] text-white/70">
-                  {card.relationship_stage}
+              {card.current_situation && (
+                <span className="rounded-full border border-violet-300/25 bg-gradient-to-r from-violet-500/18 to-sky-400/12 px-2 py-0.5 text-[11px] text-white">
+                  {card.current_situation}
+                </span>
+              )}
+              {card.goal && (
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[11px] text-white/75">
+                  {card.goal}
                 </span>
               )}
             </div>
-            {card.where_met && (
-              <p className="mt-0.5 text-[12px] text-white/55">Met at {card.where_met}</p>
-            )}
           </div>
-          <div className="flex gap-1.5">
+          <div className="flex shrink-0 gap-1.5">
             <Button
               type="button"
               size="icon"
@@ -243,25 +319,13 @@ function MemoryListItem({ card, onEdit, onDelete }) {
             </Button>
           </div>
         </div>
-        <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-1.5 text-[13px] text-white/85 sm:grid-cols-2">
-          {card.likes && (
-            <p><span className="text-white/55">Likes — </span>{card.likes}</p>
-          )}
-          {card.dislikes && (
-            <p><span className="text-white/55">Avoid — </span>{card.dislikes}</p>
-          )}
-          {card.communication_style && (
-            <p><span className="text-white/55">Vibe — </span>{card.communication_style}</p>
-          )}
-          {card.important_dates && (
-            <p><span className="text-white/55">Important — </span>{card.important_dates}</p>
-          )}
-          {card.inside_jokes && (
-            <p className="sm:col-span-2"><span className="text-white/55">Inside joke — </span>{card.inside_jokes}</p>
-          )}
-          {card.notes && (
-            <p className="sm:col-span-2"><span className="text-white/55">Notes — </span>{card.notes}</p>
-          )}
+
+        <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-1.5 text-[13px] leading-relaxed sm:grid-cols-2">
+          <MemoryCardRow label="Likes" value={card.likes} />
+          <MemoryCardRow label="Avoid" value={card.dislikes} />
+          <MemoryCardRow label="Important" value={card.important_dates} full />
+          <MemoryCardRow label="Best approach" value={card.best_approach} full />
+          <MemoryCardRow label="Notes" value={card.notes} full />
         </div>
       </div>
     </GlassCard>
@@ -271,21 +335,39 @@ function MemoryListItem({ card, onEdit, onDelete }) {
 function PreviewExample() {
   return (
     <GlassCard className="p-4" data-testid="memory-preview-card">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-sky-400">
           <BrainCircuit className="h-4 w-4 text-white" />
         </span>
         <h3 className="font-display text-base font-semibold text-white">Coffee Girl</h3>
-        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[11px] text-white/70">Talking</span>
+        <span className="rounded-full border border-violet-300/25 bg-gradient-to-r from-violet-500/18 to-sky-400/12 px-2 py-0.5 text-[11px] text-white">
+          Talking
+        </span>
+        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[11px] text-white/75">
+          Dating
+        </span>
       </div>
-      <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-1.5 text-[13px] text-white/85 sm:grid-cols-2">
-        <p><span className="text-white/55">Vibe — </span>Funny, calm, career-focused</p>
-        <p><span className="text-white/55">Likes — </span>Chai, indie music, quiet cafes</p>
-        <p><span className="text-white/55">Avoid — </span>Too much flirting, pressure to meet</p>
-        <p><span className="text-white/55">Important — </span>Interview on Friday</p>
-        <p className="sm:col-span-2"><span className="text-white/55">Inside joke — </span>World domination</p>
-        <p className="sm:col-span-2"><span className="text-white/55">Best approach — </span>Light, respectful, playful</p>
-        <p className="sm:col-span-2"><span className="text-white/55">Next move — </span>Ask about her interview and keep it easy.</p>
+      <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-1.5 text-[13px] leading-relaxed sm:grid-cols-2">
+        <p>
+          <span className="text-white/55">Likes — </span>
+          <span className="text-white/90">Chai, indie music, quiet cafes</span>
+        </p>
+        <p>
+          <span className="text-white/55">Avoid — </span>
+          <span className="text-white/90">Too much flirting, pressure to meet</span>
+        </p>
+        <p className="sm:col-span-2">
+          <span className="text-white/55">Important — </span>
+          <span className="text-white/90">Interview on Friday</span>
+        </p>
+        <p className="sm:col-span-2">
+          <span className="text-white/55">Best approach — </span>
+          <span className="text-white/90">Light, respectful, playful</span>
+        </p>
+        <p className="sm:col-span-2">
+          <span className="text-white/55">Notes — </span>
+          <span className="text-white/90">Inside joke: world domination. Ask about her interview, keep it easy.</span>
+        </p>
       </div>
     </GlassCard>
   );
@@ -295,7 +377,7 @@ export default function Memory() {
   const { user } = useAuth();
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(null); // null | card | {} for create
+  const [editing, setEditing] = useState(null);
   const [open, setOpen] = useState(false);
 
   const refresh = async () => {
@@ -320,7 +402,7 @@ export default function Memory() {
   };
 
   const onDelete = async (card) => {
-    const ok = window.confirm(`Delete “${card.nickname}”? You can’t undo this.`);
+    const ok = window.confirm(`Delete "${card.nickname}"? You can't undo this.`);
     if (!ok) return;
     try {
       await api.delete(`/memory-cards/${card.id}`);
@@ -345,15 +427,13 @@ export default function Memory() {
           />
           <div className="relative">
             <span className="inline-flex items-center gap-1 rounded-full border border-white/12 bg-white/[0.04] px-2.5 py-1 text-[11px] text-white/85">
-              <BrainCircuit className="h-3 w-3" /> Private journal — you control what’s saved
+              <BrainCircuit className="h-3 w-3" /> Private journal — you control what's saved
             </span>
             <h1 className="mt-3 font-display text-2xl font-semibold text-white">Lovli Memory</h1>
-            <p className="mt-1 text-sm text-white/70">
-              Remember the little things. Reply more thoughtfully.
-            </p>
-            <p className="mt-2 text-[13px] text-white/55">
-              Save details like inside jokes, favorite cafes, important dates, and context so future
-              replies feel more personal. Memory is private by design.
+            <p className="mt-2 text-[14px] leading-relaxed text-white/80">
+              Build a private profile of the person you like. Save what they like, dislike,
+              their vibe, your history, and important details — so Lovli can suggest better
+              replies and smarter moves.
             </p>
           </div>
         </section>
@@ -361,12 +441,21 @@ export default function Memory() {
         <section>
           <div className="mb-2 flex items-center justify-between">
             <h2 className="font-display text-base font-semibold text-white">Your memories</h2>
-            <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
+            <Dialog
+              open={open}
+              onOpenChange={(v) => {
+                setOpen(v);
+                if (!v) setEditing(null);
+              }}
+            >
               <DialogTrigger asChild>
                 <Button
                   type="button"
                   size="sm"
-                  onClick={() => { setEditing(null); setOpen(true); }}
+                  onClick={() => {
+                    setEditing(null);
+                    setOpen(true);
+                  }}
                   className="lovli-cta text-white rounded-full min-h-[36px]"
                   data-testid="memory-create-button"
                 >
@@ -383,12 +472,16 @@ export default function Memory() {
           </div>
 
           {loading ? (
-            <div className="lovli-glass rounded-2xl p-6 text-center text-sm text-white/65">Loading…</div>
+            <div className="lovli-glass rounded-2xl p-6 text-center text-sm text-white/65">
+              Loading…
+            </div>
           ) : cards.length === 0 ? (
             <div className="lovli-glass rounded-2xl p-6" data-testid="memory-empty-state">
-              <h3 className="font-display text-base font-semibold text-white">No memories yet</h3>
+              <h3 className="font-display text-base font-semibold text-white">
+                No memories yet
+              </h3>
               <p className="mt-1 text-sm text-white/65">
-                Save the little things so you never blank.
+                Save the little things so Lovli can suggest better replies later.
               </p>
               <div className="mt-4">
                 <PreviewExample />
@@ -400,7 +493,10 @@ export default function Memory() {
                 <MemoryListItem
                   key={c.id}
                   card={c}
-                  onEdit={(card) => { setEditing(card); setOpen(true); }}
+                  onEdit={(card) => {
+                    setEditing(card);
+                    setOpen(true);
+                  }}
                   onDelete={onDelete}
                 />
               ))}
@@ -433,7 +529,7 @@ export default function Memory() {
             Get early access to the AI memory layer
           </h2>
           <p className="mt-1 text-sm text-white/65">
-            We’ll let you in early when AI summaries, reminders, and date ideas go live.
+            We'll let you in early when AI summaries, reminders, and date ideas go live.
           </p>
           <div className="mt-4">
             <EarlyAccessForm
@@ -441,7 +537,7 @@ export default function Memory() {
               source="memory-page"
               defaultEmail={user?.email || ''}
               question="What would you want Lovli Memory to remember? (dates, likes, chat context, date ideas, reminders, other)"
-              successMessage="You’re on the Memory early access list."
+              successMessage="You're on the Memory early access list."
               testIdPrefix="memory-early-access"
             />
           </div>

@@ -39,12 +39,8 @@ export default function Pro() {
               <Sparkles className="h-3 w-3" /> Coming soon — early access
             </span>
             <h1 className="mt-3 font-display text-2xl font-semibold text-white">Lovli Pro</h1>
-            <p className="mt-1 text-sm text-white/70">
-              Unlimited replies and Real Indian Wingman guidance.
-            </p>
-            <p className="mt-2 text-[13px] text-white/55">
-              Real Indian Wingman means human guidance from someone who actually understands
-              Indian dating culture. Not a bot. Not a pickup artist.
+            <p className="mt-1 text-sm text-white/75">
+              Get unlimited replies + real human guidance from someone who understands Indian dating.
             </p>
           </div>
         </section>

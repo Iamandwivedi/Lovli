@@ -1,50 +1,34 @@
 [
   {
-    "content": "Phase 1: POC - Build test_core.py to prove Claude Vision + JSON reply generation works",
+    "content": "Set ALLOW_TEST_LOGIN=false in /app/backend/.env (production-ready)",
     "status": "completed"
   },
   {
-    "content": "Phase 1: POC - Run test_core.py, fix until both image and text flows return valid 3-reply JSON",
+    "content": "Backend: add goal, current_situation, best_approach fields to MemoryCard model + update memory_context for replies",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Get design guidelines from design_agent for dark premium liquid-glass aesthetic",
+    "content": "Frontend: bump bottom padding to ~120px on all main tabs (AppShell)",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Get Emergent Google OAuth integration playbook",
+    "content": "Frontend: reduce mobile header height by ~12%",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Build backend (auth: JWT + Google OAuth, generate-replies, memory CRUD, waitlist, daily limit with timezone reset)",
+    "content": "Frontend Memory: update hero copy + form (3 new fields) + compact card display",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Build mobile-first frontend - design tokens, infra (axios, auth context, ProtectedRoute)",
+    "content": "Frontend Pro: shorten Pro description copy",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Build mobile-first frontend - shell + components (TopHeader, BottomNav, GlassCard, etc.)",
+    "content": "Smoke test: backend memory CRUD with new fields + visual verification of mobile spacing",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Build mobile-first frontend - pages (Login, Signup, AuthCallback, Reply, Pro, Memory, Settings, Onboarding, Privacy, Terms, EarlyAccess)",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 2: Wire frontend ↔ backend; manual smoke check (login, generate replies, memory CRUD)",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 3: End-to-end testing with testing_agent_v3 (backend 100%, frontend 95%, no critical bugs)",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 3: Harden LLM with auto-fallback Anthropic→Emergent on transient errors (529/overload/rate-limit)",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 4: Final delivery summary via finish tool",
+    "content": "Final delivery summary",
     "status": "in_progress"
   }
 ]

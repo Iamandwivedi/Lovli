@@ -145,6 +145,10 @@ class MemoryCard(BaseModel):
     boundaries: Optional[str] = None
     important_dates: Optional[str] = None
     inside_jokes: Optional[str] = None
+    # New V1.1 fields
+    goal: Optional[str] = None  # friendship | talking | dating | serious | impress first
+    current_situation: Optional[str] = None  # not connected yet | texting | talking | dating | complicated
+    best_approach: Optional[str] = None  # free text guidance
     ai_summary: Optional[str] = None  # filled by future AI feature
     created_at: datetime = Field(default_factory=_now)
     updated_at: datetime = Field(default_factory=_now)
@@ -161,6 +165,9 @@ class MemoryCardCreate(BaseModel):
     boundaries: Optional[str] = None
     important_dates: Optional[str] = None
     inside_jokes: Optional[str] = None
+    goal: Optional[str] = None
+    current_situation: Optional[str] = None
+    best_approach: Optional[str] = None
 
 
 class MemoryCardUpdate(BaseModel):
@@ -174,6 +181,9 @@ class MemoryCardUpdate(BaseModel):
     boundaries: Optional[str] = None
     important_dates: Optional[str] = None
     inside_jokes: Optional[str] = None
+    goal: Optional[str] = None
+    current_situation: Optional[str] = None
+    best_approach: Optional[str] = None
 
 
 # -------- Waitlist ------------------------------------------------------------

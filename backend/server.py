@@ -442,16 +442,30 @@ async def generate_replies_endpoint(
             {"id": memory_card_id, "user_id": user_id}, {"_id": 0}
         )
         if mc:
-            memory_context = (
-                f"Nickname: {mc.get('nickname','')}. "
-                f"Stage: {mc.get('relationship_stage','')}. "
-                f"Likes: {mc.get('likes','')}. "
-                f"Avoid: {mc.get('dislikes','')}. "
-                f"Communication: {mc.get('communication_style','')}. "
-                f"Inside jokes: {mc.get('inside_jokes','')}. "
-                f"Important: {mc.get('important_dates','')}. "
-                f"Notes: {mc.get('notes','')}."
-            )
+            parts: list[str] = [f"Nickname: {mc.get('nickname','')}."]
+            if mc.get("goal"):
+                parts.append(f"What user wants with this person: {mc['goal']}.")
+            if mc.get("current_situation"):
+                parts.append(f"Current situation: {mc['current_situation']}.")
+            if mc.get("relationship_stage"):
+                parts.append(f"Stage: {mc['relationship_stage']}.")
+            if mc.get("where_met"):
+                parts.append(f"Where they met: {mc['where_met']}.")
+            if mc.get("likes"):
+                parts.append(f"Likes: {mc['likes']}.")
+            if mc.get("dislikes"):
+                parts.append(f"Avoid: {mc['dislikes']}.")
+            if mc.get("communication_style"):
+                parts.append(f"Communication style: {mc['communication_style']}.")
+            if mc.get("inside_jokes"):
+                parts.append(f"Inside jokes: {mc['inside_jokes']}.")
+            if mc.get("important_dates"):
+                parts.append(f"Important context: {mc['important_dates']}.")
+            if mc.get("best_approach"):
+                parts.append(f"Best approach: {mc['best_approach']}.")
+            if mc.get("notes"):
+                parts.append(f"Notes: {mc['notes']}.")
+            memory_context = " ".join(parts)
 
     try:
         result = await generate_replies(
