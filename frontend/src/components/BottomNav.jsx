@@ -14,7 +14,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed left-1/2 bottom-0 z-40 w-[min(420px,calc(100vw-20px))] -translate-x-1/2"
+      className="fixed left-1/2 bottom-0 z-[10000] w-[min(420px,calc(100vw-20px))] -translate-x-1/2"
       style={{
         // Sit at the very bottom but keep a small gutter above the iPhone home indicator.
         paddingBottom: 'max(6px, env(safe-area-inset-bottom))',

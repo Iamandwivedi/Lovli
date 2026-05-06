@@ -1,26 +1,30 @@
 [
   {
-    "content": "Backend: add google_sub + last_login_at fields to User model",
+    "content": "Rotate ADMIN_KEY to 64+ char crypto-random value (file perms 0600)",
     "status": "completed"
   },
   {
-    "content": "Backend: store google_sub on Google login; match by google_sub OR email; update last_login_at on every successful login (email/password + Google)",
+    "content": "Rotate JWT_SECRET to 64+ char crypto-random value (file perms 0600)",
     "status": "completed"
   },
   {
-    "content": "Backend: add ADMIN_KEY-protected /api/admin/users endpoint to view users",
+    "content": "Verify ALLOW_TEST_LOGIN=false stays disabled",
     "status": "completed"
   },
   {
-    "content": "Backfill: add google_sub + last_login_at to existing users in MongoDB",
+    "content": "Backend smoke: 26 assertions across signup, login, /me, generate, memory CRUD, Google flow, allowlist, test-login, admin",
     "status": "completed"
   },
   {
-    "content": "Verify: curl admin endpoint + signup/login/google flow end-to-end",
+    "content": "Frontend smoke: login, reload session, bottom nav, generate, memory CRUD via UI, logout, protected redirect",
     "status": "completed"
   },
   {
-    "content": "Final summary with mongosh command + admin endpoint usage",
+    "content": "Bump bottom nav z-index above Emergent preview badge so Pro/Memory are tappable",
+    "status": "completed"
+  },
+  {
+    "content": "Final summary",
     "status": "in_progress"
   }
 ]
