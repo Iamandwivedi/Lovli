@@ -9,27 +9,35 @@
   },
   {
     "content": "Phase 2: Get design guidelines from design_agent for dark premium liquid-glass aesthetic",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "Phase 2: Get Emergent Google OAuth integration playbook",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Phase 2: Build backend (auth: JWT + Google OAuth, generate-replies, memory CRUD, waitlist, daily limit with timezone reset)",
-    "status": "pending"
+    "status": "completed"
   },
   {
-    "content": "Phase 2: Build mobile-first frontend (all routes, bottom nav, components, premium UI)",
-    "status": "pending"
+    "content": "Phase 2: Build mobile-first frontend - design tokens, infra (axios, auth context, ProtectedRoute)",
+    "status": "completed"
   },
   {
-    "content": "Phase 2: Wire frontend ↔ backend; verify all major user stories manually",
-    "status": "pending"
+    "content": "Phase 2: Build mobile-first frontend - shell + components (TopHeader, BottomNav, GlassCard, etc.)",
+    "status": "completed"
   },
   {
-    "content": "Phase 3: End-to-end testing with testing_agent_v3 (all 10+ user stories)",
-    "status": "pending"
+    "content": "Phase 2: Build mobile-first frontend - pages (Login, Signup, AuthCallback, Reply, Pro, Memory, Settings, Onboarding, Privacy, Terms, EarlyAccess)",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Wire frontend ↔ backend; manual smoke check (login, generate replies, memory CRUD)",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 3: End-to-end testing with testing_agent_v3 (all user stories)",
+    "status": "in_progress"
   },
   {
     "content": "Phase 3: Fix all bugs reported by testing agent and re-test",

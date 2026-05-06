@@ -1,54 +1,116 @@
-import { useEffect } from "react";
-import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import { useEffect } from 'react';
+import '@/App.css';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Toaster } from '@/components/ui/sonner';
+import { AuthProvider, useAuth } from '@/lib/auth';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import Login from '@/pages/Login';
+import Signup from '@/pages/Signup';
+import AuthCallback from '@/pages/AuthCallback';
+import Onboarding from '@/pages/Onboarding';
+import AppReply from '@/pages/AppReply';
+import Pro from '@/pages/Pro';
+import Memory from '@/pages/Memory';
+import Settings from '@/pages/Settings';
+import EarlyAccess from '@/pages/EarlyAccess';
+import Privacy from '@/pages/Privacy';
+import Terms from '@/pages/Terms';
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
+function RootRedirect() {
+  const { status } = useAuth();
+  if (status === 'checking') return null;
+  return <Navigate to={status === 'authed' ? '/app' : '/login'} replace />;
+}
 
+function AppRouter() {
+  const location = useLocation();
+
+  // CRITICAL: handle Emergent OAuth callback even if it lands on a route other than /auth
+  // (Emergent appends #session_id=... to whatever redirect URL we send.)
   useEffect(() => {
-    helloWorldApi();
-  }, []);
+    if (location.hash?.includes('session_id=') && location.pathname !== '/auth') {
+      // Preserve hash so AuthCallback can read it.
+      window.location.replace('/auth' + location.hash);
+    }
+  }, [location]);
+
+  if (location.hash?.includes('session_id=') && location.pathname !== '/auth') {
+    return null;
+  }
 
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
+    <Routes>
+      <Route path="/" element={<RootRedirect />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/auth" element={<AuthCallback />} />
+      <Route path="/early-access" element={<EarlyAccess />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
 
-function App() {
+      <Route
+        path="/onboarding"
+        element={
+          <ProtectedRoute>
+            <Onboarding />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/app"
+        element={
+          <ProtectedRoute>
+            <AppReply />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pro"
+        element={
+          <ProtectedRoute>
+            <Pro />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/memory"
+        element={
+          <ProtectedRoute>
+            <Memory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+export default function App() {
   return (
     <div className="App">
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
+        <AuthProvider>
+          <AppRouter />
+          <Toaster
+            theme="dark"
+            position="top-center"
+            toastOptions={{
+              className:
+                'rounded-2xl border border-white/12 bg-[#0B0D1A]/90 backdrop-blur-xl text-white',
+            }}
+          />
+        </AuthProvider>
       </BrowserRouter>
     </div>
   );
 }
-
-export default App;
