@@ -31,7 +31,8 @@ export default function AppReply() {
   const [manualText, setManualText] = useState('');
   const [userNote, setUserNote] = useState('');
   const [platform, setPlatform] = useState(user?.preferred_platform || 'Instagram');
-  const [vibe, setVibe] = useState(user?.preferred_style || 'Playful');
+  // Vibe is a per-chat choice (not an account preference). Always start at Playful.
+  const [vibe, setVibe] = useState('Playful');
   const [memoryCardId, setMemoryCardId] = useState('');
   const [memoryCards, setMemoryCards] = useState([]);
 

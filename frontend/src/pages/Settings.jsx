@@ -11,7 +11,6 @@ import { toast } from 'sonner';
 import { LogOut, ShieldOff } from 'lucide-react';
 
 const PLATFORMS = ['Instagram', 'Hinge', 'Bumble', 'Tinder', 'WhatsApp', 'Other'];
-const STYLES = ['Playful', 'Flirty', 'Sincere', 'Respectful', 'Confident'];
 const LANGUAGES = ['English', 'Hinglish', 'Hindi + English mixed'];
 
 export default function Settings() {
@@ -20,7 +19,6 @@ export default function Settings() {
 
   const [name, setName] = useState(user?.name || '');
   const [platform, setPlatform] = useState(user?.preferred_platform || 'Instagram');
-  const [style, setStyle] = useState(user?.preferred_style || 'Playful');
   const [language, setLanguage] = useState(user?.language_preference || 'Hinglish');
   const [tz, setTz] = useState(user?.timezone || 'Asia/Kolkata');
   const [saving, setSaving] = useState(false);
@@ -31,7 +29,6 @@ export default function Settings() {
       const { data } = await api.patch('/settings', {
         name,
         preferred_platform: platform,
-        preferred_style: style,
         language_preference: language,
         timezone: tz,
       });
@@ -93,10 +90,6 @@ export default function Settings() {
           <div className="space-y-1.5">
             <Label className="text-white/80">Preferred platform</Label>
             <ChipGroup options={PLATFORMS} value={platform} onChange={setPlatform} testId="settings-platform-toggle" ariaLabel="Preferred platform" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-white/80">Reply style</Label>
-            <ChipGroup options={STYLES} value={style} onChange={setStyle} testId="settings-style-toggle" ariaLabel="Reply style" />
           </div>
           <div className="space-y-1.5">
             <Label className="text-white/80">Language</Label>

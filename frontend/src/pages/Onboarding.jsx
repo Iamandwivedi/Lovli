@@ -7,14 +7,12 @@ import { api, getLocalTimezone } from '@/lib/api';
 import { toast } from 'sonner';
 
 const PLATFORMS = ['Instagram', 'Hinge', 'Bumble', 'Tinder', 'WhatsApp', 'Other'];
-const STYLES = ['Playful', 'Flirty', 'Sincere', 'Respectful', 'Confident'];
 const LANGUAGES = ['English', 'Hinglish', 'Hindi + English mixed'];
 
 export default function Onboarding() {
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
   const [platform, setPlatform] = useState(user?.preferred_platform || 'Instagram');
-  const [style, setStyle] = useState(user?.preferred_style || 'Playful');
   const [language, setLanguage] = useState(user?.language_preference || 'Hinglish');
   const [submitting, setSubmitting] = useState(false);
 
@@ -25,7 +23,6 @@ export default function Onboarding() {
         ? { timezone: getLocalTimezone() }
         : {
             preferred_platform: platform,
-            preferred_style: style,
             language_preference: language,
             timezone: getLocalTimezone(),
           };
@@ -54,7 +51,7 @@ export default function Onboarding() {
           </button>
         </div>
         <p className="mt-1 text-sm text-white/65">
-          Helps Lovli sound more like you. You can change anything later in Settings.
+          Helps Lovli understand where you chat and how you talk. You can change this later.
         </p>
 
         <div className="mt-5 space-y-5">
@@ -67,19 +64,6 @@ export default function Onboarding() {
                 onChange={setPlatform}
                 testId="onboarding-platform-toggle"
                 ariaLabel="Preferred platform"
-              />
-            </div>
-          </section>
-
-          <section className="lovli-glass rounded-2xl p-4">
-            <h2 className="text-sm font-medium text-white/85">Preferred reply style</h2>
-            <div className="mt-3">
-              <ChipGroup
-                options={STYLES}
-                value={style}
-                onChange={setStyle}
-                testId="onboarding-style-toggle"
-                ariaLabel="Preferred style"
               />
             </div>
           </section>
@@ -101,7 +85,7 @@ export default function Onboarding() {
             type="button"
             onClick={() => finish(false)}
             disabled={submitting}
-            className="w-full lovli-cta text-white min-h-[48px]"
+            className="w-full lovli-cta min-h-[48px]"
             data-testid="onboarding-continue-button"
           >
             {submitting ? 'Saving…' : 'Continue'}
