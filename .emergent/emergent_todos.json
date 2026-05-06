@@ -1,30 +1,38 @@
 [
   {
-    "content": "Set ALLOW_TEST_LOGIN=false in /app/backend/.env (production-ready)",
+    "content": "Backend: replace Emergent OAuth with standard Google OAuth code-exchange (env-driven, redirect-URI allowlist)",
     "status": "completed"
   },
   {
-    "content": "Backend: add goal, current_situation, best_approach fields to MemoryCard model + update memory_context for replies",
+    "content": "Verify ALLOW_TEST_LOGIN=false stays disabled",
     "status": "completed"
   },
   {
-    "content": "Frontend: bump bottom padding to ~120px on all main tabs (AppShell)",
+    "content": "Frontend: create LovliMark (chat-bubble + sparkle SVG); use everywhere",
     "status": "completed"
   },
   {
-    "content": "Frontend: reduce mobile header height by ~12%",
+    "content": "Frontend: fix top header (sticky, attached to top, safe-area-inset-top aware)",
     "status": "completed"
   },
   {
-    "content": "Frontend Memory: update hero copy + form (3 new fields) + compact card display",
+    "content": "Frontend: lower bottom nav + safe-area-inset-bottom + bigger content padding",
     "status": "completed"
   },
   {
-    "content": "Frontend Pro: shorten Pro description copy",
+    "content": "Frontend: redesign primary CTA (.lovli-cta) to clean white pill with violet glow halo (no gradient)",
     "status": "completed"
   },
   {
-    "content": "Smoke test: backend memory CRUD with new fields + visual verification of mobile spacing",
+    "content": "Frontend: rebuild Pro Free-vs-Pro as true side-by-side cards (mobile + desktop)",
+    "status": "completed"
+  },
+  {
+    "content": "Frontend: replace AuthGoogleButton + AuthCallback with standard OAuth code flow + state CSRF",
+    "status": "completed"
+  },
+  {
+    "content": "QA: backend curl + iPhone-sized Playwright screenshots of /login, /app, /memory, /pro",
     "status": "completed"
   },
   {

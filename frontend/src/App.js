@@ -1,6 +1,5 @@
-import { useEffect } from 'react';
 import '@/App.css';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -24,21 +23,6 @@ function RootRedirect() {
 }
 
 function AppRouter() {
-  const location = useLocation();
-
-  // CRITICAL: handle Emergent OAuth callback even if it lands on a route other than /auth
-  // (Emergent appends #session_id=... to whatever redirect URL we send.)
-  useEffect(() => {
-    if (location.hash?.includes('session_id=') && location.pathname !== '/auth') {
-      // Preserve hash so AuthCallback can read it.
-      window.location.replace('/auth' + location.hash);
-    }
-  }, [location]);
-
-  if (location.hash?.includes('session_id=') && location.pathname !== '/auth') {
-    return null;
-  }
-
   return (
     <Routes>
       <Route path="/" element={<RootRedirect />} />

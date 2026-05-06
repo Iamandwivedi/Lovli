@@ -58,7 +58,8 @@ from models import (
     FeedbackRequest,
     GenerateRepliesResponse,
     Generation,
-    GoogleSessionRequest,
+    GoogleCodeRequest,
+    GoogleSessionRequest,  # noqa: F401  (kept for import compatibility)
     LoginRequest,
     MemoryCard,
     MemoryCardCreate,
@@ -242,38 +243,115 @@ async def test_login():
     return AuthResponse(access_token=token, user=_public_user(user))
 
 
-@api.post("/auth/google/session", response_model=AuthResponse)
-async def google_session(req: GoogleSessionRequest):
-    """Exchange an Emergent-managed Google session_id for our own JWT."""
-    session_id = (req.session_id or "").strip()
-    if not session_id:
-        raise HTTPException(status_code=400, detail="Missing session_id")
+def _allowed_redirect_uris() -> list[str]:
+    raw = os.environ.get("GOOGLE_ALLOWED_REDIRECT_URIS", "") or ""
+    return [r.strip() for r in raw.split(",") if r.strip()]
+
+
+@api.get("/auth/google/config")
+async def google_oauth_config():
+    """Public config consumed by the frontend to build Google's authorize URL.
+
+    Returns whether Google sign-in is enabled and the public client_id.
+    The client_secret never leaves the backend.
+    """
+    client_id = (os.environ.get("GOOGLE_CLIENT_ID") or "").strip()
+    return {
+        "enabled": bool(client_id),
+        "client_id": client_id,
+        "scope": "openid email profile",
+        "allowed_redirect_uris": _allowed_redirect_uris(),
+    }
+
+
+@api.post("/auth/google/code", response_model=AuthResponse)
+async def google_code_exchange(req: GoogleCodeRequest):
+    """Standard Google OAuth 2.0 authorization-code exchange.
+
+    Frontend flow:
+      1. User clicks "Continue with Google" on /login or /signup.
+      2. Frontend redirects browser to https://accounts.google.com/o/oauth2/v2/auth
+         with our client_id, redirect_uri, response_type=code, scope, state.
+      3. Google redirects back to {redirect_uri}?code=...&state=...
+      4. Frontend POSTs {code, redirect_uri, state} to this endpoint.
+      5. We exchange the code with Google for tokens (using client_secret),
+         fetch userinfo, upsert the user, and issue OUR Lovli JWT.
+    """
+    client_id = (os.environ.get("GOOGLE_CLIENT_ID") or "").strip()
+    client_secret = (os.environ.get("GOOGLE_CLIENT_SECRET") or "").strip()
+    if not client_id or not client_secret:
+        raise HTTPException(
+            status_code=503, detail="Google sign-in is not configured."
+        )
+
+    redirect_uri = (req.redirect_uri or "").strip()
+    allowed = _allowed_redirect_uris()
+    if not redirect_uri or (allowed and redirect_uri not in allowed):
+        raise HTTPException(status_code=400, detail="Unauthorized redirect URI")
+
+    code = (req.code or "").strip()
+    if not code:
+        raise HTTPException(status_code=400, detail="Missing authorization code")
 
     try:
         async with httpx.AsyncClient(timeout=15.0) as hc:
-            r = await hc.get(
-                "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
-                headers={"X-Session-ID": session_id},
+            token_r = await hc.post(
+                "https://oauth2.googleapis.com/token",
+                data={
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                    "code": code,
+                    "grant_type": "authorization_code",
+                    "redirect_uri": redirect_uri,
+                },
+                headers={"Accept": "application/json"},
             )
-        if r.status_code != 200:
-            logger.warning(
-                "emergent session-data non-200: %s %s", r.status_code, r.text
+            if token_r.status_code != 200:
+                logger.warning(
+                    "google token exchange failed: %s %s",
+                    token_r.status_code,
+                    token_r.text,
+                )
+                raise HTTPException(
+                    status_code=401, detail="Sign-in failed. Try again."
+                )
+            tokens = token_r.json()
+            access_token = tokens.get("access_token")
+            if not access_token:
+                raise HTTPException(
+                    status_code=401, detail="Sign-in failed. Try again."
+                )
+
+            ui_r = await hc.get(
+                "https://www.googleapis.com/oauth2/v2/userinfo",
+                headers={"Authorization": f"Bearer {access_token}"},
             )
-            raise HTTPException(status_code=401, detail="Invalid session")
-        data = r.json()
+            if ui_r.status_code != 200:
+                logger.warning(
+                    "google userinfo failed: %s %s", ui_r.status_code, ui_r.text
+                )
+                raise HTTPException(
+                    status_code=401, detail="Sign-in failed. Try again."
+                )
+            info = ui_r.json()
     except HTTPException:
         raise
     except Exception as e:
-        logger.exception("emergent session-data failed: %s", e)
+        logger.exception("google oauth exchange failed: %s", e)
         raise HTTPException(
-            status_code=502, detail="Auth provider unavailable"
+            status_code=502, detail="Auth provider unavailable. Try again."
         ) from e
 
-    email = (data.get("email") or "").lower()
-    name = data.get("name") or email.split("@")[0]
-    picture = data.get("picture")
+    email = (info.get("email") or "").lower()
     if not email:
-        raise HTTPException(status_code=400, detail="No email returned by provider")
+        raise HTTPException(status_code=400, detail="No email returned by Google.")
+    if info.get("verified_email") is False:
+        raise HTTPException(
+            status_code=400,
+            detail="Your Google email is not verified. Verify it and try again.",
+        )
+    name = info.get("name") or email.split("@")[0]
+    picture = info.get("picture")
 
     user = await db.users.find_one({"email": email}, {"_id": 0})
     if not user:

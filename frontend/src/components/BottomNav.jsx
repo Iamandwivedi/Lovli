@@ -14,7 +14,11 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-3 left-1/2 z-40 w-[min(420px,calc(100vw-24px))] -translate-x-1/2"
+      className="fixed left-1/2 bottom-0 z-40 w-[min(420px,calc(100vw-20px))] -translate-x-1/2"
+      style={{
+        // Sit at the very bottom but keep a small gutter above the iPhone home indicator.
+        paddingBottom: 'max(6px, env(safe-area-inset-bottom))',
+      }}
       data-testid="bottom-nav"
     >
       <div className="lovli-glass rounded-[22px] flex">
@@ -27,7 +31,7 @@ export default function BottomNav() {
               key={t.to}
               data-testid={t.testId}
               aria-label={t.label}
-              className={`relative flex flex-1 flex-col items-center justify-center gap-1 py-3 text-[11px] transition-colors ${
+              className={`relative flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[11px] transition-colors ${
                 active ? 'text-white' : 'text-white/65 hover:text-white/85'
               }`}
             >

@@ -79,7 +79,17 @@ class LoginRequest(BaseModel):
 
 
 class GoogleSessionRequest(BaseModel):
+    """Legacy: Emergent-managed Google OAuth (kept for backwards compat, unused in V1.1)."""
+
     session_id: str
+
+
+class GoogleCodeRequest(BaseModel):
+    """Standard Google OAuth 2.0 authorization-code exchange request."""
+
+    code: str = Field(min_length=1)
+    redirect_uri: str = Field(min_length=1)
+    state: Optional[str] = None
 
 
 class OnboardingRequest(BaseModel):

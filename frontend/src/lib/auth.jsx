@@ -4,7 +4,6 @@ import { api, getToken, setToken } from '@/lib/api';
 const AuthCtx = createContext(null);
 
 export function AuthProvider({ children }) {
-  // null = checking, false = not authed, true = authed
   const [user, setUser] = useState(null);
   const [status, setStatus] = useState(getToken() ? 'checking' : 'unauthed');
 
@@ -29,11 +28,6 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    // CRITICAL: skip me-check if returning from OAuth (AuthCallback handles it)
-    if (typeof window !== 'undefined' && window.location.hash?.includes('session_id=')) {
-      setStatus((s) => (s === 'checking' ? 'unauthed' : s));
-      return;
-    }
     refreshMe();
   }, [refreshMe]);
 
@@ -53,8 +47,13 @@ export function AuthProvider({ children }) {
     return data.user;
   }, []);
 
-  const exchangeGoogleSession = useCallback(async (sessionId) => {
-    const { data } = await api.post('/auth/google/session', { session_id: sessionId });
+  // Standard Google OAuth code exchange. Replaces the legacy Emergent session flow.
+  const exchangeGoogleCode = useCallback(async ({ code, redirect_uri, state }) => {
+    const { data } = await api.post('/auth/google/code', {
+      code,
+      redirect_uri,
+      state,
+    });
     setToken(data.access_token);
     setUser(data.user);
     setStatus('authed');
@@ -76,7 +75,7 @@ export function AuthProvider({ children }) {
     isChecking: status === 'checking',
     loginWithEmail,
     signupWithEmail,
-    exchangeGoogleSession,
+    exchangeGoogleCode,
     logout,
     refreshMe,
     updateUser,

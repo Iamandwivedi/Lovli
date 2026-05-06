@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/lib/auth';
 import AuthGoogleButton from '@/components/AuthGoogleButton';
+import LovliMark from '@/components/LovliMark';
 import { toast } from 'sonner';
 
 export default function Signup() {
@@ -42,9 +42,7 @@ export default function Signup() {
     <div className="min-h-screen lovli-noise flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md" data-testid="signup-page">
         <div className="mb-6 flex items-center gap-2">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 via-indigo-500 to-sky-400 shadow-[0_0_22px_rgba(99,102,241,0.4)]">
-            <Sparkles className="h-4 w-4 text-white" />
-          </span>
+          <LovliMark size={36} />
           <span className="font-display text-xl font-semibold tracking-tight text-white">
             Lovli
           </span>
@@ -104,7 +102,7 @@ export default function Signup() {
             <Button
               type="submit"
               disabled={submitting}
-              className="w-full lovli-cta text-white min-h-[44px]"
+              className="w-full lovli-cta min-h-[44px]"
               data-testid="signup-submit-button"
             >
               {submitting ? 'Creating…' : 'Create account'}
@@ -121,7 +119,11 @@ export default function Signup() {
 
           <p className="mt-5 text-center text-sm text-white/65">
             Already have an account?{' '}
-            <Link to="/login" className="text-white underline-offset-2 hover:underline" data-testid="signup-login-link">
+            <Link
+              to="/login"
+              className="text-white underline-offset-2 hover:underline"
+              data-testid="signup-login-link"
+            >
               Sign in
             </Link>
           </p>

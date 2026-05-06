@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Settings, Sparkles } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import LovliMark from '@/components/LovliMark';
 
 export default function TopHeader() {
   const { user } = useAuth();
@@ -10,7 +11,12 @@ export default function TopHeader() {
 
   return (
     <header
-      className="sticky top-0 z-30 -mx-4 px-4 pt-2 pb-2 bg-gradient-to-b from-[#070812] to-[#070812]/80 backdrop-blur"
+      className="sticky top-0 z-30 -mx-4 px-4 bg-[#070812]/92 backdrop-blur-xl border-b border-white/[0.04]"
+      style={{
+        // Visually fill the iPhone notch / status bar area.
+        paddingTop: 'calc(env(safe-area-inset-top) + 0.55rem)',
+        paddingBottom: '0.55rem',
+      }}
       data-testid="top-header"
     >
       <div className="flex items-center justify-between">
@@ -19,9 +25,7 @@ export default function TopHeader() {
           className="flex items-center gap-2"
           data-testid="top-header-logo"
         >
-          <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 via-indigo-500 to-sky-400 shadow-[0_0_22px_rgba(99,102,241,0.4)]">
-            <Sparkles className="h-3.5 w-3.5 text-white" strokeWidth={2.4} />
-          </span>
+          <LovliMark size={28} />
           <span className="font-display text-base font-semibold tracking-tight text-white">
             Lovli
           </span>

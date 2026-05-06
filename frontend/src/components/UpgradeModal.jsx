@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Sparkles } from 'lucide-react';
+import LovliMark from '@/components/LovliMark';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -37,16 +42,17 @@ export default function UpgradeModal({ open, onClose, user }) {
       >
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-sky-400">
-              <Sparkles className="h-4 w-4 text-white" />
-            </span>
-            <DialogTitle className="text-white">You’ve used today’s free replies.</DialogTitle>
+            <LovliMark size={32} />
+            <DialogTitle className="text-white">
+              You’ve used today’s free replies.
+            </DialogTitle>
           </div>
         </DialogHeader>
         {!done ? (
           <form onSubmit={submit} className="space-y-3">
             <p className="text-sm text-white/70">
-              Upgrade to Pro for unlimited generations and Real Indian Wingman guidance. Drop your email and we’ll let you in early.
+              Upgrade to Pro for unlimited generations and Real Indian Wingman guidance. Drop
+              your email and we’ll let you in early.
             </p>
             <Input
               type="email"
@@ -60,7 +66,7 @@ export default function UpgradeModal({ open, onClose, user }) {
               <Button
                 type="submit"
                 disabled={submitting}
-                className="w-full lovli-cta text-white min-h-[44px]"
+                className="w-full lovli-cta min-h-[44px]"
                 data-testid="upgrade-modal-cta-button"
               >
                 {submitting ? 'Sending…' : 'Get Early Access'}
@@ -84,7 +90,7 @@ export default function UpgradeModal({ open, onClose, user }) {
             <Button
               type="button"
               onClick={onClose}
-              className="w-full lovli-cta text-white min-h-[44px]"
+              className="w-full lovli-cta min-h-[44px]"
               data-testid="upgrade-modal-close-button"
             >
               Done
