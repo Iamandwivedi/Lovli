@@ -1,14 +1,18 @@
 [
   {
     "content": "Phase 1: POC - Build test_core.py to prove Claude Vision + JSON reply generation works",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "Phase 1: POC - Run test_core.py, fix until both image and text flows return valid 3-reply JSON",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Phase 2: Get design guidelines from design_agent for dark premium liquid-glass aesthetic",
+    "status": "in_progress"
+  },
+  {
+    "content": "Phase 2: Get Emergent Google OAuth integration playbook",
     "status": "pending"
   },
   {
