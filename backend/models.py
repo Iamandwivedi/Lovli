@@ -32,6 +32,7 @@ class User(BaseModel):
     name: str
     email: EmailStr
     hashed_password: Optional[str] = None  # None for Google-only users
+    google_sub: Optional[str] = None  # stable Google user id (the "sub" claim)
     google_picture: Optional[str] = None
     auth_provider: Literal["password", "google", "both"] = "password"
 
@@ -47,6 +48,7 @@ class User(BaseModel):
 
     created_at: datetime = Field(default_factory=_now)
     updated_at: datetime = Field(default_factory=_now)
+    last_login_at: Optional[datetime] = None
 
 
 class PublicUser(BaseModel):
@@ -65,6 +67,7 @@ class PublicUser(BaseModel):
     language_preference: str = "Hinglish"
     onboarding_complete: bool = False
     created_at: datetime
+    last_login_at: Optional[datetime] = None
 
 
 class SignupRequest(BaseModel):

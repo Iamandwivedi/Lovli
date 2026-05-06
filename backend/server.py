@@ -170,20 +170,34 @@ async def _create_user_doc(
     email: str,
     hashed_password: Optional[str] = None,
     google_picture: Optional[str] = None,
+    google_sub: Optional[str] = None,
     auth_provider: str = "password",
+    set_last_login: bool = True,
 ) -> dict:
     u = User(
         name=name,
         email=email,
         hashed_password=hashed_password,
         google_picture=google_picture,
+        google_sub=google_sub,
         auth_provider=auth_provider,  # type: ignore[arg-type]
     )
     doc = u.model_dump()
     doc["created_at"] = doc["created_at"].isoformat()
     doc["updated_at"] = doc["updated_at"].isoformat()
+    if set_last_login:
+        doc["last_login_at"] = doc["created_at"]
     await db.users.insert_one(doc)
     return doc
+
+
+async def _touch_last_login(user_id: str) -> None:
+    """Stamp last_login_at on every successful authentication."""
+    now = datetime.now(timezone.utc).isoformat()
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"last_login_at": now, "updated_at": now}},
+    )
 
 
 # ---- Health -----------------------------------------------------------------
@@ -206,6 +220,7 @@ async def signup(req: SignupRequest):
         hashed_password=hash_password(req.password),
         auth_provider="password",
     )
+    # last_login_at is already set inside _create_user_doc on first creation.
     token = create_jwt(doc["id"], doc["email"])
     return AuthResponse(access_token=token, user=_public_user(doc))
 
@@ -217,6 +232,8 @@ async def login(req: LoginRequest):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     if not verify_password(req.password, user["hashed_password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    await _touch_last_login(user["id"])
+    user["last_login_at"] = datetime.now(timezone.utc).isoformat()
     token = create_jwt(user["id"], user["email"])
     return AuthResponse(access_token=token, user=_public_user(user))
 
@@ -350,30 +367,42 @@ async def google_code_exchange(req: GoogleCodeRequest):
             status_code=400,
             detail="Your Google email is not verified. Verify it and try again.",
         )
+    google_sub = (info.get("id") or "").strip() or None
     name = info.get("name") or email.split("@")[0]
     picture = info.get("picture")
 
-    user = await db.users.find_one({"email": email}, {"_id": 0})
+    # Match by stable google_sub first, then by email (covers existing email/password
+    # users who now sign in with Google for the first time).
+    user = None
+    if google_sub:
+        user = await db.users.find_one({"google_sub": google_sub}, {"_id": 0})
+    if not user:
+        user = await db.users.find_one({"email": email}, {"_id": 0})
+
     if not user:
         user = await _create_user_doc(
             name=name,
             email=email,
             google_picture=picture,
+            google_sub=google_sub,
             auth_provider="google",
         )
     else:
         new_provider = "both" if user.get("hashed_password") else "google"
-        await db.users.update_one(
-            {"id": user["id"]},
-            {
-                "$set": {
-                    "google_picture": picture or user.get("google_picture"),
-                    "auth_provider": new_provider,
-                    "updated_at": datetime.now(timezone.utc).isoformat(),
-                }
-            },
-        )
+        update_set: dict = {
+            "google_picture": picture or user.get("google_picture"),
+            "auth_provider": new_provider,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        # Persist google_sub if we now have it and it wasn't stored
+        if google_sub and not user.get("google_sub"):
+            update_set["google_sub"] = google_sub
+        # If the email changed on Google's side (rare) keep our user, don't overwrite email.
+        await db.users.update_one({"id": user["id"]}, {"$set": update_set})
         user = await db.users.find_one({"id": user["id"]}, {"_id": 0})
+
+    await _touch_last_login(user["id"])
+    user["last_login_at"] = datetime.now(timezone.utc).isoformat()
 
     token = create_jwt(user["id"], user["email"])
     return AuthResponse(access_token=token, user=_public_user(user))
@@ -718,6 +747,94 @@ async def add_waitlist(
 
 
 # =============================================================================
+# Admin (read-only). Protected by X-Admin-Key header matching ADMIN_KEY env.
+# Use this endpoint to view and audit users.
+# =============================================================================
+def _check_admin_key(provided: Optional[str]) -> None:
+    expected = (os.environ.get("ADMIN_KEY") or "").strip()
+    if not expected:
+        raise HTTPException(
+            status_code=503, detail="Admin endpoint disabled (ADMIN_KEY not set)."
+        )
+    if not provided or provided.strip() != expected:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+@api.get("/admin/users")
+async def admin_list_users(
+    limit: int = 100,
+    offset: int = 0,
+    provider: Optional[str] = None,  # password | google | both
+    x_admin_key: Optional[str] = Header(default=None, alias="X-Admin-Key"),
+):
+    """List users in the order they signed up (oldest first by default).
+
+    Returns id, name, email, auth_provider, plan, google_sub, google_picture,
+    created_at, last_login_at, daily_generation_count, plus aggregate counts.
+    Never returns hashed_password.
+    """
+    _check_admin_key(x_admin_key)
+    q: dict = {}
+    if provider in ("password", "google", "both"):
+        q["auth_provider"] = provider
+
+    limit = max(1, min(int(limit), 500))
+    offset = max(0, int(offset))
+
+    projection = {
+        "_id": 0,
+        "hashed_password": 0,
+    }
+    cur = db.users.find(q, projection).sort("created_at", 1).skip(offset).limit(limit)
+    items = []
+    async for u in cur:
+        items.append(_serialize(u))
+
+    total = await db.users.count_documents(q)
+    by_provider = {}
+    async for row in db.users.aggregate(
+        [{"$group": {"_id": "$auth_provider", "n": {"$sum": 1}}}]
+    ):
+        by_provider[row["_id"] or "unknown"] = row["n"]
+
+    return {
+        "total": total,
+        "by_provider": by_provider,
+        "limit": limit,
+        "offset": offset,
+        "users": items,
+    }
+
+
+@api.get("/admin/stats")
+async def admin_stats(
+    x_admin_key: Optional[str] = Header(default=None, alias="X-Admin-Key"),
+):
+    """Lightweight ops dashboard: users, generations, waitlist counts."""
+    _check_admin_key(x_admin_key)
+    users_total = await db.users.count_documents({})
+    users_google = await db.users.count_documents({"auth_provider": {"$in": ["google", "both"]}})
+    users_password = await db.users.count_documents({"auth_provider": {"$in": ["password", "both"]}})
+    gens_total = await db.generations.count_documents({})
+    memory_total = await db.memory_cards.count_documents({})
+    waitlist_by_type = {}
+    async for row in db.waitlist.aggregate(
+        [{"$group": {"_id": "$type", "n": {"$sum": 1}}}]
+    ):
+        waitlist_by_type[row["_id"] or "unknown"] = row["n"]
+    return {
+        "users": {
+            "total": users_total,
+            "google": users_google,
+            "password": users_password,
+        },
+        "generations_total": gens_total,
+        "memory_cards_total": memory_total,
+        "waitlist_by_type": waitlist_by_type,
+    }
+
+
+# =============================================================================
 # App lifecycle
 # =============================================================================
 @app.on_event("startup")
@@ -725,6 +842,7 @@ async def on_startup():
     try:
         await db.users.create_index("email", unique=True)
         await db.users.create_index("id", unique=True)
+        await db.users.create_index("google_sub", sparse=True)
         await db.generations.create_index("user_id")
         await db.generations.create_index("id", unique=True)
         await db.memory_cards.create_index("user_id")
