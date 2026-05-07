@@ -38,6 +38,48 @@ LOVLI_SYSTEM_PROMPT = (
 )
 
 
+_LANGUAGE_RULES = {
+    "English": (
+        "Write the replies in NATURAL ENGLISH only. "
+        "Do NOT use any Hindi or romanized Hindi words like 'yaar', 'haan', "
+        "'matlab', 'chai', 'kya', 'tu', 'tum', 'na', 'bro' (Hindi-flavored), "
+        "'thik', 'theek', 'arre', 'bas', 'bhai', 'bhaiya', 'didi'. "
+        "Keep it casual, modern, and natural \u2014 like a fluent English-speaking "
+        "Indian Gen-Z / millennial would text on Instagram or Hinge. "
+        "Contractions are fine ('I'd', 'gonna', 'lol'). No formal/business tone."
+    ),
+    "Hinglish": (
+        "Write the replies in NATURAL INDIAN HINGLISH \u2014 the way real Indian "
+        "Gen-Z / millennials actually text, NOT a robotic English\u2192Hindi "
+        "translation. Mix English and romanized Hindi naturally in the same "
+        "sentence. Use words like 'yaar', 'matlab', 'na', 'kya', 'arre', "
+        "'bro', 'haina', 'wahi', 'sahi', 'chal', 'bas', 'thoda', 'aaj', "
+        "'kal' WHERE THEY FIT (don't force them). The vibe should feel "
+        "organic, lowercase, and chatty \u2014 like an Instagram DM, not a "
+        "textbook. Do NOT use Devanagari script. Roman script only."
+    ),
+    "Hindi + English mixed": (
+        "Write the replies with HINDI AS THE PRIMARY LANGUAGE, with English "
+        "words sprinkled naturally where Indian texters would actually use "
+        "them (e.g. 'plan', 'meet', 'message', 'reply', 'cute', 'busy'). "
+        "Use romanized Hindi (Roman script, not Devanagari) because that's "
+        "how chats actually look on WhatsApp / Instagram in India. The "
+        "Hindi should feel real and warm \u2014 not formal Hindi like a news "
+        "anchor. Casual, conversational, lowercase. Examples of natural "
+        "phrasing: 'haan yaar bilkul', 'sahi hai', 'tu bata kya plan hai', "
+        "'mujhe bhi same lag raha hai'."
+    ),
+}
+
+
+def _language_directive(language: str) -> str:
+    rule = _LANGUAGE_RULES.get(language)
+    if rule:
+        return f"LANGUAGE (strict): {language}.\n{rule}"
+    # Unknown language label \u2014 default to a sensible Hinglish-ish behavior.
+    return f"LANGUAGE (strict): {language}. Write naturally in this language only."
+
+
 def build_user_prompt(
     *,
     platform: str,
@@ -52,7 +94,8 @@ def build_user_prompt(
         "Generate exactly 3 reply options for this chat conversation.",
         f"Platform: {platform}",
         f"Selected vibe: {vibe}",
-        f"Language preference: {language}",
+        # High-level language directive up-front so Claude internalizes it early.
+        _language_directive(language),
     ]
     if has_image:
         parts.append(
@@ -77,10 +120,19 @@ def build_user_prompt(
         "}"
     )
     parts.append(
-        "Rules: each reply must be 1-3 sentences max, sound like a real "
-        "Indian Gen-Z / millennial would text, match the selected vibe, "
-        "respect Hinglish if the language preference asks for it, and "
-        "never use cringe pickup lines."
+        "General rules: each reply must be 1-3 sentences max, sound like a "
+        "real Indian Gen-Z / millennial would text, match the selected vibe, "
+        "and never use cringe pickup lines or manipulation. Replies must be "
+        "directly sendable but editable, lowercase-friendly, and free of "
+        "corporate language."
+    )
+    # Final reminder so the language rule is the LAST instruction Claude sees.
+    parts.append(
+        f"FINAL REMINDER \u2014 LANGUAGE = {language}. "
+        "All 3 replies MUST follow the language rule above. "
+        "Do not silently switch to a different language even if the chat is "
+        "in a different language; the user explicitly chose this output "
+        "language."
     )
     return "\n\n".join(parts)
 

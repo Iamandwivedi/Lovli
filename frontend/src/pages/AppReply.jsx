@@ -23,6 +23,7 @@ import { Sparkles, Shield } from 'lucide-react';
 
 const PLATFORMS = ['Instagram', 'Hinge', 'Bumble', 'Tinder', 'WhatsApp', 'Other'];
 const VIBES = ['Playful', 'Flirty', 'Sincere', 'Respectful', 'Confident'];
+const LANGUAGES = ['English', 'Hinglish', 'Hindi + English mixed'];
 
 export default function AppReply() {
   const { user, refreshMe, updateUser } = useAuth();
@@ -33,6 +34,12 @@ export default function AppReply() {
   const [platform, setPlatform] = useState(user?.preferred_platform || 'Instagram');
   // Vibe is a per-chat choice (not an account preference). Always start at Playful.
   const [vibe, setVibe] = useState('Playful');
+  // Language is per-chat too — defaults to the user's saved preference, but the user
+  // can change it on the Reply screen for any individual generation. Changing it here
+  // does NOT persist back to settings.
+  const [language, setLanguage] = useState(
+    user?.language_preference || 'Hinglish'
+  );
   const [memoryCardId, setMemoryCardId] = useState('');
   const [memoryCards, setMemoryCards] = useState([]);
 
@@ -46,7 +53,6 @@ export default function AppReply() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const resultsAnchor = useRef(null);
 
-  const language = user?.language_preference || 'Hinglish';
   const localDate = useMemo(() => getLocalDateString(), []);
   const tz = useMemo(() => getLocalTimezone(), []);
 
@@ -208,6 +214,17 @@ export default function AppReply() {
               onChange={setVibe}
               testId="reply-vibe-toggle"
               ariaLabel="Vibe"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-white/70">Reply language</p>
+            <ChipGroup
+              options={LANGUAGES}
+              value={language}
+              onChange={setLanguage}
+              testId="reply-language-toggle"
+              ariaLabel="Reply language"
             />
           </div>
 
