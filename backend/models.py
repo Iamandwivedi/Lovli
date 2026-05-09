@@ -11,7 +11,7 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-PLATFORMS = ("Instagram", "Hinge", "Bumble", "Tinder", "WhatsApp", "Other")
+PLATFORMS = ("instagram", "dating_platform", "whatsapp")
 VIBES = ("Playful", "Flirty", "Sincere", "Respectful", "Confident")
 LANGUAGES = ("English", "Hinglish", "Hindi + English mixed")
 

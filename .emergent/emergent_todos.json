@@ -1,26 +1,26 @@
 [
   {
-    "content": "Rotate ADMIN_KEY to 64+ char crypto-random value (file perms 0600)",
+    "content": "Backend models: PLATFORMS = (instagram, dating_platform, whatsapp)",
     "status": "completed"
   },
   {
-    "content": "Rotate JWT_SECRET to 64+ char crypto-random value (file perms 0600)",
+    "content": "Backend llm_service: per-platform tonal directive for Claude",
     "status": "completed"
   },
   {
-    "content": "Verify ALLOW_TEST_LOGIN=false stays disabled",
+    "content": "Frontend: shared lib/platform.js helper (label↔value, legacy migration)",
     "status": "completed"
   },
   {
-    "content": "Backend smoke: 26 assertions across signup, login, /me, generate, memory CRUD, Google flow, allowlist, test-login, admin",
+    "content": "Frontend: update Reply screen platform chips + send canonical value",
     "status": "completed"
   },
   {
-    "content": "Frontend smoke: login, reload session, bottom nav, generate, memory CRUD via UI, logout, protected redirect",
+    "content": "Frontend: update Onboarding + Settings platform chips",
     "status": "completed"
   },
   {
-    "content": "Bump bottom nav z-index above Emergent preview badge so Pro/Memory are tappable",
+    "content": "Smoke test: legacy users still load correctly + per-platform Claude prompt produces distinct tones",
     "status": "completed"
   },
   {

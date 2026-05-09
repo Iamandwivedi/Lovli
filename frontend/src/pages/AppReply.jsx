@@ -18,10 +18,14 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/lib/auth';
 import { api, getLocalDateString, getLocalTimezone } from '@/lib/api';
+import {
+  PLATFORM_LABELS,
+  platformLabelFromValue,
+  platformValueFromLabel,
+} from '@/lib/platform';
 import { toast } from 'sonner';
 import { Sparkles, Shield } from 'lucide-react';
 
-const PLATFORMS = ['Instagram', 'Hinge', 'Bumble', 'Tinder', 'WhatsApp', 'Other'];
 const VIBES = ['Playful', 'Flirty', 'Sincere', 'Respectful', 'Confident'];
 const LANGUAGES = ['English', 'Hinglish', 'Hindi + English mixed'];
 
@@ -31,7 +35,9 @@ export default function AppReply() {
   const [image, setImage] = useState(null); // {file, previewUrl} or null
   const [manualText, setManualText] = useState('');
   const [userNote, setUserNote] = useState('');
-  const [platform, setPlatform] = useState(user?.preferred_platform || 'Instagram');
+  const [platformLabel, setPlatformLabel] = useState(
+    platformLabelFromValue(user?.preferred_platform)
+  );
   // Vibe is a per-chat choice (not an account preference). Always start at Playful.
   const [vibe, setVibe] = useState('Playful');
   // Language is per-chat too — defaults to the user's saved preference, but the user
@@ -91,7 +97,7 @@ export default function AppReply() {
     try {
       setGenerating(true);
       const fd = new FormData();
-      fd.append('platform', platform);
+      fd.append('platform', platformValueFromLabel(platformLabel));
       fd.append('vibe', vibe);
       fd.append('language', language);
       fd.append('client_local_date', localDate);
@@ -137,7 +143,7 @@ export default function AppReply() {
     } finally {
       setGenerating(false);
     }
-  }, [image, manualText, usage.plan, remaining, platform, vibe, language, localDate, tz, userNote, memoryCardId, updateUser, user]);
+  }, [image, manualText, usage.plan, remaining, platformLabel, vibe, language, localDate, tz, userNote, memoryCardId, updateUser, user]);
 
   const onRegenerate = useCallback(
     async () => {
@@ -198,9 +204,9 @@ export default function AppReply() {
           <div className="space-y-1.5">
             <p className="text-xs font-medium text-white/70">Platform</p>
             <ChipGroup
-              options={PLATFORMS}
-              value={platform}
-              onChange={setPlatform}
+              options={PLATFORM_LABELS}
+              value={platformLabel}
+              onChange={setPlatformLabel}
               testId="reply-platform-toggle"
               ariaLabel="Platform"
             />

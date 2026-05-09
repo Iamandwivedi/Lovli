@@ -72,12 +72,77 @@ _LANGUAGE_RULES = {
 }
 
 
+_PLATFORM_RULES = {
+    "instagram": (
+        "Instagram DM. Tone: casual, social, friendly, low-effort polish. "
+        "Lowercase-friendly. Emojis are fine but use sparingly (0-1 per reply). "
+        "Sound like a normal Instagram DM, not a marketing message. "
+        "It's okay to riff on something visual (their story / post) if the "
+        "chat hints at it. Avoid being too formal or too forward."
+    ),
+    "dating_platform": (
+        "Dating app (Hinge / Bumble / Tinder / Aisle / etc). Tone: a little "
+        "sharper, confident, and match-app appropriate. Show personality "
+        "WITHOUT oversharing or getting too personal too early. Banter and "
+        "playful curiosity work well. Do NOT ask deep personal questions, "
+        "do NOT propose meeting in the first message unless the chat is "
+        "clearly already there, and never use cheesy pickup lines. Keep it "
+        "interesting enough that the other person actually wants to reply."
+    ),
+    "whatsapp": (
+        "WhatsApp. Tone: personal, warm, natural, conversational. The user "
+        "and the other person already have each other's numbers, so it's "
+        "okay to be more direct, more familiar, and reference shared "
+        "context. Replies can be a bit longer and more genuine here than "
+        "on a dating app. Still respectful, never pushy."
+    ),
+}
+
+
 def _language_directive(language: str) -> str:
     rule = _LANGUAGE_RULES.get(language)
     if rule:
         return f"LANGUAGE (strict): {language}.\n{rule}"
-    # Unknown language label \u2014 default to a sensible Hinglish-ish behavior.
     return f"LANGUAGE (strict): {language}. Write naturally in this language only."
+
+
+_LEGACY_PLATFORM_MAP = {
+    # Backwards-compat for users whose preferred_platform is the old label.
+    "Instagram": "instagram",
+    "WhatsApp": "whatsapp",
+    "Hinge": "dating_platform",
+    "Bumble": "dating_platform",
+    "Tinder": "dating_platform",
+    "Aisle": "dating_platform",
+    "Other": "dating_platform",
+}
+
+
+def _normalize_platform(platform: str) -> str:
+    """Map any legacy value to the canonical (instagram | dating_platform | whatsapp)."""
+    if not platform:
+        return "dating_platform"
+    p = platform.strip()
+    if p in _PLATFORM_RULES:
+        return p
+    if p in _LEGACY_PLATFORM_MAP:
+        return _LEGACY_PLATFORM_MAP[p]
+    return p.lower().replace(" ", "_")
+
+
+_PLATFORM_DISPLAY = {
+    "instagram": "Instagram",
+    "dating_platform": "Dating platform (Hinge / Bumble / Tinder / Aisle / etc.)",
+    "whatsapp": "WhatsApp",
+}
+
+
+def _platform_directive(platform_value: str) -> str:
+    rule = _PLATFORM_RULES.get(platform_value)
+    display = _PLATFORM_DISPLAY.get(platform_value, platform_value)
+    if rule:
+        return f"PLATFORM: {display}.\n{rule}"
+    return f"PLATFORM: {display}."
 
 
 def build_user_prompt(
@@ -90,9 +155,10 @@ def build_user_prompt(
     has_image: bool,
     memory_context: Optional[str] = None,
 ) -> str:
+    platform_value = _normalize_platform(platform)
     parts = [
         "Generate exactly 3 reply options for this chat conversation.",
-        f"Platform: {platform}",
+        _platform_directive(platform_value),
         f"Selected vibe: {vibe}",
         # High-level language directive up-front so Claude internalizes it early.
         _language_directive(language),
@@ -126,10 +192,10 @@ def build_user_prompt(
         "directly sendable but editable, lowercase-friendly, and free of "
         "corporate language."
     )
-    # Final reminder so the language rule is the LAST instruction Claude sees.
     parts.append(
-        f"FINAL REMINDER \u2014 LANGUAGE = {language}. "
-        "All 3 replies MUST follow the language rule above. "
+        f"FINAL REMINDER \u2014 LANGUAGE = {language}, "
+        f"PLATFORM = {_PLATFORM_DISPLAY.get(platform_value, platform_value)}. "
+        "All 3 replies MUST follow the language and platform rules above. "
         "Do not silently switch to a different language even if the chat is "
         "in a different language; the user explicitly chose this output "
         "language."

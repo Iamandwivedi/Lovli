@@ -7,10 +7,14 @@ import { Label } from '@/components/ui/label';
 import ChipGroup from '@/components/ChipGroup';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
+import {
+  PLATFORM_LABELS,
+  platformLabelFromValue,
+  platformValueFromLabel,
+} from '@/lib/platform';
 import { toast } from 'sonner';
 import { LogOut, ShieldOff } from 'lucide-react';
 
-const PLATFORMS = ['Instagram', 'Hinge', 'Bumble', 'Tinder', 'WhatsApp', 'Other'];
 const LANGUAGES = ['English', 'Hinglish', 'Hindi + English mixed'];
 
 export default function Settings() {
@@ -18,7 +22,9 @@ export default function Settings() {
   const { user, updateUser, logout } = useAuth();
 
   const [name, setName] = useState(user?.name || '');
-  const [platform, setPlatform] = useState(user?.preferred_platform || 'Instagram');
+  const [platformLabel, setPlatformLabel] = useState(
+    platformLabelFromValue(user?.preferred_platform)
+  );
   const [language, setLanguage] = useState(user?.language_preference || 'Hinglish');
   const [tz, setTz] = useState(user?.timezone || 'Asia/Kolkata');
   const [saving, setSaving] = useState(false);
@@ -28,7 +34,7 @@ export default function Settings() {
       setSaving(true);
       const { data } = await api.patch('/settings', {
         name,
-        preferred_platform: platform,
+        preferred_platform: platformValueFromLabel(platformLabel),
         language_preference: language,
         timezone: tz,
       });
@@ -89,7 +95,7 @@ export default function Settings() {
           <h2 className="text-sm font-medium text-white/85">Preferences</h2>
           <div className="space-y-1.5">
             <Label className="text-white/80">Preferred platform</Label>
-            <ChipGroup options={PLATFORMS} value={platform} onChange={setPlatform} testId="settings-platform-toggle" ariaLabel="Preferred platform" />
+            <ChipGroup options={PLATFORM_LABELS} value={platformLabel} onChange={setPlatformLabel} testId="settings-platform-toggle" ariaLabel="Preferred platform" />
           </div>
           <div className="space-y-1.5">
             <Label className="text-white/80">Language</Label>

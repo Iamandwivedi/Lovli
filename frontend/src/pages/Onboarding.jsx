@@ -4,15 +4,21 @@ import { Button } from '@/components/ui/button';
 import ChipGroup from '@/components/ChipGroup';
 import { useAuth } from '@/lib/auth';
 import { api, getLocalTimezone } from '@/lib/api';
+import {
+  PLATFORM_LABELS,
+  platformLabelFromValue,
+  platformValueFromLabel,
+} from '@/lib/platform';
 import { toast } from 'sonner';
 
-const PLATFORMS = ['Instagram', 'Hinge', 'Bumble', 'Tinder', 'WhatsApp', 'Other'];
 const LANGUAGES = ['English', 'Hinglish', 'Hindi + English mixed'];
 
 export default function Onboarding() {
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
-  const [platform, setPlatform] = useState(user?.preferred_platform || 'Instagram');
+  const [platformLabel, setPlatformLabel] = useState(
+    platformLabelFromValue(user?.preferred_platform)
+  );
   const [language, setLanguage] = useState(user?.language_preference || 'Hinglish');
   const [submitting, setSubmitting] = useState(false);
 
@@ -22,7 +28,7 @@ export default function Onboarding() {
       const payload = skip
         ? { timezone: getLocalTimezone() }
         : {
-            preferred_platform: platform,
+            preferred_platform: platformValueFromLabel(platformLabel),
             language_preference: language,
             timezone: getLocalTimezone(),
           };
@@ -59,9 +65,9 @@ export default function Onboarding() {
             <h2 className="text-sm font-medium text-white/85">Where do you mostly chat?</h2>
             <div className="mt-3">
               <ChipGroup
-                options={PLATFORMS}
-                value={platform}
-                onChange={setPlatform}
+                options={PLATFORM_LABELS}
+                value={platformLabel}
+                onChange={setPlatformLabel}
                 testId="onboarding-platform-toggle"
                 ariaLabel="Preferred platform"
               />

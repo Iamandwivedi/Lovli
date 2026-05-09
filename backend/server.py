@@ -50,7 +50,12 @@ from auth import (
     hash_password,
     verify_password,
 )
-from llm_service import LovliLlmError, LovliRequest, generate_replies
+from llm_service import (  # noqa: E402
+    LovliLlmError,
+    LovliRequest,
+    _normalize_platform as _normalize_platform_value,
+    generate_replies,
+)
 from models import (
     PLATFORMS,
     VIBES,
@@ -493,10 +498,15 @@ async def generate_replies_endpoint(
     image: Optional[UploadFile] = File(None),
     user_id: str = Depends(get_current_user_id),
 ):
-    if platform not in PLATFORMS:
+    # Accept new canonical values + map any legacy label (Hinge/Bumble/Tinder/Other)
+    # to its canonical form. Reject anything that's still not valid.
+    normalized_platform = _normalize_platform_value(platform)
+    if normalized_platform not in PLATFORMS:
         raise HTTPException(
-            status_code=400, detail=f"Invalid platform. Allowed: {PLATFORMS}"
+            status_code=400,
+            detail=f"Invalid platform. Allowed: {PLATFORMS}",
         )
+    platform = normalized_platform
     if vibe not in VIBES:
         raise HTTPException(status_code=400, detail=f"Invalid vibe. Allowed: {VIBES}")
     if not (manual_text and manual_text.strip()) and image is None:
