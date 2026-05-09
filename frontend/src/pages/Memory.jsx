@@ -248,7 +248,7 @@ function MemoryFormDialog({ open, onOpenChange, initial, onSaved }) {
           <Button
             onClick={submit}
             disabled={submitting}
-            className="lovli-cta text-white"
+            className="lovli-cta"
             data-testid="memory-save-button"
           >
             {submitting ? 'Saving…' : isEdit ? 'Save changes' : 'Save memory'}
@@ -456,7 +456,7 @@ export default function Memory() {
                     setEditing(null);
                     setOpen(true);
                   }}
-                  className="lovli-cta text-white rounded-full min-h-[36px]"
+                  className="lovli-cta rounded-full min-h-[36px]"
                   data-testid="memory-create-button"
                 >
                   <Plus className="mr-1.5 h-3.5 w-3.5" /> Create memory

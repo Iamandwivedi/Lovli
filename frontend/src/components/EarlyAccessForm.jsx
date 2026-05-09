@@ -75,7 +75,7 @@ export default function EarlyAccessForm({
       <Button
         type="submit"
         disabled={submitting}
-        className="w-full lovli-cta text-white min-h-[44px]"
+        className="w-full lovli-cta min-h-[44px]"
         data-testid={`${testIdPrefix}-submit-button`}
       >
         {submitting ? 'Sending…' : 'Get Early Access'}

@@ -117,7 +117,7 @@ export default function Settings() {
               type="button"
               onClick={save}
               disabled={saving}
-              className="w-full lovli-cta text-white min-h-[44px]"
+              className="w-full lovli-cta min-h-[44px]"
               data-testid="settings-save-button"
             >
               {saving ? 'Saving…' : 'Save changes'}

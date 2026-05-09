@@ -267,7 +267,7 @@ export default function AppReply() {
             type="button"
             disabled={generating}
             onClick={doGenerate}
-            className="w-full lovli-cta text-white min-h-[48px] rounded-xl text-sm font-semibold"
+            className="w-full lovli-cta min-h-[48px] rounded-xl text-sm font-semibold"
             data-testid="generate-replies-button"
           >
             <Sparkles className="mr-2 h-4 w-4" />
