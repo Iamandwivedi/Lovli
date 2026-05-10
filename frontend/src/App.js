@@ -90,7 +90,7 @@ export default function App() {
             position="top-center"
             toastOptions={{
               className:
-                'rounded-2xl border border-white/12 bg-[#0B0D1A]/90 backdrop-blur-xl text-white',
+                'rounded-2xl border border-lovli-border bg-lovli-card-2 backdrop-blur-xl text-lovli-text',
             }}
           />
         </AuthProvider>

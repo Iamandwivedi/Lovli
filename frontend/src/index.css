@@ -2,29 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Figtree:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Figtree:wght@400;500;600;700&display=swap');
+
+/*
+ * ============================================================
+ * Lovli — Brand color tokens
+ * Single source of truth. Use via tailwind classes (lovli-*) or
+ * the CSS variables below. Hard-coded magic colors are forbidden.
+ * ============================================================
+ */
+:root {
+    /* Core dark surfaces */
+    --lovli-bg: #050509;
+    --lovli-bg-deep: #090A14;
+    --lovli-card: #11121C;
+    --lovli-card-2: #171827;
+    --lovli-border: #2A2B3A;
+    --lovli-border-strong: #3A3B4D;
+
+    /* Accents */
+    --lovli-lavender: #A78BFA;
+    --lovli-lavender-soft: #C4B5FD;
+    --lovli-violet: #8B5CF6;
+    --lovli-sky: #38BDF8;
+    --lovli-sky-soft: #60A5FA;
+
+    /* Text */
+    --lovli-text: #F8FAFC;
+    --lovli-text-soft: #E5E7EB;
+    --lovli-text-muted: #A1A1AA;
+    --lovli-text-faint: #71717A;
+}
 
 html,
 body,
 #root {
     margin: 0;
-    background-color: #070812;
-    color: rgba(255, 255, 255, 0.92);
+    background-color: var(--lovli-bg);
+    color: var(--lovli-text);
     font-family:
-        'Figtree', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+        'Figtree', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
         Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100%;
+    text-rendering: optimizeLegibility;
 }
 
 h1,
 h2,
 h3,
 .font-display {
-    font-family: 'Space Grotesk', 'Figtree', ui-sans-serif, system-ui,
-        sans-serif;
-    letter-spacing: -0.01em;
+    font-family: 'Space Grotesk', 'Figtree', ui-sans-serif, sans-serif;
+    letter-spacing: -0.012em;
+    color: var(--lovli-text);
+}
+
+p {
+    color: var(--lovli-text-soft);
 }
 
 code {
@@ -32,6 +67,12 @@ code {
         monospace;
 }
 
+::selection {
+    background: rgba(167, 139, 250, 0.32);
+    color: var(--lovli-text);
+}
+
+/* Cleaner, calmer scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -40,92 +81,87 @@ code {
     background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(167, 139, 250, 0.16);
     border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.16);
-}
-
-@keyframes lovli-shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+    background: rgba(167, 139, 250, 0.28);
 }
 
 @keyframes lovli-pulse {
-    0%, 100% { opacity: 0.35; }
+    0%, 100% { opacity: 0.32; }
     50% { opacity: 1; }
 }
 
+/*
+ * Subtle ambient backdrop glow.
+ * Calmer than before — top of viewport gets a soft lavender wash,
+ * lower-left a faint sky glow. No harsh purple/pink combos.
+ */
 .lovli-noise {
     background-image:
         radial-gradient(
-            1200px 600px at 50% -10%,
-            rgba(99, 102, 241, 0.18),
+            900px 480px at 50% -8%,
+            rgba(167, 139, 250, 0.10),
             transparent 60%
         ),
         radial-gradient(
-            900px 500px at 10% 20%,
-            rgba(168, 85, 247, 0.14),
-            transparent 55%
-        ),
-        radial-gradient(
-            900px 500px at 90% 30%,
-            rgba(56, 189, 248, 0.1),
-            transparent 55%
+            720px 420px at 12% 110%,
+            rgba(56, 189, 248, 0.06),
+            transparent 60%
         );
 }
 
 @layer base {
     :root {
-        --background: 232 55% 5%;
-        --foreground: 0 0% 98%;
-        --card: 232 45% 8%;
-        --card-foreground: 0 0% 98%;
-        --popover: 232 45% 8%;
-        --popover-foreground: 0 0% 98%;
-        --primary: 252 92% 70%;
-        --primary-foreground: 232 55% 8%;
-        --secondary: 232 28% 14%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 232 22% 14%;
-        --muted-foreground: 0 0% 70%;
-        --accent: 232 28% 14%;
-        --accent-foreground: 0 0% 98%;
-        --destructive: 346 84% 62%;
+        --background: 240 33% 4%;
+        --foreground: 210 20% 98%;
+        --card: 233 25% 9%;
+        --card-foreground: 210 20% 98%;
+        --popover: 233 25% 9%;
+        --popover-foreground: 210 20% 98%;
+        --primary: 252 95% 76%;
+        --primary-foreground: 240 33% 5%;
+        --secondary: 233 22% 14%;
+        --secondary-foreground: 210 20% 98%;
+        --muted: 233 22% 14%;
+        --muted-foreground: 240 5% 65%;
+        --accent: 233 22% 14%;
+        --accent-foreground: 210 20% 98%;
+        --destructive: 0 72% 60%;
         --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 100%;
-        --input: 0 0% 100%;
-        --ring: 244 92% 70%;
+        --border: 234 15% 20%;
+        --input: 234 15% 20%;
+        --ring: 252 95% 76%;
         --radius: 1rem;
     }
 
     .dark {
-        --background: 232 55% 5%;
-        --foreground: 0 0% 98%;
-        --card: 232 45% 8%;
-        --card-foreground: 0 0% 98%;
-        --popover: 232 45% 8%;
-        --popover-foreground: 0 0% 98%;
-        --primary: 252 92% 70%;
-        --primary-foreground: 232 55% 8%;
-        --secondary: 232 28% 14%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 232 22% 14%;
-        --muted-foreground: 0 0% 70%;
-        --accent: 232 28% 14%;
-        --accent-foreground: 0 0% 98%;
-        --destructive: 346 84% 62%;
+        --background: 240 33% 4%;
+        --foreground: 210 20% 98%;
+        --card: 233 25% 9%;
+        --card-foreground: 210 20% 98%;
+        --popover: 233 25% 9%;
+        --popover-foreground: 210 20% 98%;
+        --primary: 252 95% 76%;
+        --primary-foreground: 240 33% 5%;
+        --secondary: 233 22% 14%;
+        --secondary-foreground: 210 20% 98%;
+        --muted: 233 22% 14%;
+        --muted-foreground: 240 5% 65%;
+        --accent: 233 22% 14%;
+        --accent-foreground: 210 20% 98%;
+        --destructive: 0 72% 60%;
         --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 100%;
-        --input: 0 0% 100%;
-        --ring: 244 92% 70%;
+        --border: 234 15% 20%;
+        --input: 234 15% 20%;
+        --ring: 252 95% 76%;
     }
 }
 
 @layer base {
     * {
-        border-color: hsl(var(--border) / 0.1);
+        border-color: hsl(var(--border));
     }
     body {
         @apply bg-background text-foreground;
@@ -145,61 +181,124 @@ code {
 }
 
 /*
- * Premium primary CTA — clean white pill, no gradient.
- * Uses subtle violet glow halo on shadow to keep brand cohesion on the dark UI.
- * Higher specificity (#root scope) so it wins over any utility classes like text-white.
+ * --------------------------------------------------------------
+ * Premium primary CTA — clean white pill with subtle lavender glow.
+ * Apple-like clarity: no gradients, calm transitions, soft lift.
+ * --------------------------------------------------------------
  */
 #root .lovli-cta,
 .lovli-cta {
     background-image: none;
-    background-color: #ffffff;
-    color: #0B0D1A;
-    border: 1px solid rgba(255, 255, 255, 0);
+    background-color: #FFFFFF;
+    color: var(--lovli-bg);
+    border: 1px solid #E5E7EB;
     box-shadow:
-        0 10px 30px rgba(99, 102, 241, 0.18),
-        0 0 0 1px rgba(255, 255, 255, 0.06);
+        0 12px 32px rgba(167, 139, 250, 0.22),
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset;
     transition:
-        background-color 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
-        box-shadow 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
-        transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+        background-color 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        border-color 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: transform, box-shadow;
 }
 #root .lovli-cta:hover:not(:disabled),
 .lovli-cta:hover:not(:disabled) {
-    background-color: #f3f4f8;
+    background-color: #FFFFFF;
+    border-color: #FFFFFF;
     box-shadow:
-        0 14px 38px rgba(99, 102, 241, 0.28),
-        0 0 0 1px rgba(255, 255, 255, 0.12);
+        0 16px 40px rgba(167, 139, 250, 0.35),
+        0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+    transform: translateY(-1px);
+}
+#root .lovli-cta:focus-visible,
+.lovli-cta:focus-visible {
+    outline: none;
+    box-shadow:
+        0 12px 32px rgba(167, 139, 250, 0.22),
+        0 0 0 2px rgba(167, 139, 250, 0.55);
 }
 #root .lovli-cta:active:not(:disabled),
 .lovli-cta:active:not(:disabled) {
     transform: scale(0.985);
+    box-shadow: 0 8px 22px rgba(167, 139, 250, 0.20);
 }
 #root .lovli-cta:disabled,
 .lovli-cta:disabled {
-    background-color: rgba(255, 255, 255, 0.7);
-    color: rgba(11, 13, 26, 0.7);
+    background-color: rgba(255, 255, 255, 0.78);
+    color: rgba(5, 5, 9, 0.55);
+    border-color: rgba(229, 231, 235, 0.5);
     cursor: not-allowed;
+    box-shadow: none;
 }
 
-/* Glass utility */
+/*
+ * --------------------------------------------------------------
+ * Glass surface — used for cards, modals, the bottom nav, etc.
+ * Sits on the deep midnight base. Subtle, premium, NOT frosted.
+ * --------------------------------------------------------------
+ */
 .lovli-glass {
-    background-color: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+    background-color: rgba(23, 24, 39, 0.78); /* #171827 @ ~78% */
+    border: 1px solid var(--lovli-border);
+    backdrop-filter: blur(14px) saturate(1.05);
+    -webkit-backdrop-filter: blur(14px) saturate(1.05);
+    box-shadow:
+        0 16px 48px rgba(0, 0, 0, 0.55),
+        0 1px 0 rgba(255, 255, 255, 0.03) inset;
 }
 
+/* Solid card for non-glass surfaces (lists, inputs). */
+.lovli-card {
+    background-color: var(--lovli-card);
+    border: 1px solid var(--lovli-border);
+}
+
+/*
+ * Selected chip — subtle dark fill, lavender border + soft glow.
+ * Avoids heavy gradients per brand direction.
+ */
 .lovli-chip-active {
-    background-image: linear-gradient(
-        90deg,
-        rgba(168, 85, 247, 0.22) 0%,
-        rgba(99, 102, 241, 0.18) 45%,
-        rgba(56, 189, 248, 0.14) 100%
-    );
-    border-color: rgba(99, 102, 241, 0.45);
+    background-color: rgba(167, 139, 250, 0.10);
+    border-color: rgba(167, 139, 250, 0.55);
     box-shadow:
-        0 0 0 1px rgba(99, 102, 241, 0.25),
-        0 10px 30px rgba(99, 102, 241, 0.12);
-    color: white;
+        0 0 0 1px rgba(167, 139, 250, 0.18),
+        0 6px 18px rgba(167, 139, 250, 0.18);
+    color: var(--lovli-text);
+}
+
+/* Soft, readable focus ring for inputs/textareas/selects. */
+.lovli-focusable:focus-visible,
+.lovli-focusable:focus-within {
+    outline: none;
+    border-color: rgba(167, 139, 250, 0.55);
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.18);
+}
+
+/* Tiny accent gradient — reserved for small accents only (icon dots, hairlines). */
+.lovli-accent-gradient {
+    background-image: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 45%, #38BDF8 100%);
+}
+
+/*
+ * Shadcn input/textarea overrides.
+ * Make all inputs use the new dark card surface + #2A2B3A border
+ * with lavender focus ring out of the box.
+ */
+input,
+textarea,
+select,
+button[role="combobox"] {
+    transition:
+        background-color 160ms ease,
+        border-color 160ms ease,
+        box-shadow 160ms ease;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+button[role="combobox"]:focus-visible {
+    outline: none;
+    border-color: rgba(167, 139, 250, 0.55) !important;
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.18) !important;
 }

@@ -69,11 +69,11 @@ export default function ReplyResultCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, delay: index * 0.06, ease: [0.2, 0.8, 0.2, 1] }}
-      className="rounded-2xl border border-white/10 bg-white/[0.06] backdrop-blur-xl p-4 shadow-[0_18px_60px_rgba(0,0,0,0.55)]"
+      className="rounded-2xl border border-lovli-border bg-lovli-card-2/80 backdrop-blur-xl p-5 shadow-[0_16px_48px_rgba(0,0,0,0.55)]"
       data-testid="reply-result-card"
     >
       <div className="flex items-center justify-between">
-        <span className="inline-flex items-center rounded-full border border-white/12 bg-white/[0.06] px-2.5 py-1 text-[11px] text-white/75">
+        <span className="inline-flex items-center rounded-full border border-lovli-border bg-lovli-card px-2.5 py-1 text-[11px] text-lovli-text-soft/85">
           {vibe} · Option {index + 1}
         </span>
         {onSaveToMemory && (
@@ -81,7 +81,7 @@ export default function ReplyResultCard({
             type="button"
             onClick={() => onSaveToMemory(reply)}
             aria-label="Save to memory"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white/75 hover:bg-white/[0.08] hover:text-white"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-lovli-border bg-lovli-card text-lovli-text-soft hover:bg-lovli-card-2 hover:text-lovli-text transition-colors"
             data-testid="reply-save-button"
           >
             <Bookmark className="h-3.5 w-3.5" />
@@ -89,7 +89,10 @@ export default function ReplyResultCard({
         )}
       </div>
 
-      <p className="mt-3 whitespace-pre-wrap text-[15px] leading-relaxed text-white/92" data-testid="reply-result-text">
+      <p
+        className="mt-3 whitespace-pre-wrap text-[15px] leading-relaxed text-lovli-text"
+        data-testid="reply-result-text"
+      >
         {reply}
       </p>
 
@@ -98,7 +101,7 @@ export default function ReplyResultCard({
           type="button"
           onClick={onCopy}
           size="sm"
-          className="min-h-[36px] rounded-full bg-white text-[#0B0D1A] hover:bg-white/90"
+          className="min-h-[36px] rounded-full lovli-cta px-4"
           data-testid="reply-copy-button"
         >
           <Copy className="mr-1.5 h-3.5 w-3.5" />
@@ -111,7 +114,7 @@ export default function ReplyResultCard({
             onClick={onRegenerate}
             size="sm"
             variant="ghost"
-            className="min-h-[36px] rounded-full border border-white/10 bg-white/[0.04] text-white/85 hover:bg-white/[0.08]"
+            className="min-h-[36px] rounded-full border border-lovli-border bg-lovli-card text-lovli-text-soft hover:bg-lovli-card-2 hover:text-lovli-text"
             data-testid="reply-regenerate-button"
           >
             <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
@@ -125,7 +128,7 @@ export default function ReplyResultCard({
               type="button"
               size="sm"
               variant="ghost"
-              className="min-h-[36px] rounded-full border border-white/10 bg-white/[0.04] text-white/85 hover:bg-white/[0.08]"
+              className="min-h-[36px] rounded-full border border-lovli-border bg-lovli-card text-lovli-text-soft hover:bg-lovli-card-2 hover:text-lovli-text"
               data-testid="reply-feedback-button"
               disabled={feedbackSent}
             >
@@ -135,7 +138,7 @@ export default function ReplyResultCard({
           </PopoverTrigger>
           <PopoverContent
             align="start"
-            className="w-56 rounded-2xl border-white/12 bg-[#0B0D1A]/90 backdrop-blur-2xl text-white"
+            className="w-56 rounded-2xl border-lovli-border bg-lovli-card-2 backdrop-blur-2xl text-lovli-text"
             data-testid="reply-feedback-popover"
           >
             <div className="flex flex-col gap-1.5">
@@ -144,7 +147,7 @@ export default function ReplyResultCard({
                   key={f}
                   type="button"
                   onClick={() => sendFeedback(f)}
-                  className="text-left text-sm rounded-lg px-2.5 py-1.5 hover:bg-white/[0.08]"
+                  className="text-left text-sm rounded-lg px-2.5 py-1.5 hover:bg-lovli-card transition-colors"
                   data-testid={`reply-feedback-option-${f.toLowerCase().replace(/\s+/g, '-')}`}
                 >
                   {f}

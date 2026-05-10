@@ -21,20 +21,20 @@ export default function LoadingState({ subtle = false, className = '' }) {
     >
       <div className="flex items-center gap-1.5" aria-hidden="true">
         <span
-          className="h-2 w-2 rounded-full bg-violet-400"
+          className="h-2 w-2 rounded-full bg-lovli-lavender"
           style={{ animation: 'lovli-pulse 1.2s ease-in-out infinite' }}
         />
         <span
-          className="h-2 w-2 rounded-full bg-indigo-400"
+          className="h-2 w-2 rounded-full bg-lovli-violet"
           style={{ animation: 'lovli-pulse 1.2s ease-in-out 0.15s infinite' }}
         />
         <span
-          className="h-2 w-2 rounded-full bg-sky-400"
+          className="h-2 w-2 rounded-full bg-lovli-sky"
           style={{ animation: 'lovli-pulse 1.2s ease-in-out 0.3s infinite' }}
         />
       </div>
       {!subtle && (
-        <p className="text-sm text-white/70" data-testid="loading-state-message">
+        <p className="text-sm text-lovli-text-muted" data-testid="loading-state-message">
           {MESSAGES[i]}
         </p>
       )}

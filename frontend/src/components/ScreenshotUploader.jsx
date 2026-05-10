@@ -40,7 +40,7 @@ export default function ScreenshotUploader({ value, onChange }) {
   if (value?.previewUrl) {
     return (
       <div
-        className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04]"
+        className="relative overflow-hidden rounded-2xl border border-lovli-border bg-lovli-card"
         data-testid="reply-screenshot-preview"
       >
         <img
@@ -52,7 +52,7 @@ export default function ScreenshotUploader({ value, onChange }) {
           type="button"
           onClick={() => onChange?.(null)}
           aria-label="Remove image"
-          className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/12 bg-black/55 text-white/90 hover:bg-black/70"
+          className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full border border-lovli-border bg-lovli-bg/80 text-lovli-text-soft hover:bg-lovli-bg hover:text-lovli-text transition-colors"
           data-testid="reply-screenshot-remove-button"
         >
           <X className="h-4 w-4" />
@@ -73,19 +73,19 @@ export default function ScreenshotUploader({ value, onChange }) {
         onDragLeave={() => setDrag(false)}
         onDrop={onDrop}
         data-testid="reply-screenshot-uploader"
-        className={`flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-6 text-center transition-colors ${
+        className={`flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-7 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lovli-lavender/55 ${
           drag
-            ? 'border-indigo-300/40 bg-indigo-400/[0.08]'
-            : 'border-white/14 bg-white/[0.03] hover:bg-white/[0.05]'
+            ? 'border-lovli-lavender/55 bg-lovli-lavender/8'
+            : 'border-lovli-border bg-lovli-card hover:bg-lovli-card-2 hover:border-lovli-border-strong'
         }`}
       >
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06]">
-          <Upload className="h-4 w-4 text-white/80" />
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-lovli-border bg-lovli-card-2">
+          <Upload className="h-4 w-4 text-lovli-lavender" />
         </span>
-        <span className="text-sm text-white/85 font-medium">
+        <span className="text-sm text-lovli-text font-medium">
           Tap to upload chat screenshot
         </span>
-        <span className="text-xs text-white/55">JPG, PNG, or WEBP — up to 6MB</span>
+        <span className="text-xs text-lovli-text-muted">JPG, PNG, or WEBP — up to 6MB</span>
         <input
           ref={inputRef}
           type="file"
@@ -100,7 +100,7 @@ export default function ScreenshotUploader({ value, onChange }) {
           {error}
         </p>
       )}
-      <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-white/55">
+      <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-lovli-text-muted">
         <ImageIcon className="h-3 w-3" /> Only upload chats you’re comfortable sharing with Lovli.
       </p>
     </div>

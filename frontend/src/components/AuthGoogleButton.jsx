@@ -88,7 +88,7 @@ export default function AuthGoogleButton({
       onClick={onClick}
       disabled={disabled}
       data-testid={testId}
-      className={`w-full min-h-[44px] rounded-xl border border-white/12 bg-white/[0.06] text-white/90 hover:bg-white/[0.08] disabled:opacity-60 disabled:cursor-not-allowed`}
+      className="w-full min-h-[44px] rounded-full border border-lovli-border bg-lovli-card text-lovli-text hover:bg-lovli-card-2 hover:border-lovli-border-strong disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
       title={
         config && !config.enabled
           ? 'Google sign-in will be enabled once credentials are added.'

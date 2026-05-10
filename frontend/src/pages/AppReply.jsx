@@ -156,23 +156,26 @@ export default function AppReply() {
     [doGenerate, usage.plan, remaining]
   );
 
+  const inputClass =
+    'bg-lovli-card border-lovli-border text-lovli-text placeholder:text-lovli-text-faint';
+
   return (
     <AppShell>
       <div data-testid="reply-page">
-        <div className="mt-2">
-          <h1 className="font-display text-2xl font-semibold text-white">
+        <div className="mt-1">
+          <h1 className="font-display text-[26px] font-semibold leading-tight text-lovli-text">
             Stuck on what to reply?
           </h1>
-          <p className="mt-1 text-sm text-white/65">
+          <p className="mt-1.5 text-[14px] leading-relaxed text-lovli-text-muted">
             Upload the chat, choose your vibe, and get 3 natural replies.
           </p>
         </div>
 
-        <section className="mt-4 lovli-glass rounded-2xl p-4 space-y-4">
+        <section className="mt-5 lovli-glass rounded-2xl p-4 sm:p-5 space-y-5">
           <ScreenshotUploader value={image} onChange={setImage} />
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-white/70" htmlFor="paste-textarea">
+            <label className="text-[12px] font-medium text-lovli-text-soft" htmlFor="paste-textarea">
               Or paste chat manually
             </label>
             <Textarea
@@ -182,12 +185,12 @@ export default function AppReply() {
               placeholder="Paste the chat or explain the situation…"
               rows={4}
               data-testid="reply-paste-textarea"
-              className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/40"
+              className={inputClass}
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-white/70" htmlFor="note-textarea">
+            <label className="text-[12px] font-medium text-lovli-text-soft" htmlFor="note-textarea">
               Add a quick note (optional)
             </label>
             <Textarea
@@ -197,12 +200,12 @@ export default function AppReply() {
               placeholder="e.g. keep it light, not nervous; we matched yesterday"
               rows={2}
               data-testid="reply-note-textarea"
-              className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/40"
+              className={inputClass}
             />
           </div>
 
-          <div className="space-y-1.5">
-            <p className="text-xs font-medium text-white/70">Platform</p>
+          <div className="space-y-2">
+            <p className="text-[12px] font-medium text-lovli-text-soft">Platform</p>
             <ChipGroup
               options={PLATFORM_LABELS}
               value={platformLabel}
@@ -212,8 +215,8 @@ export default function AppReply() {
             />
           </div>
 
-          <div className="space-y-1.5">
-            <p className="text-xs font-medium text-white/70">Vibe</p>
+          <div className="space-y-2">
+            <p className="text-[12px] font-medium text-lovli-text-soft">Vibe</p>
             <ChipGroup
               options={VIBES}
               value={vibe}
@@ -223,8 +226,8 @@ export default function AppReply() {
             />
           </div>
 
-          <div className="space-y-1.5">
-            <p className="text-xs font-medium text-white/70">Reply language</p>
+          <div className="space-y-2">
+            <p className="text-[12px] font-medium text-lovli-text-soft">Reply language</p>
             <ChipGroup
               options={LANGUAGES}
               value={language}
@@ -236,15 +239,17 @@ export default function AppReply() {
 
           {memoryCards.length > 0 && (
             <div className="space-y-1.5">
-              <p className="text-xs font-medium text-white/70">Personalize with a memory card (optional)</p>
+              <p className="text-[12px] font-medium text-lovli-text-soft">
+                Personalize with a memory card (optional)
+              </p>
               <Select value={memoryCardId || 'none'} onValueChange={(v) => setMemoryCardId(v === 'none' ? '' : v)}>
                 <SelectTrigger
                   data-testid="reply-memory-select"
-                  className="bg-white/[0.04] border-white/10 text-white"
+                  className="bg-lovli-card border-lovli-border text-lovli-text"
                 >
                   <SelectValue placeholder="None" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0B0D1A] border-white/12 text-white">
+                <SelectContent className="bg-lovli-card-2 border-lovli-border text-lovli-text">
                   <SelectItem value="none">None</SelectItem>
                   {memoryCards.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
@@ -258,7 +263,7 @@ export default function AppReply() {
 
           <div className="flex items-center justify-between gap-3 pt-1">
             <UsageCounter used={usage.daily_generation_count} limit={usage.daily_limit} plan={usage.plan} />
-            <span className="inline-flex items-center gap-1 text-[11px] text-white/50">
+            <span className="inline-flex items-center gap-1 text-[11px] text-lovli-text-muted">
               <Shield className="h-3 w-3" /> Private
             </span>
           </div>
@@ -267,7 +272,7 @@ export default function AppReply() {
             type="button"
             disabled={generating}
             onClick={doGenerate}
-            className="w-full lovli-cta min-h-[48px] rounded-xl text-sm font-semibold"
+            className="w-full lovli-cta min-h-[50px] rounded-full text-[15px] font-semibold"
             data-testid="generate-replies-button"
           >
             <Sparkles className="mr-2 h-4 w-4" />
@@ -275,7 +280,7 @@ export default function AppReply() {
           </Button>
         </section>
 
-        <div ref={resultsAnchor} className="mt-5" />
+        <div ref={resultsAnchor} className="mt-6" />
 
         <AnimatePresence mode="wait">
           {generating && (
@@ -285,7 +290,7 @@ export default function AppReply() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.22 }}
-              className="lovli-glass rounded-2xl p-6"
+              className="lovli-glass rounded-2xl p-7"
             >
               <LoadingState />
             </motion.div>
@@ -302,7 +307,7 @@ export default function AppReply() {
               data-testid="reply-results"
             >
               {results.tone_notes && (
-                <div className="text-xs text-white/55" data-testid="reply-tone-notes">
+                <div className="text-xs text-lovli-text-muted" data-testid="reply-tone-notes">
                   Tone: {results.tone_notes}
                 </div>
               )}
@@ -325,14 +330,14 @@ export default function AppReply() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.2 }}
-              className="lovli-glass rounded-2xl p-5 text-center"
+              className="lovli-glass rounded-2xl p-6 text-center"
               data-testid="reply-empty-state"
             >
-              <div className="mx-auto mb-2 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04]">
-                <Sparkles className="h-4 w-4 text-white/85" />
+              <div className="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-full border border-lovli-lavender/35 bg-lovli-lavender/10">
+                <Sparkles className="h-4 w-4 text-lovli-lavender" />
               </div>
-              <p className="text-sm text-white/85">Upload a chat screenshot to get started.</p>
-              <p className="mt-1 text-[12px] text-white/50">
+              <p className="text-[14px] text-lovli-text">Upload a chat screenshot to get started.</p>
+              <p className="mt-1 text-[12px] text-lovli-text-muted">
                 Lovli reads the vibe and gives you 3 natural reply options.
               </p>
             </motion.div>

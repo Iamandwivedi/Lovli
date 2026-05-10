@@ -70,7 +70,7 @@ export default function AuthCallback() {
   }, [exchangeGoogleCode, navigate, params]);
 
   return (
-    <div className="min-h-screen lovli-noise flex items-center justify-center px-6">
+    <div className="min-h-screen lovli-noise bg-lovli-bg flex items-center justify-center px-6">
       <LoadingState />
     </div>
   );

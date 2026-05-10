@@ -38,19 +38,19 @@ export default function UpgradeModal({ open, onClose, user }) {
     <Dialog open={open} onOpenChange={(v) => !v && onClose?.()}>
       <DialogContent
         data-testid="upgrade-modal"
-        className="max-w-md rounded-2xl border-white/12 bg-[#0B0D1A]/85 backdrop-blur-2xl shadow-[0_18px_60px_rgba(0,0,0,0.65)]"
+        className="max-w-md rounded-2xl border-lovli-border bg-lovli-card-2/95 backdrop-blur-2xl shadow-[0_18px_60px_rgba(0,0,0,0.65)]"
       >
         <DialogHeader>
           <div className="flex items-center gap-2">
             <LovliMark size={32} />
-            <DialogTitle className="text-white">
+            <DialogTitle className="text-lovli-text">
               You’ve used today’s free replies.
             </DialogTitle>
           </div>
         </DialogHeader>
         {!done ? (
           <form onSubmit={submit} className="space-y-3">
-            <p className="text-sm text-white/70">
+            <p className="text-sm text-lovli-text-muted">
               Upgrade to Pro for unlimited generations and Real Indian Wingman guidance. Drop
               your email and we’ll let you in early.
             </p>
@@ -60,13 +60,13 @@ export default function UpgradeModal({ open, onClose, user }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               data-testid="upgrade-modal-email-input"
-              className="bg-white/[0.06] border-white/12 text-white placeholder:text-white/40"
+              className="bg-lovli-card border-lovli-border text-lovli-text placeholder:text-lovli-text-faint h-11"
             />
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button
                 type="submit"
                 disabled={submitting}
-                className="w-full lovli-cta min-h-[44px]"
+                className="w-full lovli-cta min-h-[44px] rounded-full"
                 data-testid="upgrade-modal-cta-button"
               >
                 {submitting ? 'Sending…' : 'Get Early Access'}
@@ -76,7 +76,7 @@ export default function UpgradeModal({ open, onClose, user }) {
                 variant="ghost"
                 onClick={onClose}
                 data-testid="upgrade-modal-dismiss-button"
-                className="w-full text-white/80 hover:bg-white/[0.06] min-h-[44px]"
+                className="w-full text-lovli-text-soft hover:bg-lovli-card hover:text-lovli-text min-h-[44px] rounded-full"
               >
                 Come back tomorrow
               </Button>
@@ -84,13 +84,13 @@ export default function UpgradeModal({ open, onClose, user }) {
           </form>
         ) : (
           <div className="space-y-3">
-            <p className="text-sm text-white/85">
+            <p className="text-sm text-lovli-text">
               You’re on the Pro early access list. We’ll email you when it opens.
             </p>
             <Button
               type="button"
               onClick={onClose}
-              className="w-full lovli-cta min-h-[44px]"
+              className="w-full lovli-cta min-h-[44px] rounded-full"
               data-testid="upgrade-modal-close-button"
             >
               Done

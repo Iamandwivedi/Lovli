@@ -44,7 +44,7 @@ export default function EarlyAccessForm({
   if (done) {
     return (
       <div
-        className="rounded-2xl border border-emerald-300/20 bg-emerald-400/[0.08] p-4 text-emerald-100 text-sm"
+        className="rounded-2xl border border-lovli-lavender/35 bg-lovli-lavender/8 p-4 text-lovli-text-soft text-sm"
         data-testid={`${testIdPrefix}-success`}
       >
         {successMessage || 'You’re on the list.'}
@@ -60,7 +60,7 @@ export default function EarlyAccessForm({
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         data-testid={`${testIdPrefix}-email-input`}
-        className="bg-white/[0.06] border-white/12 text-white placeholder:text-white/40"
+        className="bg-lovli-card border-lovli-border text-lovli-text placeholder:text-lovli-text-faint h-11"
       />
       {question && (
         <Textarea
@@ -69,13 +69,13 @@ export default function EarlyAccessForm({
           placeholder={question}
           rows={3}
           data-testid={`${testIdPrefix}-help-textarea`}
-          className="bg-white/[0.06] border-white/12 text-white placeholder:text-white/40"
+          className="bg-lovli-card border-lovli-border text-lovli-text placeholder:text-lovli-text-faint"
         />
       )}
       <Button
         type="submit"
         disabled={submitting}
-        className="w-full lovli-cta min-h-[44px]"
+        className="w-full lovli-cta min-h-[44px] rounded-full"
         data-testid={`${testIdPrefix}-submit-button`}
       >
         {submitting ? 'Sending…' : 'Get Early Access'}

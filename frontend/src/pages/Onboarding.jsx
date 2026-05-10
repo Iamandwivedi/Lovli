@@ -43,26 +43,30 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen lovli-noise flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen lovli-noise bg-lovli-bg flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md" data-testid="onboarding-page">
         <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl font-semibold text-white">A few quick basics</h1>
+          <h1 className="font-display text-[22px] font-semibold text-lovli-text">
+            A few quick basics
+          </h1>
           <button
             type="button"
             onClick={() => finish(true)}
-            className="text-sm text-white/60 hover:text-white"
+            className="text-sm text-lovli-text-muted hover:text-lovli-text transition-colors"
             data-testid="onboarding-skip-button"
           >
             Skip
           </button>
         </div>
-        <p className="mt-1 text-sm text-white/65">
+        <p className="mt-1.5 text-[14px] text-lovli-text-muted">
           Helps Lovli understand where you chat and how you talk. You can change this later.
         </p>
 
-        <div className="mt-5 space-y-5">
-          <section className="lovli-glass rounded-2xl p-4">
-            <h2 className="text-sm font-medium text-white/85">Where do you mostly chat?</h2>
+        <div className="mt-6 space-y-5">
+          <section className="lovli-glass rounded-2xl p-5">
+            <h2 className="text-[13px] font-medium text-lovli-text-soft">
+              Where do you mostly chat?
+            </h2>
             <div className="mt-3">
               <ChipGroup
                 options={PLATFORM_LABELS}
@@ -74,8 +78,8 @@ export default function Onboarding() {
             </div>
           </section>
 
-          <section className="lovli-glass rounded-2xl p-4">
-            <h2 className="text-sm font-medium text-white/85">Language</h2>
+          <section className="lovli-glass rounded-2xl p-5">
+            <h2 className="text-[13px] font-medium text-lovli-text-soft">Language</h2>
             <div className="mt-3">
               <ChipGroup
                 options={LANGUAGES}
@@ -91,7 +95,7 @@ export default function Onboarding() {
             type="button"
             onClick={() => finish(false)}
             disabled={submitting}
-            className="w-full lovli-cta min-h-[48px]"
+            className="w-full lovli-cta min-h-[50px] rounded-full"
             data-testid="onboarding-continue-button"
           >
             {submitting ? 'Saving…' : 'Continue'}

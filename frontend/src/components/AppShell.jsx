@@ -4,18 +4,22 @@ import BottomNav from '@/components/BottomNav';
 
 export default function AppShell({ children, hideNav = false }) {
   return (
-    <div className="relative min-h-screen lovli-noise" data-testid="app-shell">
+    <div
+      className="relative min-h-screen lovli-noise bg-lovli-bg"
+      data-testid="app-shell"
+    >
       <div
         className="mx-auto w-full max-w-[480px] px-4 sm:max-w-[520px] md:max-w-[560px]"
         style={{
-          // Bottom padding clears the floating bottom nav (~64px tall)
-          // plus its safe-area gutter on iPhone Safari.
+          // Generous bottom padding so content always scrolls cleanly
+          // above the floating bottom nav (~64px tall + 14px gutter
+          // + safe-area inset on iPhone).
           paddingBottom:
-            'calc(140px + env(safe-area-inset-bottom))',
+            'calc(168px + env(safe-area-inset-bottom))',
         }}
       >
         <TopHeader />
-        <main className="mt-3">{children}</main>
+        <main className="mt-4">{children}</main>
       </div>
       {!hideNav && <BottomNav />}
     </div>
