@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, ShieldCheck } from 'lucide-react';
 
 const ACCEPT = 'image/jpeg,image/jpg,image/png,image/webp';
 
@@ -73,19 +73,21 @@ export default function ScreenshotUploader({ value, onChange }) {
         onDragLeave={() => setDrag(false)}
         onDrop={onDrop}
         data-testid="reply-screenshot-uploader"
-        className={`flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-7 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lovli-lavender/55 ${
+        className={`group flex w-full flex-col items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed px-4 py-8 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lovli-lavender/55 ${
           drag
             ? 'border-lovli-lavender/55 bg-lovli-lavender/8'
-            : 'border-lovli-border bg-lovli-card hover:bg-lovli-card-2 hover:border-lovli-border-strong'
+            : 'border-lovli-border bg-lovli-card hover:bg-lovli-card-2 hover:border-lovli-lavender/40'
         }`}
       >
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-lovli-border bg-lovli-card-2">
+        <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-lovli-lavender/30 bg-lovli-lavender/10 transition-transform group-hover:scale-[1.03]">
           <Upload className="h-4 w-4 text-lovli-lavender" />
         </span>
-        <span className="text-sm text-lovli-text font-medium">
-          Tap to upload chat screenshot
+        <span className="text-[15px] text-lovli-text font-semibold">
+          Upload chat screenshot
         </span>
-        <span className="text-xs text-lovli-text-muted">JPG, PNG, or WEBP — up to 6MB</span>
+        <span className="text-xs text-lovli-text-muted">
+          Instagram, Dating platform, or WhatsApp
+        </span>
         <input
           ref={inputRef}
           type="file"
@@ -101,7 +103,7 @@ export default function ScreenshotUploader({ value, onChange }) {
         </p>
       )}
       <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-lovli-text-muted">
-        <ImageIcon className="h-3 w-3" /> Only upload chats you’re comfortable sharing with Lovli.
+        <ShieldCheck className="h-3 w-3" /> Only upload chats you’re comfortable sharing.
       </p>
     </div>
   );
