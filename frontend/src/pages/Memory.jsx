@@ -541,7 +541,7 @@ export default function Memory() {
         {/* Memories list */}
         <section>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-display text-[15px] font-semibold text-lovli-text">
+            <h2 className="font-display text-[16px] font-semibold text-lovli-text">
               Your memories
             </h2>
             <Dialog

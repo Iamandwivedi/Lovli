@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth';
 import AuthGoogleButton from '@/components/AuthGoogleButton';
 import LovliMark from '@/components/LovliMark';
 import { toast } from 'sonner';
+import { LockKeyhole } from 'lucide-react';
 
 const INPUT_CLS =
   'bg-lovli-card border-lovli-border text-lovli-text placeholder:text-lovli-text-faint h-11';
@@ -52,11 +53,18 @@ export default function Signup() {
         </div>
 
         <div className="lovli-glass rounded-2xl p-6">
-          <h1 className="font-display text-[24px] font-semibold text-lovli-text">
+          <h1 className="font-display text-[22px] font-semibold text-lovli-text">
             Create your account
           </h1>
           <p className="mt-1.5 text-[14px] text-lovli-text-muted">
             Replies that sound like you, in seconds.
+          </p>
+          <p
+            className="mt-2 inline-flex items-center gap-1.5 text-[11.5px] text-lovli-text-muted"
+            data-testid="signup-privacy-cue"
+          >
+            <LockKeyhole className="h-3 w-3 text-lovli-lavender/80" />
+            Your chats stay yours.
           </p>
 
           <form onSubmit={submit} className="mt-5 space-y-3">

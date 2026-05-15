@@ -16,7 +16,7 @@ export default function EarlyAccess() {
           </Link>
         </div>
         <div className="lovli-glass rounded-2xl p-6">
-          <h1 className="font-display text-[24px] font-semibold text-lovli-text">
+          <h1 className="font-display text-[22px] font-semibold text-lovli-text">
             Get early access
           </h1>
           <p className="mt-1.5 text-[14px] text-lovli-text-muted">

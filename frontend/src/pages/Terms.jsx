@@ -13,7 +13,7 @@ export default function Terms() {
           </span>
         </Link>
         <div className="lovli-glass rounded-2xl p-6">
-          <h1 className="font-display text-[24px] font-semibold text-lovli-text">Terms</h1>
+          <h1 className="font-display text-[22px] font-semibold text-lovli-text">Terms</h1>
           <div className="mt-3 space-y-3 text-[14px] leading-relaxed text-lovli-text-soft">
             <p>
               By using Lovli you agree to use the product respectfully. Lovli is a writing

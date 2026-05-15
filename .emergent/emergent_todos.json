@@ -1,14 +1,18 @@
 [
   {
-    "content": "Rewrite Pro.jsx: AI-focused hero ('Lovli Pro' / 'More replies. Smarter personalization.'), Free vs Pro comparison as two stacked calm cards (no giant table, no 'Most Popular' badge, no wingman/coach copy), inline 'Get Early Access' form with email + 5 reason chips",
+    "content": "Standardize all in-app screen h1 sizes to text-[22px] (AppReply 26→22, Login/Signup/EarlyAccess/Privacy/Terms 24→22)",
     "status": "completed"
   },
   {
-    "content": "Rewrite Settings.jsx into 4 clean sections (Account, Preferences, Privacy, Plan) with helper text, hide timezone input but preserve state, add navigate-to-/pro CTA in Plan section, keep delete-account placeholder + add privacy cue",
+    "content": "Unify Memory 'Your memories' section heading to text-[16px] to match other section headers",
     "status": "completed"
   },
   {
-    "content": "Lint, restart-verify, screenshot Pro + Settings on mobile viewport; assert: no 'Wingman'/'Human guidance' copy, CTA = 'Get Early Access', Settings has 4 sections",
+    "content": "Add subtle 'Your chats stay yours.' privacy cue to Login + Signup cards",
+    "status": "completed"
+  },
+  {
+    "content": "Lint + screenshot Login, Signup, AppReply, Memory across mobile viewport to confirm consistent typography rhythm",
     "status": "completed"
   }
 ]

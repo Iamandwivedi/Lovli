@@ -179,7 +179,7 @@ export default function AppReply() {
     <AppShell>
       <div data-testid="reply-page">
         <div className="mt-1">
-          <h1 className="font-display text-[26px] font-semibold leading-tight text-lovli-text">
+          <h1 className="font-display text-[22px] font-semibold leading-tight text-lovli-text">
             Stuck on what to reply?
           </h1>
           <p className="mt-1.5 text-[14px] leading-relaxed text-lovli-text-muted">
