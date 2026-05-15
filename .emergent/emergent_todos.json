@@ -1,18 +1,26 @@
 [
   {
-    "content": "Simplify ReplyResultCard: human tone label (vibe-mapped), reply text as hero (#F8FAFC, bigger/airier), only Copy + Regenerate actions (remove Feedback popover and Save-to-memory), Regenerate visually quieter than Copy",
+    "content": "Soften Memory page hero copy + replace BrainCircuit with warmer journal icon; add 'Private by default. You control what gets saved.' cue",
     "status": "completed"
   },
   {
-    "content": "Update AppReply results area: add 'Choose a reply' heading + 'Edit it if you want. Make it yours.' subtext; keep subtle staggered fade-up",
+    "content": "Rename 'Create memory' button to 'Add Memory' (preserve test IDs)",
     "status": "completed"
   },
   {
-    "content": "Polish BottomNav: more premium floating glass, refined lavender active state, larger thumb targets, robust safe-area handling",
+    "content": "Memory cards: journal-style stacked entries with soft labels (Good to remember, Things to avoid, How they usually talk, Inside jokes, Important moments, What feels right, Your notes); hide empty fields",
     "status": "completed"
   },
   {
-    "content": "Lint + screenshot results layout (collapsed + with replies) on mobile to verify no nav overlap",
+    "content": "Update PreviewExample (empty-state) to use the same soft labels",
+    "status": "completed"
+  },
+  {
+    "content": "Add Memory modal: title 'Add Memory' + subtext 'Use nicknames, not real names. You can edit or delete this anytime.'; group inputs into 3 named sections (Basic context, Good to remember, Your notes) with softer field labels; lighter mobile spacing",
+    "status": "completed"
+  },
+  {
+    "content": "Lint + screenshot Memory page (empty + with card) and Add Memory modal on mobile viewport",
     "status": "completed"
   }
 ]
