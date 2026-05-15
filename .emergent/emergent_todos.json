@@ -1,26 +1,14 @@
 [
   {
-    "content": "Soften Memory page hero copy + replace BrainCircuit with warmer journal icon; add 'Private by default. You control what gets saved.' cue",
+    "content": "Rewrite Pro.jsx: AI-focused hero ('Lovli Pro' / 'More replies. Smarter personalization.'), Free vs Pro comparison as two stacked calm cards (no giant table, no 'Most Popular' badge, no wingman/coach copy), inline 'Get Early Access' form with email + 5 reason chips",
     "status": "completed"
   },
   {
-    "content": "Rename 'Create memory' button to 'Add Memory' (preserve test IDs)",
+    "content": "Rewrite Settings.jsx into 4 clean sections (Account, Preferences, Privacy, Plan) with helper text, hide timezone input but preserve state, add navigate-to-/pro CTA in Plan section, keep delete-account placeholder + add privacy cue",
     "status": "completed"
   },
   {
-    "content": "Memory cards: journal-style stacked entries with soft labels (Good to remember, Things to avoid, How they usually talk, Inside jokes, Important moments, What feels right, Your notes); hide empty fields",
-    "status": "completed"
-  },
-  {
-    "content": "Update PreviewExample (empty-state) to use the same soft labels",
-    "status": "completed"
-  },
-  {
-    "content": "Add Memory modal: title 'Add Memory' + subtext 'Use nicknames, not real names. You can edit or delete this anytime.'; group inputs into 3 named sections (Basic context, Good to remember, Your notes) with softer field labels; lighter mobile spacing",
-    "status": "completed"
-  },
-  {
-    "content": "Lint + screenshot Memory page (empty + with card) and Add Memory modal on mobile viewport",
+    "content": "Lint, restart-verify, screenshot Pro + Settings on mobile viewport; assert: no 'Wingman'/'Human guidance' copy, CTA = 'Get Early Access', Settings has 4 sections",
     "status": "completed"
   }
 ]
