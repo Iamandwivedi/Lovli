@@ -393,28 +393,43 @@ export default function AppReply() {
           {!generating && results && (
             <motion.div
               key="results"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
-              className="space-y-3"
+              transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
+              className="space-y-4"
               data-testid="reply-results"
             >
+              <div data-testid="reply-results-heading">
+                <h2 className="font-display text-[18px] font-semibold text-lovli-text">
+                  Choose a reply
+                </h2>
+                <p className="mt-0.5 text-[13px] text-lovli-text-muted">
+                  Edit it if you want. Make it yours.
+                </p>
+              </div>
+
               {results.tone_notes && (
-                <div className="text-xs text-lovli-text-muted" data-testid="reply-tone-notes">
-                  Tone: {results.tone_notes}
+                <div
+                  className="text-[11.5px] text-lovli-text-muted"
+                  data-testid="reply-tone-notes"
+                >
+                  Tone read: {results.tone_notes}
                 </div>
               )}
-              {results.replies.map((r, i) => (
-                <ReplyResultCard
-                  key={`${results.generation_id}-${i}`}
-                  reply={r}
-                  index={i}
-                  vibe={vibe}
-                  generationId={results.generation_id}
-                  onRegenerate={onRegenerate}
-                />
-              ))}
+
+              <div className="space-y-3">
+                {results.replies.map((r, i) => (
+                  <ReplyResultCard
+                    key={`${results.generation_id}-${i}`}
+                    reply={r}
+                    index={i}
+                    vibe={vibe}
+                    generationId={results.generation_id}
+                    onRegenerate={onRegenerate}
+                  />
+                ))}
+              </div>
             </motion.div>
           )}
 

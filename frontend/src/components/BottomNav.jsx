@@ -14,14 +14,23 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed left-1/2 bottom-0 z-[10000] w-[min(420px,calc(100vw-20px))] -translate-x-1/2"
+      className="fixed left-1/2 bottom-0 z-[10000] w-[min(440px,calc(100vw-20px))] -translate-x-1/2"
       style={{
-        // Sit at the very bottom but keep a small gutter above the iPhone home indicator.
-        paddingBottom: 'max(10px, calc(env(safe-area-inset-bottom) + 4px))',
+        // Stays floating with a comfortable gutter above the iPhone home indicator /
+        // Android nav bar. Safe-area-aware on every modern mobile browser.
+        paddingBottom: 'max(12px, calc(env(safe-area-inset-bottom) + 6px))',
+        // Prevent the nav from ever capturing scroll on overflowing content
+        // while still being interactive.
+        pointerEvents: 'none',
       }}
       data-testid="bottom-nav"
     >
-      <div className="lovli-glass rounded-[22px] flex overflow-hidden">
+      <div
+        // Pill-shaped floating glass card with translucent dark background,
+        // subtle border, and soft shadow. pointer-events re-enabled here.
+        className="flex items-stretch rounded-[24px] border border-lovli-border bg-lovli-card-2/82 backdrop-blur-2xl shadow-[0_18px_50px_rgba(0,0,0,0.55),0_1px_0_rgba(255,255,255,0.04)_inset]"
+        style={{ pointerEvents: 'auto' }}
+      >
         {TABS.map((t) => {
           const Icon = t.icon;
           const active = pathname === t.to || (t.to === '/app' && pathname === '/');
@@ -31,24 +40,28 @@ export default function BottomNav() {
               key={t.to}
               data-testid={t.testId}
               aria-label={t.label}
-              className={`relative flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium transition-colors ${
+              aria-current={active ? 'page' : undefined}
+              // Comfortable thumb target: ~58-64px tall, generous tap area.
+              className={`relative flex flex-1 flex-col items-center justify-center gap-1 px-2 py-3 text-[11px] font-medium transition-colors focus-visible:outline-none ${
                 active
-                  ? 'text-lovli-text'
+                  ? 'text-lovli-lavender'
                   : 'text-lovli-text-muted hover:text-lovli-text-soft'
               }`}
             >
               {active && (
                 <motion.span
                   layoutId="bottom-nav-indicator"
-                  transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.7 }}
-                  className="absolute -top-[3px] h-[3px] w-9 rounded-full bg-lovli-lavender shadow-[0_0_18px_rgba(167,139,250,0.55)]"
+                  transition={{ type: 'spring', stiffness: 360, damping: 30, mass: 0.7 }}
+                  aria-hidden="true"
+                  className="absolute top-1.5 h-[3px] w-8 rounded-full bg-lovli-lavender shadow-[0_0_14px_rgba(167,139,250,0.6)]"
                 />
               )}
               <Icon
-                className={`h-5 w-5 transition-colors ${active ? 'text-lovli-lavender' : ''}`}
-                strokeWidth={active ? 2.2 : 1.8}
+                className="h-[18px] w-[18px]"
+                strokeWidth={active ? 2.2 : 1.7}
+                aria-hidden="true"
               />
-              <span>{t.label}</span>
+              <span className={active ? '' : 'text-lovli-text-muted'}>{t.label}</span>
             </NavLink>
           );
         })}

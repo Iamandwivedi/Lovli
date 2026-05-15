@@ -1,14 +1,18 @@
 [
   {
-    "content": "Update ScreenshotUploader copy: 'Upload chat screenshot' + 'Instagram, Dating platform, or WhatsApp' subtitle; trim format hint; keep privacy line shortened",
+    "content": "Simplify ReplyResultCard: human tone label (vibe-mapped), reply text as hero (#F8FAFC, bigger/airier), only Copy + Regenerate actions (remove Feedback popover and Save-to-memory), Regenerate visually quieter than Copy",
     "status": "completed"
   },
   {
-    "content": "Refactor AppReply.jsx into Option B layout: visible defaults (upload, paste, language, usage/privacy, Generate) + 'Customize reply' collapsible (platform, vibe, memory) with summary line",
+    "content": "Update AppReply results area: add 'Choose a reply' heading + 'Edit it if you want. Make it yours.' subtext; keep subtle staggered fade-up",
     "status": "completed"
   },
   {
-    "content": "Lint, restart, screenshot collapsed + expanded states on mobile viewport",
+    "content": "Polish BottomNav: more premium floating glass, refined lavender active state, larger thumb targets, robust safe-area handling",
+    "status": "completed"
+  },
+  {
+    "content": "Lint + screenshot results layout (collapsed + with replies) on mobile to verify no nav overlap",
     "status": "completed"
   }
 ]
