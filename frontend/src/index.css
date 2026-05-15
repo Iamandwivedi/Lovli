@@ -32,6 +32,25 @@
     --lovli-text-soft: #E5E7EB;
     --lovli-text-muted: #A1A1AA;
     --lovli-text-faint: #71717A;
+
+    /*
+     * Bottom-nav safe spacing.
+     * The floating bottom tab bar sits at `bottom: 0` with a max(12px, env+6)
+     * outer gutter and a ~64px inner glass pill. To guarantee that primary CTAs
+     * (Generate replies, Save memory, Save changes, Get Early Access, etc.)
+     * and the last reply card are NEVER hidden behind the translucent pill,
+     * every AppShell screen reserves the following bottom padding.
+     *
+     *   nav pill height           ≈ 64px
+     * + nav outer gutter          ≈ 40px on iPhone (max(12px, env+6))
+     * + comfortable breathing     = 64px (well past the user-requested 24px)
+     * + env(safe-area-inset-bottom)
+     *
+     * Net: ≥ ~90px of visible clearance between any in-screen CTA / last
+     * reply card and the top edge of the nav pill on every modern mobile
+     * browser, even when the URL bar is collapsed.
+     */
+    --lovli-nav-safe-bottom: calc(104px + 64px + env(safe-area-inset-bottom));
 }
 
 html,

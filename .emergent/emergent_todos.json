@@ -1,18 +1,14 @@
 [
   {
-    "content": "Standardize all in-app screen h1 sizes to text-[22px] (AppReply 26→22, Login/Signup/EarlyAccess/Privacy/Terms 24→22)",
+    "content": "Add --lovli-nav-safe-bottom CSS variable in index.css using nav-height + 24px breathing + env(safe-area-inset-bottom)",
     "status": "completed"
   },
   {
-    "content": "Unify Memory 'Your memories' section heading to text-[16px] to match other section headers",
+    "content": "Update AppShell padding-bottom to consume the new variable (auto-applies to Reply, Memory, Pro, Settings)",
     "status": "completed"
   },
   {
-    "content": "Add subtle 'Your chats stay yours.' privacy cue to Login + Signup cards",
-    "status": "completed"
-  },
-  {
-    "content": "Lint + screenshot Login, Signup, AppReply, Memory across mobile viewport to confirm consistent typography rhythm",
+    "content": "Re-measure on mobile viewport: Generate button bottom vs nav top, confirm clearance >= 80px; screenshot Reply / Memory / Pro / Settings bottoms",
     "status": "completed"
   }
 ]

@@ -11,11 +11,11 @@ export default function AppShell({ children, hideNav = false }) {
       <div
         className="mx-auto w-full max-w-[480px] px-4 sm:max-w-[520px] md:max-w-[560px]"
         style={{
-          // Generous bottom padding so content always scrolls cleanly
-          // above the floating bottom nav (~64px tall + 14px gutter
-          // + safe-area inset on iPhone).
-          paddingBottom:
-            'calc(168px + env(safe-area-inset-bottom))',
+          // Reserved bottom space so the floating tab bar NEVER overlaps the
+          // last in-screen content (CTAs, reply cards, form actions). See
+          // --lovli-nav-safe-bottom in index.css for the full formula
+          // (nav pill + outer gutter + 24px breathing + safe-area inset).
+          paddingBottom: 'var(--lovli-nav-safe-bottom)',
         }}
       >
         <TopHeader />
