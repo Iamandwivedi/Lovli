@@ -892,6 +892,24 @@ app.add_middleware(
 )
 
 
+# ---- Kubernetes liveness / readiness probes ---------------------------------
+# These endpoints sit at the root of the FastAPI app (NOT under /api/) because
+# Kubernetes probes hit the container directly on port 8001 — they do NOT go
+# through the public ingress that strips the /api prefix.  Returning 404 here
+# causes the pod to be marked unhealthy and restarted in a loop.  These routes
+# are intentionally synchronous and dependency-free so they never block on
+# Mongo / Anthropic / Google: a healthy pod is one whose Python process is
+# alive and the FastAPI app object is responding.
+@app.get("/", include_in_schema=False)
+@app.get("/health", include_in_schema=False)
+@app.get("/healthz", include_in_schema=False)
+@app.head("/", include_in_schema=False)
+@app.head("/health", include_in_schema=False)
+@app.head("/healthz", include_in_schema=False)
+def _liveness():
+    return {"status": "ok", "service": "lovli"}
+
+
 @app.exception_handler(404)
 async def not_found_handler(_request, exc):
     return JSONResponse(
