@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/lib/auth';
+import { extractErrorMessage } from '@/lib/api';
 import AuthGoogleButton from '@/components/AuthGoogleButton';
 import LovliMark from '@/components/LovliMark';
 import { toast } from 'sonner';
@@ -36,7 +37,7 @@ export default function Signup() {
       await signupWithEmail(name, email, password);
       navigate('/onboarding', { replace: true });
     } catch (err) {
-      toast.error(err?.response?.data?.detail || 'Could not create your account.');
+      toast.error(extractErrorMessage(err, 'Could not create your account.'));
     } finally {
       setSubmitting(false);
     }

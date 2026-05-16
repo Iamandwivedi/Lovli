@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import ChipGroup from '@/components/ChipGroup';
 import { useAuth } from '@/lib/auth';
-import { api } from '@/lib/api';
+import { api, extractErrorMessage } from '@/lib/api';
 import {
   PLATFORM_LABELS,
   platformLabelFromValue,
@@ -86,7 +86,7 @@ export default function Settings() {
       updateUser(data);
       toast.success('Settings saved.');
     } catch (err) {
-      toast.error(err?.response?.data?.detail || 'Could not save.');
+      toast.error(extractErrorMessage(err, 'Could not save.'));
     } finally {
       setSaving(false);
     }

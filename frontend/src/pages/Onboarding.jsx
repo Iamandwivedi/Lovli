@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import ChipGroup from '@/components/ChipGroup';
 import { useAuth } from '@/lib/auth';
-import { api, getLocalTimezone } from '@/lib/api';
+import { api, getLocalTimezone, extractErrorMessage } from '@/lib/api';
 import {
   PLATFORM_LABELS,
   platformLabelFromValue,
@@ -36,7 +36,7 @@ export default function Onboarding() {
       updateUser(data);
       navigate('/app', { replace: true });
     } catch (err) {
-      toast.error(err?.response?.data?.detail || 'Could not save preferences.');
+      toast.error(extractErrorMessage(err, 'Could not save preferences.'));
     } finally {
       setSubmitting(false);
     }

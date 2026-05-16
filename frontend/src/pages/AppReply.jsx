@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAuth } from '@/lib/auth';
-import { api, getLocalDateString, getLocalTimezone } from '@/lib/api';
+import { api, getLocalDateString, getLocalTimezone, extractErrorMessage } from '@/lib/api';
 import {
   PLATFORM_LABELS,
   platformLabelFromValue,
@@ -157,7 +157,7 @@ export default function AppReply() {
       } else if (status === 503) {
         toast.error("Lovli couldn’t generate replies right now. Try again.");
       } else {
-        toast.error(err?.response?.data?.detail || "Lovli couldn’t generate replies right now. Try again.");
+        toast.error(extractErrorMessage(err, "Lovli couldn’t generate replies right now. Try again."));
       }
     } finally {
       setGenerating(false);

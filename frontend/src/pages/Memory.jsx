@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { api } from '@/lib/api';
+import { api, extractErrorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 import {
@@ -124,7 +124,7 @@ function MemoryFormDialog({ open, onOpenChange, initial, onSaved }) {
       onSaved?.(saved, isEdit ? 'updated' : 'created');
       onOpenChange(false);
     } catch (err) {
-      toast.error(err?.response?.data?.detail || 'Could not save right now.');
+      toast.error(extractErrorMessage(err, 'Could not save right now.'));
     } finally {
       setSubmitting(false);
     }

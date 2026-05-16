@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
+import { extractErrorMessage } from '@/lib/api';
 import LoadingState from '@/components/LoadingState';
 import { toast } from 'sonner';
 
@@ -63,7 +64,7 @@ export default function AuthCallback() {
         }
         navigate(user?.onboarding_complete ? '/app' : '/onboarding', { replace: true });
       } catch (err) {
-        toast.error(err?.response?.data?.detail || 'Sign-in failed. Try again.');
+        toast.error(extractErrorMessage(err, 'Sign-in failed. Try again.'));
         navigate('/login', { replace: true });
       }
     })();

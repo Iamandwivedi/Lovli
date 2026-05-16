@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/lib/auth';
+import { extractErrorMessage } from '@/lib/api';
 import AuthGoogleButton from '@/components/AuthGoogleButton';
 import LovliMark from '@/components/LovliMark';
 import { toast } from 'sonner';
@@ -31,7 +32,7 @@ export default function Login() {
       await loginWithEmail(email, password);
       navigate('/app', { replace: true });
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Couldn’t sign you in.");
+      toast.error(extractErrorMessage(err, "Couldn’t sign you in."));
     } finally {
       setSubmitting(false);
     }

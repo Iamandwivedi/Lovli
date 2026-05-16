@@ -67,3 +67,33 @@ export function getLocalTimezone() {
     return 'Asia/Kolkata';
   }
 }
+
+/**
+ * Safely turn any error from an `api.*` call into a single human-readable
+ * string. FastAPI returns `detail` as a string for HTTPException but as an
+ * ARRAY of Pydantic error objects on 422 validation errors. Passing those
+ * objects directly to `toast.error` (or any React child) crashes the
+ * render tree, so every catch handler should use this helper.
+ *
+ * Usage:
+ *   try { ... } catch (err) { toast.error(extractErrorMessage(err, 'fallback')); }
+ */
+export function extractErrorMessage(err, fallback = 'Something went wrong. Try again.') {
+  try {
+    const d = err?.response?.data?.detail;
+    if (typeof d === 'string' && d.trim()) return d;
+    if (Array.isArray(d) && d.length > 0) {
+      const first = d[0];
+      if (typeof first === 'string') return first;
+      if (first && typeof first.msg === 'string') return first.msg;
+    }
+    if (d && typeof d === 'object' && typeof d.msg === 'string') return d.msg;
+    if (typeof err?.message === 'string' && err.message && err.message !== 'Network Error') {
+      return err.message;
+    }
+  } catch {
+    /* fall through to fallback */
+  }
+  return fallback;
+}
+
