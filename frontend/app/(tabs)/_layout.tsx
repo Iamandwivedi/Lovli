@@ -1,11 +1,11 @@
 // Bottom tab layout — 3 tabs, dark glass.
 import React from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, fontSize } from "@/src/theme/colors";
+import { colors } from "@/src/theme/colors";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -26,6 +26,19 @@ function TabBarBackground() {
   return <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(11,12,20,0.92)" }]} />;
 }
 
+// Forward all props (including testID) to a styled Pressable.
+function TabButton(props: React.ComponentProps<typeof Pressable>) {
+  return (
+    <Pressable
+      {...props}
+      android_ripple={{ color: "transparent" }}
+      style={styles.tabButton}
+    >
+      {props.children as React.ReactNode}
+    </Pressable>
+  );
+}
+
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
 
@@ -42,21 +55,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.lavender,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontSize: 11, fontWeight: "600", marginTop: 2 },
-        tabBarButton: (props) => {
-          const { children, onPress, accessibilityState, testID } = props;
-          return (
-            <Pressable
-              testID={testID}
-              onPress={(e) => onPress?.(e)}
-              accessibilityRole="button"
-              accessibilityState={accessibilityState as never}
-              android_ripple={{ color: "transparent" }}
-              style={styles.tabButton}
-            >
-              {children as React.ReactNode}
-            </Pressable>
-          );
-        },
+        tabBarButton: TabButton,
       }}
     >
       <Tabs.Screen
@@ -64,11 +63,10 @@ export default function TabsLayout() {
         options={{
           title: "Reply",
           tabBarTestID: "bottom-nav-reply",
+          tabBarButtonTestID: "bottom-nav-reply",
+          tabBarAccessibilityLabel: "Reply tab",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? TAB_ICON.reply.active : TAB_ICON.reply.inactive} size={22} color={color} />
-          ),
-          tabBarLabel: ({ color, focused }) => (
-            <Text style={[styles.label, { color }, focused && styles.labelActive]}>Reply</Text>
           ),
         }}
       />
@@ -77,11 +75,10 @@ export default function TabsLayout() {
         options={{
           title: "Pro",
           tabBarTestID: "bottom-nav-pro",
+          tabBarButtonTestID: "bottom-nav-pro",
+          tabBarAccessibilityLabel: "Pro tab",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? TAB_ICON.pro.active : TAB_ICON.pro.inactive} size={22} color={color} />
-          ),
-          tabBarLabel: ({ color, focused }) => (
-            <Text style={[styles.label, { color }, focused && styles.labelActive]}>Pro</Text>
           ),
         }}
       />
@@ -90,11 +87,10 @@ export default function TabsLayout() {
         options={{
           title: "Memory",
           tabBarTestID: "bottom-nav-memory",
+          tabBarButtonTestID: "bottom-nav-memory",
+          tabBarAccessibilityLabel: "Memory tab",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? TAB_ICON.memory.active : TAB_ICON.memory.inactive} size={22} color={color} />
-          ),
-          tabBarLabel: ({ color, focused }) => (
-            <Text style={[styles.label, { color }, focused && styles.labelActive]}>Memory</Text>
           ),
         }}
       />
@@ -117,6 +113,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 6,
   },
-  label: { fontSize: 11, fontWeight: "600", marginTop: 2 },
-  labelActive: { fontSize: fontSize.xs },
 });

@@ -40,7 +40,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         Animated.timing(opacity, { toValue: 0, duration: 180, useNativeDriver: true }),
         Animated.timing(translateY, { toValue: 20, duration: 200, useNativeDriver: true }),
       ]).start(() => setToast(null));
-    }, 2000);
+    }, 2800);
     return () => clearTimeout(t);
   }, [toast, opacity, translateY]);
 

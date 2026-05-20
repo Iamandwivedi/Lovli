@@ -1,0 +1,93 @@
+{
+  "summary": "Re-ran the full Lovli mobile suite against the live backend on the preview tunnel. The previous iteration_1 blocker (bottom tab testIDs not in DOM) is FIXED — 'bottom-nav-reply', 'bottom-nav-pro', 'bottom-nav-memory' now resolve to count=1 each. However a new and far more impactful blocker was discovered: the primary CTAs that sit near the bottom of scrollable screens — generate-replies-button (Reply), pro-early-access-button (Pro), memory-add-button / memory-save-button (Memory), settings-save-button / settings-logout-button (Settings) — get hit-tested by the absolutely-positioned bottom tab bar instead of by the button itself. Tapping 'Generate replies' on the Reply screen reproducibly navigates to /pro (the Pro bottom tab), because the bottom tab bar's Pressable wins the pointer event. Visually, the Generate button is partially overlapped by the 'Reply / Pro / Memory' labels (confirmed in screenshots). This makes the app unusable on mobile web — users cannot trigger generation. The validation toast for empty input also could not be observed because the click never reaches the button's onPress. Pro joined-block, Memory Add page, and Settings page never loaded for the same root cause (button click being swallowed by the tab bar overlay).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "src/components/Screen.tsx + app/(tabs)/_layout.tsx",
+        "issue": "Tab-bar overlay swallows primary-button taps. TAB_BAR_SPACE is hard-coded to 96 in Screen.tsx, but the actual bottom tab bar on web is 64 + max(safe-area, 8) = 72px and the bottom tab bar sits with position:absolute and a higher z-index than content. Result: any element whose visual bounds end inside the bottom ~72px of the viewport will lose pointer events to the underlying tab Pressable. We reproduced this by clicking generate-replies-button on the Reply screen: the page navigated to /pro (Pro tab) instead of running the validation path or generating replies. Visually the Generate button bottom edge overlaps with the 'Reply Pro Memory' label row.",
+        "testID": "generate-replies-button / pro-early-access-button / memory-add-button / memory-save-button / settings-save-button / settings-logout-button",
+        "priority": "CRITICAL"
+      },
+      {
+        "component": "app/(tabs)/reply.tsx",
+        "issue": "Empty-input validation toast ('Upload a screenshot or paste the chat first.') could not be verified because the Generate-replies tap is hijacked by the Pro tab (see above). Once the tab-overlap bug is fixed, please re-verify this toast independently — in run 2, after force-scrolling the button to center and clicking again, no toast text was observed within 800ms (toast-message element was null).",
+        "testID": "toast-message",
+        "priority": "HIGH"
+      },
+      {
+        "component": "app/(tabs)/memory.tsx",
+        "issue": "On first Memory tab load, both `[data-testid=\"memory-empty\"]` count and `[data-testid^=\"memory-card-\"]` count were 0 even though the 'No memories yet' card is rendered visually. This suggests the empty-state GlassCard renders before the cards-loaded check completes, OR the testID prop on GlassCard is not propagating to the outer DOM node on web. Confirm GlassCard forwards testID to its root <View>.",
+        "testID": "memory-empty",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "POST /api/generate-replies (live backend)",
+        "issue": "Could not be exercised end-to-end this run because the Generate button is intercepted by the Pro tab bar. As soon as the overlap bug is fixed, retest with manual_text='hey she said she loves matcha cafes', language=English, vibe=Playful — backend latency observed up to 60-70s in earlier dry-runs.",
+        "affected_testIDs": ["generate-replies-button", "reply-result-card", "reply-tone-label", "reply-result-text", "reply-copy-button", "reply-regenerate-button", "reply-usage-counter"]
+      },
+      {
+        "flow": "POST /api/waitlist (Pro early access)",
+        "issue": "Tapped pro-early-access-button after filling pro-email-input with a unique email — pro-joined-block did not appear within 15s, and no toast-message was captured. Likely the same tab-overlay hijack (button sits near the bottom of the Pro screen). Re-verify after the overlap fix.",
+        "affected_testIDs": ["pro-early-access-button", "pro-joined-block", "toast-message"]
+      },
+      {
+        "flow": "Memory CRUD",
+        "issue": "memory-add-button tap did not navigate to /memory/add (memory-add-page testID never appeared), so add/edit/delete could not be verified. Likely the same tab-overlay hijack. Note: implementation in MemoryForm.tsx correctly defines memory-add-page, memory-edit-page, memory-nickname-input, memory-likes-input, memory-save-button. Delete uses Alert.alert → window.confirm on web (handled correctly via page.once('dialog', d.accept)).",
+        "affected_testIDs": ["memory-add-button", "memory-add-page", "memory-nickname-input", "memory-likes-input", "memory-save-button", "memory-edit-{id}", "memory-delete-{id}", "memory-edit-page"]
+      },
+      {
+        "flow": "Settings open + save + logout",
+        "issue": "open-settings-button is present in the DOM (count=1) on the Reply screen (top-right gear, AppHeader). However, tapping it did NOT navigate to /settings within 8s — settings-page testID never resolved. The gear icon is in the header (well above the tab bar) so this is NOT the same overlay bug. Suspect either (a) the Pressable hitSlop area is too small / not reachable in mobile viewport, or (b) the router.push('/settings') call isn't wired. Please inspect AppHeader's open-settings-button onPress.",
+        "affected_testIDs": ["open-settings-button", "settings-page", "settings-name-input", "settings-email", "settings-login-method", "settings-language-Hinglish", "settings-platform-Instagram", "settings-save-button", "settings-logout-button"]
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "Reply / Pro / Memory / Settings",
+        "issues": [
+          "Primary CTA buttons at the bottom of scrollable screens visually overlap with the bottom tab bar labels — this matches the hit-test bug. Suggest TAB_BAR_SPACE >= 110 (tab bar height + 32px safety), OR add a sticky CTA container with paddingBottom matching the tab bar, OR set zIndex on the Generate button higher than the tab bar."
+        ]
+      }
+    ],
+    "react_native_issues": [
+      {
+        "component": "Animated useNativeDriver",
+        "issue": "Non-blocking web warning ('Animated: useNativeDriver is not supported...'). Harmless on iOS/Android, can be ignored."
+      },
+      {
+        "component": "Deprecated style props",
+        "issue": "Console warnings: '\"shadow*\" style props are deprecated, use boxShadow' and 'props.pointerEvents is deprecated, use style.pointerEvents'. Cosmetic only — Reanimated/RN-web warnings, not blocking."
+      }
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_2.json"],
+  "action_items": [
+    "CRITICAL: Fix bottom tab bar hit-testing over primary CTAs. Two viable fixes: (a) bump TAB_BAR_SPACE in src/components/Screen.tsx from 96 → ~120 so the last button sits clearly above the tab bar; (b) wrap the bottom tab bar with `pointerEvents` configured so it doesn't intercept clicks outside the tab-icon bounds, e.g. add `pointerEvents: 'box-none'` on the tabBar container and put pointerEvents:'auto' on the inner tab buttons. After the fix, manually verify that tapping generate-replies-button on the Reply screen fires the Reply onPress (not the Pro tab navigation).",
+    "Investigate open-settings-button: confirm onPress calls router.push('/settings'). open-settings-button is in the header so it is not affected by the tab-bar hijack; this looks like a separate wiring/route issue.",
+    "Verify GlassCard forwards testID to its outer DOM node — `[data-testid=\"memory-empty\"]` count was 0 on the empty Memory state.",
+    "Re-run the full E2E suite (validation toast → generate-replies → Copy → Pro waitlist → Memory add/edit/delete → Settings save+logout) once both the tab overlay fix and the Settings nav fix are in place. The earlier daily usage was at 0/8; one generation may have been consumed during dry-runs."
+  ],
+  "critical_code_review_comments": [
+    "Screen.tsx hard-codes TAB_BAR_SPACE=96 but the actual measured tab bar height + Pressable hit area extends further, causing overlay hijacks. Compute this dynamically from the actual tabBar height + safe-area-bottom + a 16-24px buffer.",
+    "expo-router's <Tabs.Screen tabBarButton={TabButton}/> custom button: TabButton currently forwards all props to <Pressable> which is correct, but the Pressable is given style={styles.tabButton} (flex:1) — that fills the entire tab cell. If there is additional padding around tab cells (e.g. tabBar paddingHorizontal), the Pressable still extends to the cell edges. Combined with the tab bar being position:absolute at the very bottom, this is what catches outside-button clicks.",
+    "AuthContext + endpoints still look clean. No hardcoded secrets in frontend.",
+    "Memory delete uses Alert.alert (correctly maps to window.confirm on web). Listener via page.once('dialog', d.accept()) is the right test pattern.",
+    "Google login button correctly disabled per the product requirement."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "n/a (backend testing not requested)",
+    "frontend": "~30% — login + tab nav + screens render; primary CTAs (generate, pro early access, memory add/save, settings save/logout) and open-settings-button all blocked."
+  },
+  "seed_data_creation": "None. Used the existing test user lovli.mobile.test@example.com on the live backend.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Two issues are blocking the entire post-login suite: (1) bottom tab bar hijacks taps on primary CTAs; (2) open-settings-button (header gear) does not navigate to /settings. After main agent fixes these, mobile-web viewport 390x844, login with lovli.mobile.test@example.com / LovliMobile2026!, then run T1..T6 with the same testIDs listed in this report. Allow up to 70s for /api/generate-replies (Claude latency). Free user daily limit is 8 — do NOT exceed 1 generation per run. Memory delete dialogue maps to window.confirm on web, accept via page.once('dialog', lambda d: d.accept()). Settings is opened via the top-right gear icon on Reply screen header, NOT a bottom tab.",
+  "rca_of_issue": "Bottom-tab pointer hijack: in app/(tabs)/_layout.tsx, the tab bar is rendered by expo-router with style={position:'absolute', bottom:0, height: 64+insets.bottom}. The custom tabBarButton (TabButton in the same file) uses Pressable with flex:1 which fills the entire tab cell. Because the tab bar sits on top of the scrollable Screen (with paddingBottom: TAB_BAR_SPACE=96 in Screen.tsx) and the tab bar's z-index defaults higher than scroll content on react-native-web, any Pressable inside the scrollable content whose visual bounds fall within the bottom ~72px of the viewport will lose pointer events to the underlying tab Pressable. Reproduction: open the preview at 390x844, login, scroll to the Generate replies button at the bottom of the Reply screen — the button's bottom half visually overlaps with the 'Reply Pro Memory' labels. Click via Playwright (or a mobile tap on real device near that y-coordinate) fires the bottom-nav-pro Pressable and navigates to /pro. Mitigation: (a) raise TAB_BAR_SPACE to ~120 so all CTAs end above the tab bar; OR (b) set pointerEvents='box-none' on the tab bar background View so only the tab icons receive events; OR (c) lift the Generate button into a sticky footer with its own zIndex above the tab bar."
+}
