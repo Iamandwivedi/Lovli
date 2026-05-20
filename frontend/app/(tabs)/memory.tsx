@@ -1,6 +1,6 @@
 // Memory tab — private journal feel.
 import React, { useCallback, useEffect, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Screen } from "@/src/components/Screen";
@@ -56,24 +56,29 @@ export default function MemoryScreen() {
   };
 
   const onDelete = (card: MemoryCard) => {
+    const doDelete = async () => {
+      try {
+        await deleteMemoryCard(card.id);
+        setCards((prev) => prev.filter((c) => c.id !== card.id));
+        toast.success("Memory deleted.");
+      } catch {
+        toast.error("Could not delete right now.");
+      }
+    };
+
+    if (Platform.OS === "web") {
+      // Alert.alert with multi-button is a no-op on react-native-web — use window.confirm.
+      const ok = typeof window !== "undefined" && window.confirm(`Delete "${card.nickname}"? You can't undo this.`);
+      if (ok) doDelete();
+      return;
+    }
+
     Alert.alert(
       `Delete "${card.nickname}"?`,
       "You can't undo this.",
       [
         { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteMemoryCard(card.id);
-              setCards((prev) => prev.filter((c) => c.id !== card.id));
-              toast.success("Memory deleted.");
-            } catch {
-              toast.error("Could not delete right now.");
-            }
-          },
-        },
+        { text: "Delete", style: "destructive", onPress: doDelete },
       ],
       { cancelable: true },
     );
