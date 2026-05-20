@@ -22,6 +22,7 @@ export const GlassCard: React.FC<Props> = ({ children, style, padded = true, var
         padded && styles.padded,
         style,
       ]}
+      {...(testID ? { "data-testid": testID } : {})}
     >
       {children}
     </View>

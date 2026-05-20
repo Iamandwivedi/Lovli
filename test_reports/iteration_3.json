@@ -1,0 +1,64 @@
+{
+  "summary": "Re-ran the full Lovli mobile E2E suite on the preview tunnel (390x844) against the live backend. The two big blockers from iteration_2 are FIXED: (1) bottom tab-bar overlay on primary CTAs no longer hijacks the Generate-replies tap once content is scrolled — TAB_BAR_SPACE=132 in Screen.tsx leaves a ~67px gap between button bottom and tab-bar top after scroll, so onPress on Reply/Pro/Memory/Settings CTAs reaches the correct handler (verified via toast 'Upload a screenshot or paste the chat first.', and via real reply generation); (2) open-settings-button (top-right gear) DOES navigate to /settings, settings-name-input shows 'Lovli Mobile Test', settings-save-button → toast 'Settings saved.', logout returns to /login. memory-empty testID now resolves correctly (GlassCard forwards data-testid). Reply generation E2E worked end-to-end (3 cards, usage='1 of 8 used today', Copy → 'Copied. Go send it.'). Pro waitlist worked (joined-block + toast). Memory Add and Edit worked (toasts 'Memory saved.' and 'Memory updated.', card visible with 'Matcha Plus'). ONE bug remaining: Memory Delete is broken on web because Alert.alert(multi-button) on react-native-web does NOT raise a confirm dialog and never invokes the destructive onPress — the DELETE /api/memory-cards/{id} request is never sent and the card stays. Also a Playwright-only quirk: real page.click on Pro Early Access button times out unless we scroll the ScrollView via mouse.wheel first (button natural y=907 > viewport 844). Real users on mobile can scroll, so this is a test-harness issue, not a user-facing regression — but it does mean primary CTAs near the screen bottom rely on the user scrolling first, which is acceptable.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "app/(tabs)/memory.tsx :: onDelete via Alert.alert",
+        "issue": "Alert.alert with multiple buttons (Cancel + destructive Delete) is a no-op on react-native-web. No window.alert / window.confirm is shown, no dialog event is dispatched, and the 'Delete' button's onPress never fires. Result: tapping memory-delete-{id} on web does nothing — no API DELETE, no toast, no card removal. Verified by attaching page.on('dialog', ...) — zero dialog events were captured after clicking memory-delete. Fix: branch on Platform.OS — on 'web', call window.confirm(`Delete \"${nickname}\"?`) directly; on native, keep Alert.alert. Or render a custom themed confirm modal so behaviour is identical across platforms (also better for design).",
+        "testID": "memory-delete-{id}",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "DELETE /api/memory-cards/{id}",
+        "issue": "Never invoked on web because the confirmation step (Alert.alert) silently no-ops. Backend endpoint itself is fine; the failure is the missing client-side trigger on web.",
+        "affected_testIDs": ["memory-delete-{id}", "toast-message"]
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "Reply / Pro / Memory",
+        "issues": [
+          "Primary CTAs (Generate replies, Get Early Access, Save Memory) sit below the initial viewport fold on a 390x844 viewport — user must scroll to reach them. Once scrolled, there is ~67px breathing room above the tab bar (good). Consider auto-scrolling to the CTA on load, OR making the CTA a sticky footer with paddingBottom matching the tab bar height, so first-time users don't miss it."
+        ]
+      }
+    ],
+    "react_native_issues": [
+      {
+        "component": "Alert.alert cross-platform behaviour",
+        "issue": "Alert.alert on web maps to window.alert (single OK) and ignores the button array. Any flow that relies on a destructive confirm (memory delete today; logout confirmation tomorrow if added; etc.) needs a Platform.OS guard or a custom modal."
+      },
+      {
+        "component": "Deprecated style props (cosmetic)",
+        "issue": "Console warnings persist: 'shadow* style props are deprecated, use boxShadow' and 'props.pointerEvents is deprecated, use style.pointerEvents'. Non-blocking, RN-web only."
+      }
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_3.json"],
+  "action_items": [
+    "Fix Memory Delete on web: in app/(tabs)/memory.tsx onDelete, use window.confirm when Platform.OS === 'web' (or render a themed confirm modal). Then memory-delete-{id} will trigger the API and the 'Memory deleted.' toast. This is the only remaining functional bug from this iteration.",
+    "(Optional UX) Consider auto-scrolling primary CTAs into view on screen mount, or pinning them as sticky footers above the tab bar so they're tappable without manual scroll on small viewports."
+  ],
+  "critical_code_review_comments": [
+    "Screen.tsx TAB_BAR_SPACE=132 works correctly when content is scrolled; gap to tab bar is ~67px on 390x844. No further change needed.",
+    "GlassCard correctly forwards both testID prop and data-testid attribute on its outer View — memory-empty resolves.",
+    "AppHeader open-settings-button correctly calls router.push('/settings'). Iteration_2's 'doesn't navigate' was a test-harness artifact (real-DOM click goes through).",
+    "settings.tsx now syncs settings-name-input via useEffect when user loads — value populates as 'Lovli Mobile Test' on first render.",
+    "memory.tsx delete flow assumes Alert.alert renders a confirm dialog with onPress hooks. On react-native-web this is silently dropped — needs Platform.OS branch."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "n/a (backend testing not requested; all observed API calls — login, /generate-replies, /waitlist, /memory-cards POST+PUT — returned 2xx and produced expected UI state)",
+    "frontend": "~92% — 10 of 11 acceptance scenarios PASS (validation toast, generate replies, copy, Pro waitlist, Memory nav+empty, Memory add, Memory edit, Settings open, Settings save, Logout, no tab-bar regression). 1 FAIL: Memory delete (Alert.alert no-op on web)."
+  },
+  "seed_data_creation": "Created and edited a memory card 'Matcha' → 'Matcha Plus' on the live test account. Could NOT delete it due to the Alert.alert/web bug — main agent should clean up either via UI after the fix or via direct API call. Pro waitlist entry created with lovli.mobile.test+pro{timestamp}@example.com (fresh email per run).",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Only memory-delete-{id} needs retesting after main agent fixes the Alert.alert → window.confirm Platform.OS branch. Steps: login (lovli.mobile.test@example.com / LovliMobile2026!), open Memory tab, ensure at least one memory card exists (will likely still see 'Matcha Plus' from this iteration), attach page.on('dialog', lambda d: d.accept()), tap memory-delete-{id}. Expect dialog event, card removal, and toast 'Memory deleted.'. All other flows are green — no need to re-run the full suite. Note: the /api/generate-replies daily limit is now 1/8 used for this test user today; further runs will increment this.",
+  "rca_of_issue": "Memory delete on web — root cause: react-native-web's polyfill for Alert.alert only supports a single-button alert (window.alert). When called with multiple buttons + onPress callbacks (Cancel + Delete in memory.tsx), the multi-button path is silently dropped and the destructive onPress is NEVER invoked. Reproduction: visit /memory on web at 390x844, tap memory-delete-{id}; observe (a) no native dialog event fires (page.on('dialog', ...) captures zero events), (b) no toast appears, (c) the card stays. Mitigation options: (1) use Platform.OS guard — `if (Platform.OS === 'web') { if (window.confirm(`Delete \"${card.nickname}\"?`)) onDelete(); }` else fall back to Alert.alert; (2) replace Alert.alert with a custom themed confirm modal that works on all platforms (also better UX/branding); (3) use the cross-platform library 'react-native-paper' Dialog or similar. Option (1) is the smallest change."
+}

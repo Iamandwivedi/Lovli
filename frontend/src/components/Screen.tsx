@@ -25,7 +25,7 @@ type Props = {
   testID?: string;
 };
 
-const TAB_BAR_SPACE = 96; // bottom tab bar height + safe area
+const TAB_BAR_SPACE = 132; // bottom tab bar height + safe area + breathing room
 
 export const Screen: React.FC<Props> = ({
   children,

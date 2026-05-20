@@ -1,5 +1,5 @@
 // Settings — accessed from top-right icon. Not a bottom tab.
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -45,6 +45,16 @@ export default function SettingsScreen() {
     (user?.language_preference as Language) || "Hinglish",
   );
   const [saving, setSaving] = useState(false);
+
+  // Sync local form state once the user object is loaded (e.g. after a hard refresh).
+  useEffect(() => {
+    if (!user) return;
+    setName(user.name || "");
+    setPlatform(platformValueToLabel(user.preferred_platform || "instagram"));
+    setLanguage((user.language_preference as Language) || "Hinglish");
+    // We only want to sync once on the first user load — guarded by user?.id.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const onSave = async () => {
     try {
