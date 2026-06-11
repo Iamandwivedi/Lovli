@@ -46,3 +46,8 @@ coverage/
 # Always commit example envs
 !.env.example
 !**/.env.example
+.env.*
+*.env
+credentials.json
+*.pem
+.credentials
