@@ -1,13 +1,12 @@
 [phases.setup]
-# Nixpacks' bare `python311` derivation ships Python without a usable `pip`
-# binary on PATH. Including `python311Packages.pip` makes `python -m pip`
-# work reliably; the explicit `ensurepip` step is a belt-and-braces fallback
-# for older Nixpacks builders where the Python package set varies.
+# `python311Packages.pip` ensures `python -m pip` is available on the
+# Nixpacks Python 3.11 derivation. We deliberately do NOT call
+# `ensurepip` (older Nixpacks images fail that step) — pip is provided
+# by the Nix package above instead.
 nixPkgs = ["python311", "python311Packages.pip"]
 
 [phases.install]
 cmds = [
-  "python -m ensurepip --upgrade",
   "python -m pip install --upgrade pip",
   "python -m pip install -r requirements.txt"
 ]
