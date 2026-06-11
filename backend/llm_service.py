@@ -330,11 +330,21 @@ async def _generate_anthropic(req: LovliRequest, retry: bool = False) -> dict:
 # ---- Emergent provider (fallback) -----------------------------------------
 
 async def _generate_emergent(req: LovliRequest, retry: bool = False) -> dict:
-    from emergentintegrations.llm.chat import (  # local import
-        ImageContent,
-        LlmChat,
-        UserMessage,
-    )
+    # Optional dependency — only required if EMERGENT_LLM_KEY is configured AND
+    # the primary Anthropic path fails. On Railway (and any portable deploy)
+    # the package is not installed; we surface a clean error in that case
+    # rather than crashing on ImportError.
+    try:
+        from emergentintegrations.llm.chat import (  # local import
+            ImageContent,
+            LlmChat,
+            UserMessage,
+        )
+    except ImportError as e:
+        raise LovliLlmError(
+            "Emergent LLM fallback not available in this deployment "
+            "(emergentintegrations package not installed)."
+        ) from e
 
     api_key = os.environ.get("EMERGENT_LLM_KEY")
     if not api_key:
