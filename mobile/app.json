@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Lovli",
+    "slug": "lovli",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#050509",
+    "splash": {
+      "backgroundColor": "#050509",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "in.lovli.app",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Lovli uses your photo library to let you upload chat screenshots.",
+        "NSCameraUsageDescription": "Lovli uses your camera to capture chat screenshots."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#050509"
+      },
+      "package": "in.lovli.app",
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES"
+      ]
+    },
+    "plugins": [
+      ["expo-router", { "root": "app" }],
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Lovli uses your photo library to let you upload chat screenshots."
+        }
+      ],
+      "expo-font"
+    ],
+    "scheme": "lovli",
+    "extra": {
+      "router": {
+        "origin": false
+      }
+    }
+  }
+}

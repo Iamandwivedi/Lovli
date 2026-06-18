@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lovli — Mobile Design Board v1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050509; --bg-deep:#090A14; --card:#11121C; --card2:#171827;
+    --border:#2A2B3A; --border-strong:#3A3B4D;
+    --lav:#A78BFA; --lav-soft:#C4B5FD; --violet:#8B5CF6; --sky:#38BDF8; --sky-soft:#60A5FA;
+    --text:#F8FAFC; --text-soft:#E5E7EB; --muted:#A1A1AA; --faint:#71717A;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#1A1B22;font-family:'Figtree',sans-serif;color:var(--text);padding:56px 64px}
+  .board-title{font:600 24px 'Space Grotesk';letter-spacing:-.012em;margin-bottom:6px}
+  .board-sub{font:400 13px 'Figtree';color:#8B8D98;margin-bottom:40px}
+  .section-title{font:600 15px 'Space Grotesk';color:#C9CBD6;margin:56px 0 20px;letter-spacing:.02em;text-transform:uppercase}
+  .row{display:flex;flex-wrap:wrap;gap:44px;align-items:flex-start}
+  .fw .flabel{font:500 12px 'Figtree';color:#8B8D98;margin:0 0 10px 2px}
+  .frame{width:390px;height:844px;background:var(--bg);outline:1px solid #30313e;position:relative;overflow:hidden;display:flex;flex-direction:column}
+  /* ---------- shared phone chrome ---------- */
+  .status{height:50px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;font:600 14px 'Figtree';color:var(--text);flex-shrink:0}
+  .status .sig{display:flex;gap:5px;align-items:center}
+  .status .sig i{display:block;background:var(--text);border-radius:1px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 12px;flex-shrink:0}
+  .brand{display:flex;align-items:center;gap:8px}
+  .mark{width:26px;height:26px;border-radius:8px;background:radial-gradient(circle at 30% 25%,#C4B5FD 0%,#8B5CF6 55%,#4C3D8F 100%);box-shadow:0 0 14px rgba(167,139,250,.35);position:relative}
+  .mark::after{content:'';position:absolute;inset:0;border-radius:8px;border:1px solid rgba(255,255,255,.22)}
+  .word{font:600 16px 'Space Grotesk';letter-spacing:-.012em}
+  .topbar .right{display:flex;gap:8px;align-items:center}
+  .badge-plan{font:500 11px 'Figtree';color:var(--muted);border:1px solid var(--border);padding:4px 10px;border-radius:999px}
+  .icbtn{width:32px;height:32px;border-radius:999px;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center}
+  .content{flex:1;padding:4px 16px 0;overflow:hidden;position:relative}
+  /* bottom nav */
+  .nav{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);width:358px;background:rgba(23,24,39,.92);border:1px solid var(--border);border-radius:24px;display:flex;padding:8px 6px 10px;backdrop-filter:blur(20px);box-shadow:0 16px 48px rgba(0,0,0,.55)}
+  .nav .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font:500 10.5px 'Figtree';color:var(--muted);position:relative;padding-top:5px}
+  .nav .tab.on{color:var(--lav)}
+  .nav .tab.on::before{content:'';position:absolute;top:-8px;width:26px;height:3px;border-radius:999px;background:var(--lav)}
+  .homebar{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:120px;height:4px;border-radius:999px;background:rgba(248,250,252,.28)}
+  /* ---------- typography ---------- */
+  .h1{font:600 22px/1.25 'Space Grotesk';letter-spacing:-.012em;color:var(--text)}
+  .h2{font:600 16px 'Space Grotesk';letter-spacing:-.012em;color:var(--text)}
+  .sub{font:400 14px/1.5 'Figtree';color:var(--muted);margin-top:6px}
+  .label{font:500 12.5px 'Figtree';color:var(--text-soft)}
+  .helper{font:400 12.5px/1.45 'Figtree';color:var(--muted)}
+  .tinycap{font:500 11px 'Figtree';letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  /* ---------- components ---------- */
+  .glass{background:rgba(23,24,39,.78);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 16px 48px rgba(0,0,0,.55)}
+  .cardx{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px}
+  .cta{height:50px;border-radius:999px;background:#FFFFFF;color:#050509;font:600 15px 'Figtree';display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 12px 32px rgba(167,139,250,.22)}
+  .ghost{height:46px;border-radius:999px;background:var(--card);border:1px solid var(--border);color:var(--text-soft);font:500 14px 'Figtree';display:flex;align-items:center;justify-content:center;gap:8px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{min-height:36px;display:inline-flex;align-items:center;border-radius:999px;padding:7px 14px;font:500 12px 'Figtree';border:1px solid var(--border);background:var(--card);color:rgba(229,231,235,.85)}
+  .chip.on{background:rgba(167,139,250,.10);border-color:rgba(167,139,250,.55);color:var(--text);box-shadow:0 0 12px rgba(167,139,250,.15)}
+  .input{height:44px;border-radius:12px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;padding:0 14px;font:400 14px 'Figtree';color:var(--faint)}
+  .input.filled{color:var(--text)}
+  .input.focus{border-color:var(--lav);box-shadow:0 0 0 3px rgba(167,139,250,.18)}
+  .textarea{border-radius:12px;background:var(--card);border:1px solid var(--border);padding:12px 14px;font:400 14px/1.5 'Figtree';color:var(--faint);min-height:76px}
+  .lockline{display:flex;align-items:center;gap:6px;font:400 12.5px 'Figtree';color:var(--muted)}
+  .divider{display:flex;align-items:center;gap:12px;color:var(--faint);font:400 12px 'Figtree'}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+  .dotstep{display:flex;gap:6px;justify-content:center}
+  .dotstep i{width:6px;height:6px;border-radius:999px;background:var(--border-strong);display:block}
+  .dotstep i.on{background:var(--lav);width:18px}
+  svg.ic{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  .iconring{width:44px;height:44px;border-radius:999px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.10);display:flex;align-items:center;justify-content:center;color:var(--lav)}
+  /* tokens frame */
+  .tok-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .sw{border-radius:12px;border:1px solid var(--border);padding:8px;height:74px;display:flex;flex-direction:column;justify-content:flex-end}
+  .sw b{font:500 10px 'Figtree';color:var(--text-soft);display:block}
+  .sw span{font:400 9px 'Figtree';color:var(--muted)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/><circle cx="12" cy="15.5" r="1.4"/></symbol>
+    <symbol id="i-chev-d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 4l1.7 4.6L18 10l-4.3 1.4L12 16l-1.7-4.6L6 10l4.3-1.4z"/><path d="M19 16l.8 2.1L22 19l-2.2.9L19 22l-.8-2.1L16 19l2.2-.9z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 6.3"/><path d="M20 5v6h-6"/></symbol>
+    <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H4l2-3a8 8 0 1 1 15-5z"/><path d="M8 11h8M8 14.5h5"/></symbol>
+    <symbol id="i-brain" viewBox="0 0 24 24"><path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 3c0 1 .4 1.8 1 2.4A3.5 3.5 0 0 0 7.5 19H9"/><path d="M15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 3c0 1-.4 1.8-1 2.4A3.5 3.5 0 0 1 16.5 19H15"/><path d="M12 3v18"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2 2 2 0 0 0 2 2h14"/><path d="M12 7.8c.8-1 2.4-1.2 3.2-.3.8.8.7 2.2-.3 3l-2.9 2.6-2.9-2.6c-1-.8-1.1-2.2-.3-3 .8-.9 2.4-.7 3.2.3z"/></symbol>
+    <symbol id="i-cog" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.7a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.7a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 13l4.5 4.5L19 7"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M16.5 4.5l3 3L8 19l-4 1 1-4z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6.5 7l1 13h9l1-13"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4.5 17l5-5 4 4 2.5-2.5 3.5 3.5"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c1-3.6 4-5 7-5s6 1.4 7 5"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2L5 13h6l-1 9 8-11h-6z"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="M2 8.5C5 6 8.4 4.8 12 4.8c3.6 0 7 1.2 10 3.7M5.5 12.5a10 10 0 0 1 6.5-2.4c2.4 0 4.7.8 6.5 2.4M9 16.2a5 5 0 0 1 6 0"/><circle cx="12" cy="19" r="1.2" fill="currentColor"/><path d="M3 3l18 18"/></symbol>
+    <symbol id="i-badge" viewBox="0 0 24 24"><path d="M12 2l2.4 2.4 3.4-.4.8 3.3 3 1.7-1.4 3 1.4 3-3 1.7-.8 3.3-3.4-.4L12 22l-2.4-2.4-3.4.4-.8-3.3-3-1.7 1.4-3-1.4-3 3-1.7.8-3.3 3.4.4z"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/></symbol>
+    <symbol id="i-google" viewBox="0 0 24 24"><path d="M21 12.2c0-.7-.1-1.3-.2-2H12v3.9h5.1a4.4 4.4 0 0 1-1.9 2.9v2.4h3C20 17.6 21 15.2 21 12.2z" fill="#60A5FA" stroke="none"/><path d="M12 21c2.4 0 4.5-.8 6-2.2l-3-2.4c-.8.6-1.9.9-3 .9-2.3 0-4.3-1.6-5-3.7H4v2.4A9 9 0 0 0 12 21z" fill="#34D399" stroke="none"/><path d="M7 13.6a5.3 5.3 0 0 1 0-3.4V7.8H4a9 9 0 0 0 0 8.2z" fill="#FBBF24" stroke="none"/><path d="M12 6.6c1.3 0 2.5.5 3.4 1.3L18.1 5A9 9 0 0 0 4 7.8l3 2.4c.7-2.1 2.7-3.6 5-3.6z" fill="#F87171" stroke="none"/></symbol>
+  </defs>
+</svg>
+
+<div class="board-title">Lovli — Mobile UI/UX Design Board v1</div>
+<div class="board-sub">Direction: Quiet Confidence · iPhone 15 frames 390×844 · Tokens per DESIGN_HANDOFF.md · Import to Figma via html.to.design</div>
+
+<div class="section-title">A · Foundations</div>
+<div class="row">
+
+  <!-- A1 TOKENS -->
+  <div class="fw"><div class="flabel">A1 · Tokens &amp; Type</div>
+  <div class="frame" style="height:auto;min-height:844px">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="content" style="padding-bottom:24px">
+      <div class="h1" style="margin-top:6px">Foundations</div>
+      <p class="sub">Binding tokens — mirror to <code style="font-size:12px">theme/colors.ts</code></p>
+      <p class="tinycap" style="margin:20px 0 10px">Core dark</p>
+      <div class="tok-grid">
+        <div class="sw" style="background:#050509"><b>bg</b><span>#050509</span></div>
+        <div class="sw" style="background:#090A14"><b>bg-deep</b><span>#090A14</span></div>
+        <div class="sw" style="background:#11121C"><b>card</b><span>#11121C</span></div>
+        <div class="sw" style="background:#171827"><b>card-2</b><span>#171827</span></div>
+        <div class="sw" style="background:#2A2B3A"><b>border</b><span>#2A2B3A</span></div>
+        <div class="sw" style="background:#3A3B4D"><b>border-strong</b><span>#3A3B4D</span></div>
+      </div>
+      <p class="tinycap" style="margin:20px 0 10px">Accent · selected / focus / active only</p>
+      <div class="tok-grid">
+        <div class="sw" style="background:#A78BFA"><b style="color:#050509">lavender</b><span style="color:#1e1b35">#A78BFA</span></div>
+        <div class="sw" style="background:#C4B5FD"><b style="color:#050509">lavender-soft</b><span style="color:#1e1b35">#C4B5FD</span></div>
+        <div class="sw" style="background:#8B5CF6"><b style="color:#FFF">violet</b><span style="color:#e3dcfb">#8B5CF6</span></div>
+        <div class="sw" style="background:#38BDF8"><b style="color:#050509">sky</b><span style="color:#0c3349">#38BDF8</span></div>
+      </div>
+      <p class="tinycap" style="margin:20px 0 10px">Text</p>
+      <div class="tok-grid">
+        <div class="sw" style="background:#11121C"><b style="color:#F8FAFC">text</b><span>#F8FAFC</span></div>
+        <div class="sw" style="background:#11121C"><b style="color:#E5E7EB">text-soft</b><span>#E5E7EB</span></div>
+        <div class="sw" style="background:#11121C"><b style="color:#A1A1AA">muted</b><span>#A1A1AA</span></div>
+        <div class="sw" style="background:#11121C"><b style="color:#71717A">faint</b><span>#71717A</span></div>
+      </div>
+      <p class="tinycap" style="margin:22px 0 12px">Type scale · Space Grotesk + Figtree</p>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="h1">Page title — 22 / 600</div>
+        <div class="h2">Section title — 16 / 600</div>
+        <div style="font:600 17px 'Space Grotesk';letter-spacing:-.012em">Card title — 17 / 600</div>
+        <div style="font:400 17px/1.6 'Figtree'">Reply text (hero) — 17 / 400 / 1.6</div>
+        <div style="font:400 14px 'Figtree'">Body — 14 / 400</div>
+        <div class="helper">Helper / muted — 12.5 / 400</div>
+        <div class="tinycap">Tiny meta — 11 / 500 / caps</div>
+      </div>
+      <p class="tinycap" style="margin:22px 0 12px">Core controls</p>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="cta"><svg class="ic" width="16" height="16"><use href="#i-sparkles"/></svg>Primary CTA — white pill</div>
+        <div class="ghost">Secondary — dark glass</div>
+        <div class="chips"><span class="chip">Chip</span><span class="chip on">Chip selected</span></div>
+        <div class="input focus">Input — focus ring lavender/18%</div>
+      </div>
+    </div>
+  </div></div>
+</div>
+
+<div class="section-title">B · First run — Splash · Onboarding · Auth</div>
+<div class="row">
+
+  <!-- B1 SPLASH -->
+  <div class="fw"><div class="flabel">B1 · Splash — discreet, no tagline</div>
+  <div class="frame">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+      <div class="mark" style="width:54px;height:54px;border-radius:16px;box-shadow:0 0 44px rgba(167,139,250,.4)"></div>
+      <div style="font:600 24px 'Space Grotesk';letter-spacing:-.012em">lovli</div>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+
+  <!-- B2 ONBOARDING 1 -->
+  <div class="fw"><div class="flabel">B2 · Onboarding 1 — value preview (NEW)</div>
+  <div class="frame">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="content" style="display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:flex-end;padding-top:4px"><span class="helper">Skip</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:22px;padding-bottom:30px">
+        <div>
+          <div class="h1">Stuck on what to reply?</div>
+          <p class="sub">Upload a chat. Lovli gives you 3 natural replies you can actually send.</p>
+        </div>
+        <!-- mock incoming chat -->
+        <div style="align-self:flex-start;max-width:280px;background:var(--card-2,#171827);border:1px solid var(--border);border-radius:18px 18px 18px 6px;padding:12px 16px;font:400 14.5px/1.45 'Figtree';color:var(--text-soft)">
+          Movie kab dekh rahe ho phir? 😏
+        </div>
+        <!-- arrow / morph cue -->
+        <div style="display:flex;align-items:center;gap:8px;color:var(--lav)"><svg class="ic" width="15" height="15"><use href="#i-sparkles"/></svg><span style="font:500 12px 'Figtree';color:var(--lav)">Lovli writes 3 ways to answer</span></div>
+        <!-- 3 mini reply previews -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="cardx" style="padding:13px 15px"><span class="tinycap" style="color:var(--lav)">● Playful</span><div style="font:400 14.5px/1.5 'Figtree';margin-top:5px">Jab tum free ho tab 😄 par popcorn tumhare side se</div></div>
+          <div class="cardx" style="padding:13px 15px"><span class="tinycap" style="color:var(--lav)">● Warm</span><div style="font:400 14.5px/1.5 'Figtree';margin-top:5px">Was just thinking about that — is weekend chalein?</div></div>
+          <div class="cardx" style="padding:13px 15px;opacity:.55"><span class="tinycap" style="color:var(--lav)">● Confident</span><div style="font:400 14.5px/1.5 'Figtree';margin-top:5px">Saturday, 7 baje. Main book kar leta hoon.</div></div>
+        </div>
+      </div>
+      <div style="padding-bottom:34px;display:flex;flex-direction:column;gap:16px">
+        <div class="dotstep"><i class="on"></i><i></i><i></i></div>
+        <div class="cta">Continue</div>
+      </div>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+
+  <!-- B3 ONBOARDING 2 -->
+  <div class="fw"><div class="flabel">B3 · Onboarding 2 — platform</div>
+  <div class="frame">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="content" style="display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:flex-end;padding-top:4px"><span class="helper">Skip</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px;padding-bottom:80px">
+        <div>
+          <div class="h1">Where do you mostly chat?</div>
+          <p class="sub">Helps Lovli read the context. You can change this for any reply.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="chip on" style="justify-content:space-between;display:flex;width:100%;padding:14px 16px;border-radius:14px;font-size:14px">Instagram <svg class="ic" width="16" height="16" style="color:var(--lav)"><use href="#i-check"/></svg></div>
+          <div class="chip" style="width:100%;padding:14px 16px;border-radius:14px;font-size:14px">Dating platform</div>
+          <div class="chip" style="width:100%;padding:14px 16px;border-radius:14px;font-size:14px">WhatsApp</div>
+        </div>
+      </div>
+      <div style="padding-bottom:34px;display:flex;flex-direction:column;gap:16px">
+        <div class="dotstep"><i></i><i class="on"></i><i></i></div>
+        <div class="cta">Continue</div>
+      </div>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+
+  <!-- B4 ONBOARDING 3 -->
+  <div class="fw"><div class="flabel">B4 · Onboarding 3 — language</div>
+  <div class="frame">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="content" style="display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:flex-end;padding-top:4px"><span class="helper">Skip</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px;padding-bottom:80px">
+        <div>
+          <div class="h1">How should replies sound?</div>
+          <p class="sub">Your default reply language. You can switch it on every reply.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="chip" style="width:100%;padding:14px 16px;border-radius:14px;font-size:14px">English</div>
+          <div class="chip on" style="justify-content:space-between;display:flex;width:100%;padding:14px 16px;border-radius:14px;font-size:14px">Hinglish <svg class="ic" width="16" height="16" style="color:var(--lav)"><use href="#i-check"/></svg></div>
+          <div class="chip" style="width:100%;padding:14px 16px;border-radius:14px;font-size:14px">Hindi + English mixed</div>
+        </div>
+        <div class="lockline"><svg class="ic" width="13" height="13"><use href="#i-lock"/></svg>Private by design. Your chats stay yours.</div>
+      </div>
+      <div style="padding-bottom:34px;display:flex;flex-direction:column;gap:16px">
+        <div class="dotstep"><i></i><i></i><i class="on"></i></div>
+        <div class="cta">Done</div>
+      </div>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+
+  <!-- B5 LOGIN -->
+  <div class="fw"><div class="flabel">B5 · Login</div>
+  <div class="frame">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="content" style="display:flex;flex-direction:column;justify-content:center;padding-bottom:60px">
+      <div style="display:flex;align-items:center;gap:9px;justify-content:center;margin-bottom:26px">
+        <div class="mark" style="width:30px;height:30px;border-radius:9px"></div>
+        <span style="font:600 19px 'Space Grotesk';letter-spacing:-.012em">lovli</span>
+      </div>
+      <div class="glass" style="display:flex;flex-direction:column;gap:16px">
+        <div>
+          <div class="h1">Welcome back</div>
+          <p class="sub">Pick up where the conversation left off.</p>
+        </div>
+        <div class="lockline"><svg class="ic" width="13" height="13"><use href="#i-lock"/></svg>Your chats stay yours.</div>
+        <div style="display:flex;flex-direction:column;gap:6px"><span class="label">Email</span><div class="input">you@example.com</div></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><span class="label">Password</span><div class="input">••••••••</div></div>
+        <div class="cta" style="height:48px">Sign in</div>
+        <div class="divider">or</div>
+        <div class="ghost"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-google"/></svg>Continue with Google</div>
+        <p class="helper" style="text-align:center">New here? <span style="color:var(--lav)">Create account</span></p>
+      </div>
+      <p class="helper" style="text-align:center;margin-top:18px;font-size:11.5px;color:var(--faint)">Terms · Privacy</p>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+
+  <!-- B6 SIGNUP -->
+  <div class="fw"><div class="flabel">B6 · Signup</div>
+  <div class="frame">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="content" style="display:flex;flex-direction:column;justify-content:center;padding-bottom:50px">
+      <div style="display:flex;align-items:center;gap:9px;justify-content:center;margin-bottom:24px">
+        <div class="mark" style="width:30px;height:30px;border-radius:9px"></div>
+        <span style="font:600 19px 'Space Grotesk';letter-spacing:-.012em">lovli</span>
+      </div>
+      <div class="glass" style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <div class="h1">Nice to meet you</div>
+          <p class="sub">3 natural replies for any chat. Built for Indian conversations.</p>
+        </div>
+        <div class="lockline"><svg class="ic" width="13" height="13"><use href="#i-lock"/></svg>Your chats stay yours.</div>
+        <div style="display:flex;flex-direction:column;gap:6px"><span class="label">Name</span><div class="input">What should we call you?</div></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><span class="label">Email</span><div class="input">you@example.com</div></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><span class="label">Password</span><div class="input">8+ characters</div></div>
+        <div class="cta" style="height:48px">Create account</div>
+        <div class="divider">or</div>
+        <div class="ghost" style="height:44px"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-google"/></svg>Continue with Google</div>
+        <p class="helper" style="text-align:center">Already have an account? <span style="color:var(--lav)">Sign in</span></p>
+      </div>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+</div>
+
+<div class="section-title">C · Reply flow — the money path</div>
+<div class="row">
+
+  <!-- C1 REPLY FIRST RUN -->
+  <div class="fw"><div class="flabel">C1 · Reply — first run (example link + example card)</div>
+  <div class="frame">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="topbar">
+      <div class="brand"><div class="mark"></div><span class="word">lovli</span></div>
+      <div class="right"><span class="badge-plan">Free</span><div class="icbtn"><svg class="ic" width="15" height="15" style="color:var(--muted)"><use href="#i-cog"/></svg></div></div>
+    </div>
+    <div class="content">
+      <div class="h1">Stuck on what to reply?</div>
+      <p class="sub">Upload the chat, choose language, and get 3 natural replies.</p>
+      <div class="glass" style="margin-top:16px;display:flex;flex-direction:column;gap:16px;padding:16px">
+        <!-- upload card -->
+        <div style="border:1.5px dashed var(--border);border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;align-items:center;gap:7px;background:rgba(17,18,28,.5)">
+          <div class="iconring" style="width:38px;height:38px"><svg class="ic" width="17" height="17"><use href="#i-upload"/></svg></div>
+          <div style="font:600 14.5px 'Figtree';color:var(--text)">Upload chat screenshot</div>
+          <div class="helper" style="font-size:12px">Instagram, Dating platform, or WhatsApp</div>
+          <div class="lockline" style="font-size:11.5px"><svg class="ic" width="12" height="12"><use href="#i-lock"/></svg>Screenshots are never stored</div>
+        </div>
+        <!-- paste -->
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span class="label">Or paste the chat</span>
+          <div class="textarea" style="min-height:64px">Paste the chat or explain the situation…</div>
+          <span style="font:500 12px 'Figtree';color:var(--lav)">No screenshot? Try an example</span>
+        </div>
+        <!-- language -->
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span class="label">Reply language</span>
+          <div class="chips"><span class="chip">English</span><span class="chip on">Hinglish</span><span class="chip">Hindi + English mixed</span></div>
+        </div>
+        <!-- customize collapsed -->
+        <div class="cardx" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px">
+          <div style="display:flex;align-items:center;gap:11px">
+            <div class="iconring" style="width:30px;height:30px"><svg class="ic" width="13" height="13"><use href="#i-sliders"/></svg></div>
+            <div>
+              <div style="font:500 13px 'Figtree';color:var(--text)">Customize reply</div>
+              <div style="font:400 11.5px 'Figtree';color:var(--muted)">Instagram • Playful • No memory</div>
+            </div>
+          </div>
+          <svg class="ic" width="15" height="15" style="color:var(--muted)"><use href="#i-chev-d"/></svg>
+        </div>
+        <!-- usage + privacy -->
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span class="helper" style="font-size:11.5px">0 of 8 used today</span>
+          <span class="lockline" style="font-size:11px"><svg class="ic" width="11" height="11"><use href="#i-shield"/></svg>Private</span>
+        </div>
+        <div class="cta"><svg class="ic" width="15" height="15"><use href="#i-sparkles"/></svg>Generate replies</div>
+      </div>
+      <!-- first-run example card -->
+      <div class="cardx" style="margin-top:14px;padding:14px 15px">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span class="tinycap" style="color:var(--lav)">● Playful</span><span class="tinycap" style="color:var(--faint)">Example</span></div>
+        <div style="font:400 16px/1.55 'Figtree';margin-top:6px;color:var(--text)">Haha bold claim 😄 chalo prove karo — coffee this week?</div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="tab on"><svg class="ic" width="19" height="19"><use href="#i-message"/></svg>Reply</div>
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-sparkles"/></svg>Pro</div>
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-brain"/></svg>Memory</div>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+
+  <!-- C2 REPLY FILLED -->
+  <div class="fw"><div class="flabel">C2 · Reply — filled (screenshot attached, memory on)</div>
+  <div class="frame">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="topbar">
+      <div class="brand"><div class="mark"></div><span class="word">lovli</span></div>
+      <div class="right"><span class="badge-plan">Free</span><div class="icbtn"><svg class="ic" width="15" height="15" style="color:var(--muted)"><use href="#i-cog"/></svg></div></div>
+    </div>
+    <div class="content">
+      <div class="h1">Stuck on what to reply?</div>
+      <p class="sub">Upload the chat, choose language, and get 3 natural replies.</p>
+      <div class="glass" style="margin-top:16px;display:flex;flex-direction:column;gap:16px;padding:16px">
+        <!-- attached screenshot state -->
+        <div style="border:1px solid rgba(167,139,250,.45);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;background:rgba(167,139,250,.06)">
+          <div style="width:44px;height:58px;border-radius:8px;background:linear-gradient(160deg,#22243a,#171827);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--lav)"><svg class="ic" width="16" height="16"><use href="#i-image"/></svg></div>
+          <div style="flex:1">
+            <div style="font:500 13.5px 'Figtree';color:var(--text)">chat-screenshot.png</div>
+            <div class="helper" style="font-size:11.5px">Attached · tap to replace</div>
+          </div>
+          <div class="icbtn" style="width:28px;height:28px"><svg class="ic" width="13" height="13" style="color:var(--muted)"><use href="#i-x"/></svg></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span class="label">Or paste the chat</span>
+          <div class="textarea" style="min-height:52px">Paste the chat or explain the situation…</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span class="label">Reply language</span>
+          <div class="chips"><span class="chip">English</span><span class="chip on">Hinglish</span><span class="chip">Hindi + English mixed</span></div>
+        </div>
+        <div class="cardx" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-color:rgba(167,139,250,.35)">
+          <div style="display:flex;align-items:center;gap:11px">
+            <div class="iconring" style="width:30px;height:30px"><svg class="ic" width="13" height="13"><use href="#i-sliders"/></svg></div>
+            <div>
+              <div style="font:500 13px 'Figtree';color:var(--text)">Customize reply</div>
+              <div style="font:400 11.5px 'Figtree';color:var(--muted)">Instagram • Playful • Aisha</div>
+            </div>
+          </div>
+          <svg class="ic" width="15" height="15" style="color:var(--muted)"><use href="#i-chev-d"/></svg>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span class="helper" style="font-size:11.5px">3 of 8 used today</span>
+          <span class="lockline" style="font-size:11px"><svg class="ic" width="11" height="11"><use href="#i-shield"/></svg>Private</span>
+        </div>
+        <div class="cta"><svg class="ic" width="15" height="15"><use href="#i-sparkles"/></svg>Generate replies</div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="tab on"><svg class="ic" width="19" height="19"><use href="#i-message"/></svg>Reply</div>
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-sparkles"/></svg>Pro</div>
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-brain"/></svg>Memory</div>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+
+  <!-- C3 CUSTOMIZE SHEET -->
+  <div class="fw"><div class="flabel">C3 · Customize — bottom sheet (native pattern)</div>
+  <div class="frame">
+    <div class="status" style="opacity:.35"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="content" style="opacity:.35">
+      <div class="h1" style="margin-top:8px">Stuck on what to reply?</div>
+      <p class="sub">Upload the chat, choose language, and get 3 natural replies.</p>
+      <div class="glass" style="margin-top:16px;height:240px"></div>
+    </div>
+    <div style="position:absolute;inset:0;background:rgba(5,5,9,.55)"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;background:var(--card2);border:1px solid var(--border);border-bottom:none;border-radius:24px 24px 0 0;padding:10px 20px 30px;box-shadow:0 -16px 48px rgba(0,0,0,.6)">
+      <div style="width:38px;height:4px;border-radius:999px;background:var(--border-strong);margin:0 auto 16px"></div>
+      <div class="h2">Customize reply</div>
+      <div style="display:flex;flex-direction:column;gap:18px;margin-top:16px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span class="label">Platform</span>
+          <div class="chips"><span class="chip on">Instagram</span><span class="chip">Dating platform</span><span class="chip">WhatsApp</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span class="label">Vibe</span>
+          <div class="chips"><span class="chip on">Playful</span><span class="chip">Flirty</span><span class="chip">Sincere</span><span class="chip">Respectful</span><span class="chip">Confident</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span class="label">Personalize with memory <span style="color:var(--faint);font-weight:400">(optional)</span></span>
+          <div class="input filled" style="justify-content:space-between;display:flex;align-items:center">Aisha <svg class="ic" width="14" height="14" style="color:var(--muted)"><use href="#i-chev-d"/></svg></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span class="label">Quick note <span style="color:var(--faint);font-weight:400">(optional)</span></span>
+          <div class="textarea" style="min-height:56px">e.g. keep it light, not nervous; we matched yesterday</div>
+        </div>
+        <div class="cta" style="height:48px">Done</div>
+      </div>
+    </div>
+    <div class="homebar" style="background:rgba(248,250,252,.4)"></div>
+  </div></div>
+
+  <!-- C4 GENERATING -->
+  <div class="fw"><div class="flabel">C4 · Generating — calm two-step microcopy</div>
+  <div class="frame">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="topbar">
+      <div class="brand"><div class="mark"></div><span class="word">lovli</span></div>
+      <div class="right"><span class="badge-plan">Free</span><div class="icbtn"><svg class="ic" width="15" height="15" style="color:var(--muted)"><use href="#i-cog"/></svg></div></div>
+    </div>
+    <div class="content" style="display:flex;flex-direction:column;justify-content:center;padding-bottom:120px">
+      <div class="glass" style="display:flex;flex-direction:column;align-items:center;gap:18px;padding:40px 24px">
+        <div style="display:flex;gap:8px">
+          <span style="width:9px;height:9px;border-radius:999px;background:var(--lav)"></span>
+          <span style="width:9px;height:9px;border-radius:999px;background:var(--lav);opacity:.55"></span>
+          <span style="width:9px;height:9px;border-radius:999px;background:var(--lav);opacity:.25"></span>
+        </div>
+        <div style="text-align:center">
+          <div style="font:500 15px 'Figtree';color:var(--text)">Reading the chat…</div>
+          <div class="helper" style="margin-top:5px;color:var(--faint)">Writing natural replies</div>
+        </div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="tab on"><svg class="ic" width="19" height="19"><use href="#i-message"/></svg>Reply</div>
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-sparkles"/></svg>Pro</div>
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-brain"/></svg>Memory</div>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+
+  <!-- C5 RESULTS -->
+  <div class="fw"><div class="flabel">C5 · Results — dedicated screen, replies are the hero</div>
+  <div class="frame">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="content">
+      <!-- context bar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 4px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="icbtn" style="width:30px;height:30px"><svg class="ic" width="15" height="15" style="color:var(--text-soft)"><use href="#i-chev-l"/></svg></div>
+          <span class="helper" style="font-size:12px">Instagram • Hinglish • Playful</span>
+        </div>
+        <span class="helper" style="font-size:11.5px">4 of 8</span>
+      </div>
+      <div style="margin-top:10px">
+        <div class="h2" style="font-size:18px">Choose a reply</div>
+        <p class="helper" style="margin-top:3px">Edit it if you want. Make it yours.</p>
+        <p class="helper" style="margin-top:8px;font-size:11.5px;color:var(--faint)">Tone read: she's teasing you — keep it light.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
+        <!-- card 1 -->
+        <div class="glass" style="padding:16px;border-color:rgba(167,139,250,.3)">
+          <span class="tinycap" style="color:var(--lav)">● Playful</span>
+          <div style="font:400 17px/1.6 'Figtree';margin-top:8px">Haha achha? Ab toh batana padega — warna main apni theory bana lunga 😄</div>
+          <div style="display:flex;gap:10px;margin-top:14px;align-items:center">
+            <div class="cta" style="height:38px;flex:0 0 112px;font-size:13px;box-shadow:none"><svg class="ic" width="13" height="13"><use href="#i-copy"/></svg>Copy</div>
+            <div class="ghost" style="height:38px;flex:0 0 130px;font-size:12.5px"><svg class="ic" width="13" height="13"><use href="#i-refresh"/></svg>Regenerate</div>
+          </div>
+        </div>
+        <!-- card 2 -->
+        <div class="glass" style="padding:16px">
+          <span class="tinycap" style="color:var(--lav)">● Warm</span>
+          <div style="font:400 17px/1.6 'Figtree';margin-top:8px">Tumse baat karke hamesha din thoda better ho jaata hai, pata hai?</div>
+          <div style="display:flex;gap:10px;margin-top:14px;align-items:center">
+            <div class="cta" style="height:38px;flex:0 0 112px;font-size:13px;box-shadow:none"><svg class="ic" width="13" height="13"><use href="#i-copy"/></svg>Copy</div>
+            <div class="ghost" style="height:38px;flex:0 0 130px;font-size:12.5px"><svg class="ic" width="13" height="13"><use href="#i-refresh"/></svg>Regenerate</div>
+          </div>
+        </div>
+        <!-- card 3 -->
+        <div class="glass" style="padding:16px">
+          <span class="tinycap" style="color:var(--lav)">● Confident</span>
+          <div style="font:400 17px/1.6 'Figtree';margin-top:8px">Chalo, Saturday coffee pe decide karte hain. 7 baje?</div>
+          <div style="display:flex;gap:10px;margin-top:14px;align-items:center">
+            <div class="cta" style="height:38px;flex:0 0 112px;font-size:13px;box-shadow:none"><svg class="ic" width="13" height="13"><use href="#i-copy"/></svg>Copy</div>
+            <div class="ghost" style="height:38px;flex:0 0 130px;font-size:12.5px"><svg class="ic" width="13" height="13"><use href="#i-refresh"/></svg>Regenerate</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="tab on"><svg class="ic" width="19" height="19"><use href="#i-message"/></svg>Reply</div>
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-sparkles"/></svg>Pro</div>
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-brain"/></svg>Memory</div>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+
+  <!-- C6 POST-COPY + LIMIT -->
+  <div class="fw"><div class="flabel">C6 · Post-copy nudge + toast (overlay state)</div>
+  <div class="frame">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="content">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 4px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="icbtn" style="width:30px;height:30px"><svg class="ic" width="15" height="15" style="color:var(--text-soft)"><use href="#i-chev-l"/></svg></div>
+          <span class="helper" style="font-size:12px">Instagram • Hinglish • Playful</span>
+        </div>
+        <span class="helper" style="font-size:11.5px">4 of 8</span>
+      </div>
+      <div style="margin-top:10px">
+        <div class="h2" style="font-size:18px">Choose a reply</div>
+        <p class="helper" style="margin-top:3px">Edit it if you want. Make it yours.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
+        <div class="glass" style="padding:16px;border-color:rgba(167,139,250,.45)">
+          <span class="tinycap" style="color:var(--lav)">● Playful</span>
+          <div style="font:400 17px/1.6 'Figtree';margin-top:8px">Haha achha? Ab toh batana padega — warna main apni theory bana lunga 😄</div>
+          <div style="display:flex;gap:10px;margin-top:14px;align-items:center">
+            <div class="ghost" style="height:38px;flex:0 0 112px;font-size:13px;border-color:rgba(167,139,250,.5);color:var(--lav)"><svg class="ic" width="13" height="13"><use href="#i-check"/></svg>Copied</div>
+            <div class="ghost" style="height:38px;flex:0 0 130px;font-size:12.5px"><svg class="ic" width="13" height="13"><use href="#i-refresh"/></svg>Regenerate</div>
+          </div>
+        </div>
+        <!-- memory nudge -->
+        <div class="cardx" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-color:rgba(167,139,250,.25)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <svg class="ic" width="15" height="15" style="color:var(--lav)"><use href="#i-book"/></svg>
+            <span style="font:400 12.5px 'Figtree';color:var(--text-soft)">Want future replies to remember them? <b style="font-weight:600;color:var(--lav)">Add a Memory</b></span>
+          </div>
+          <svg class="ic" width="13" height="13" style="color:var(--faint)"><use href="#i-x"/></svg>
+        </div>
+        <div class="glass" style="padding:16px;opacity:.6">
+          <span class="tinycap" style="color:var(--lav)">● Warm</span>
+          <div style="font:400 17px/1.6 'Figtree';margin-top:8px">Tumse baat karke hamesha din thoda better ho jaata hai, pata hai?</div>
+        </div>
+      </div>
+      <!-- toast -->
+      <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:118px;background:var(--card2);border:1px solid var(--border);border-radius:999px;padding:10px 18px;display:flex;gap:8px;align-items:center;box-shadow:0 16px 48px rgba(0,0,0,.55)">
+        <svg class="ic" width="14" height="14" style="color:var(--lav)"><use href="#i-check"/></svg>
+        <span style="font:500 13px 'Figtree';color:var(--text)">Copied. Go send it.</span>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="tab on"><svg class="ic" width="19" height="19"><use href="#i-message"/></svg>Reply</div>
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-sparkles"/></svg>Pro</div>
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-brain"/></svg>Memory</div>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+
+  <!-- C7 LIMIT REACHED -->
+  <div class="fw"><div class="flabel">C7 · Limit reached — warm, honest, not punishing</div>
+  <div class="frame">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="topbar">
+      <div class="brand"><div class="mark"></div><span class="word">lovli</span></div>
+      <div class="right"><span class="badge-plan">Free</span><div class="icbtn"><svg class="ic" width="15" height="15" style="color:var(--muted)"><use href="#i-cog"/></svg></div></div>
+    </div>
+    <div class="content" style="display:flex;flex-direction:column;justify-content:center;padding-bottom:110px">
+      <div class="glass" style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:36px 24px;text-align:center">
+        <div class="iconring" style="width:52px;height:52px"><svg class="ic" width="22" height="22"><use href="#i-sparkles"/></svg></div>
+        <div class="h1">That's 8 for today.</div>
+        <p class="sub" style="margin-top:0">Resets at midnight. Come back tomorrow — or get early access to Pro for unlimited replies.</p>
+        <span class="chip" style="border-color:rgba(167,139,250,.4);color:var(--lav-soft);background:rgba(167,139,250,.07)">8 of 8 used today</span>
+        <div class="cta" style="width:100%;margin-top:6px">Get Early Access</div>
+        <div class="ghost" style="width:100%">Back to Reply</div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="tab on"><svg class="ic" width="19" height="19"><use href="#i-message"/></svg>Reply</div>
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-sparkles"/></svg>Pro</div>
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-brain"/></svg>Memory</div>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+</div>
+
+<div class="section-title">D · Memory — a private journal</div>
+<div class="row">
+
+  <!-- D1 MEMORY EMPTY -->
+  <div class="fw"><div class="flabel">D1 · Memory — empty (ghost example card)</div>
+  <div class="frame">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="topbar">
+      <div class="brand"><div class="mark"></div><span class="word">lovli</span></div>
+      <div class="right"><span class="badge-plan">Free</span><div class="icbtn"><svg class="ic" width="15" height="15" style="color:var(--muted)"><use href="#i-cog"/></svg></div></div>
+    </div>
+    <div class="content" style="display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:48px">
+      <div class="iconring" style="width:56px;height:56px"><svg class="ic" width="24" height="24"><use href="#i-book"/></svg></div>
+      <p class="tinycap" style="margin-top:18px;color:var(--lav)">Lovli Memory</p>
+      <div class="h1" style="margin-top:8px">Remember meaningful details.</div>
+      <p class="sub" style="max-width:300px">Save the little things they mention so future replies feel more thoughtful.</p>
+      <div class="lockline" style="margin-top:14px"><svg class="ic" width="13" height="13"><use href="#i-lock"/></svg>Private by default. You control what gets saved.</div>
+      <div class="cta" style="width:100%;margin-top:22px"><svg class="ic" width="15" height="15"><use href="#i-plus"/></svg>Add Memory</div>
+      <!-- ghost example -->
+      <div class="cardx" style="width:100%;margin-top:22px;text-align:left;opacity:.5;border-style:dashed">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font:600 15px 'Space Grotesk'">Aisha</span>
+          <span class="tinycap" style="color:var(--faint)">Example</span>
+        </div>
+        <div style="margin-top:10px"><span class="tinycap">Good to remember</span><p style="font:400 13px/1.5 'Figtree';color:var(--text-soft);margin-top:3px">Loves filter coffee. Hates small talk.</p></div>
+        <div style="margin-top:10px"><span class="tinycap">Inside jokes</span><p style="font:400 13px/1.5 'Figtree';color:var(--text-soft);margin-top:3px">The samosa incident 🥲</p></div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-message"/></svg>Reply</div>
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-sparkles"/></svg>Pro</div>
+      <div class="tab on"><svg class="ic" width="19" height="19"><use href="#i-brain"/></svg>Memory</div>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+
+  <!-- D2 MEMORY LIST -->
+  <div class="fw"><div class="flabel">D2 · Memory — list (empty fields hidden)</div>
+  <div class="frame">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="topbar">
+      <div class="brand"><div class="mark"></div><span class="word">lovli</span></div>
+      <div class="right"><span class="badge-plan">Free</span><div class="icbtn"><svg class="ic" width="15" height="15" style="color:var(--muted)"><use href="#i-cog"/></svg></div></div>
+    </div>
+    <div class="content">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between">
+        <div>
+          <p class="tinycap" style="color:var(--lav)">Lovli Memory</p>
+          <div class="h1" style="margin-top:6px">Remember meaningful details.</div>
+        </div>
+      </div>
+      <div class="lockline" style="margin-top:10px"><svg class="ic" width="13" height="13"><use href="#i-lock"/></svg>Private by default. You control what gets saved.</div>
+      <div class="cta" style="margin-top:16px;height:46px"><svg class="ic" width="15" height="15"><use href="#i-plus"/></svg>Add Memory</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:18px">
+        <div class="glass" style="padding:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font:600 16px 'Space Grotesk'">Aisha</span>
+            <div style="display:flex;gap:8px">
+              <div class="icbtn" style="width:28px;height:28px"><svg class="ic" width="12" height="12" style="color:var(--muted)"><use href="#i-pencil"/></svg></div>
+              <div class="icbtn" style="width:28px;height:28px;border-color:rgba(251,113,133,.25);background:rgba(244,63,94,.08)"><svg class="ic" width="12" height="12" style="color:#FDA4AF"><use href="#i-trash"/></svg></div>
+            </div>
+          </div>
+          <p class="helper" style="font-size:11.5px;margin-top:2px">Matched on Instagram · Getting to know each other</p>
+          <div style="margin-top:12px"><span class="tinycap">Good to remember</span><p style="font:400 13.5px/1.5 'Figtree';color:var(--text-soft);margin-top:3px">Loves filter coffee. Preparing for CAT. Has a golden retriever, Simba.</p></div>
+          <div style="margin-top:10px"><span class="tinycap">Things to avoid</span><p style="font:400 13.5px/1.5 'Figtree';color:var(--text-soft);margin-top:3px">Don't joke about her ex. Slow to reply in the mornings.</p></div>
+          <div style="margin-top:10px"><span class="tinycap">Inside jokes</span><p style="font:400 13.5px/1.5 'Figtree';color:var(--text-soft);margin-top:3px">The samosa incident.</p></div>
+        </div>
+        <div class="glass" style="padding:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font:600 16px 'Space Grotesk'">R</span>
+            <div style="display:flex;gap:8px">
+              <div class="icbtn" style="width:28px;height:28px"><svg class="ic" width="12" height="12" style="color:var(--muted)"><use href="#i-pencil"/></svg></div>
+              <div class="icbtn" style="width:28px;height:28px;border-color:rgba(251,113,133,.25);background:rgba(244,63,94,.08)"><svg class="ic" width="12" height="12" style="color:#FDA4AF"><use href="#i-trash"/></svg></div>
+            </div>
+          </div>
+          <p class="helper" style="font-size:11.5px;margin-top:2px">WhatsApp · Known for a while</p>
+          <div style="margin-top:12px"><span class="tinycap">How they usually talk</span><p style="font:400 13.5px/1.5 'Figtree';color:var(--text-soft);margin-top:3px">Short messages, lots of voice notes. Very Hinglish.</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-message"/></svg>Reply</div>
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-sparkles"/></svg>Pro</div>
+      <div class="tab on"><svg class="ic" width="19" height="19"><use href="#i-brain"/></svg>Memory</div>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+
+  <!-- D3 ADD MEMORY -->
+  <div class="fw"><div class="flabel">D3 · Add Memory — full screen, 3 sections, pinned save</div>
+  <div class="frame">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="content">
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 0 2px">
+        <div class="icbtn" style="width:30px;height:30px"><svg class="ic" width="15" height="15" style="color:var(--text-soft)"><use href="#i-chev-l"/></svg></div>
+        <div class="h2" style="font-size:18px">Add Memory</div>
+      </div>
+      <p class="helper" style="margin-top:8px">Use nicknames, not real names. You can edit or delete this anytime.</p>
+      <div style="display:flex;flex-direction:column;gap:14px;margin-top:16px">
+        <div class="cardx" style="display:flex;flex-direction:column;gap:12px">
+          <span class="tinycap" style="color:var(--lav)">Basic context</span>
+          <div style="display:flex;flex-direction:column;gap:6px"><span class="label">Nickname</span><div class="input filled focus">Aisha</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><span class="label">Current situation</span><div class="input">e.g. matched last week, talking daily</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><span class="label">Where you met</span><div class="input">Instagram</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><span class="label">What do you want with this person?</span><div class="input">e.g. see where it goes</div></div>
+        </div>
+        <div class="cardx" style="display:flex;flex-direction:column;gap:12px">
+          <span class="tinycap" style="color:var(--lav)">Good to remember</span>
+          <div style="display:flex;flex-direction:column;gap:6px"><span class="label">Good to remember</span><div class="textarea" style="min-height:54px">Little things they mention…</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><span class="label">Things to avoid</span><div class="textarea" style="min-height:46px">Topics to skip…</div></div>
+        </div>
+      </div>
+    </div>
+    <div style="position:absolute;left:0;right:0;bottom:0;padding:14px 16px 30px;background:linear-gradient(180deg,rgba(5,5,9,0) 0%,#050509 38%)">
+      <div class="cta">Save Memory</div>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+</div>
+
+<div class="section-title">E · Pro · Settings · System states</div>
+<div class="row">
+
+  <!-- E1 PRO -->
+  <div class="fw"><div class="flabel">E1 · Pro — waitlist, stacked plan cards</div>
+  <div class="frame">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="topbar">
+      <div class="brand"><div class="mark"></div><span class="word">lovli</span></div>
+      <div class="right"><span class="badge-plan">Free</span><div class="icbtn"><svg class="ic" width="15" height="15" style="color:var(--muted)"><use href="#i-cog"/></svg></div></div>
+    </div>
+    <div class="content">
+      <span class="chip" style="border-color:rgba(167,139,250,.4);color:var(--lav-soft);background:rgba(167,139,250,.07);min-height:28px;padding:4px 12px;font-size:11px">Coming soon</span>
+      <div class="h1" style="margin-top:12px">More replies. Smarter personalization.</div>
+      <p class="sub">For users who want unlimited generations, better memory, and early access to new AI features.</p>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:18px">
+        <div class="cardx">
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:600 15px 'Space Grotesk'">Free</span><span class="badge-plan">Your plan</span></div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+            <div style="display:flex;gap:9px;align-items:center"><svg class="ic" width="14" height="14" style="color:var(--muted)"><use href="#i-check"/></svg><span style="font:400 13.5px 'Figtree';color:var(--text-soft)">8 generations / day</span></div>
+            <div style="display:flex;gap:9px;align-items:center"><svg class="ic" width="14" height="14" style="color:var(--muted)"><use href="#i-check"/></svg><span style="font:400 13.5px 'Figtree';color:var(--text-soft)">3 replies each time</span></div>
+            <div style="display:flex;gap:9px;align-items:center"><svg class="ic" width="14" height="14" style="color:var(--muted)"><use href="#i-check"/></svg><span style="font:400 13.5px 'Figtree';color:var(--text-soft)">Basic vibes</span></div>
+            <div style="display:flex;gap:9px;align-items:center"><svg class="ic" width="14" height="14" style="color:var(--muted)"><use href="#i-check"/></svg><span style="font:400 13.5px 'Figtree';color:var(--text-soft)">Standard memory</span></div>
+          </div>
+        </div>
+        <div class="glass" style="padding:16px;border-color:rgba(167,139,250,.45)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font:600 15px 'Space Grotesk';color:var(--lav-soft)">Lovli Pro</span>
+            <span class="tinycap" style="color:var(--lav);border:1px solid rgba(167,139,250,.4);padding:3px 8px;border-radius:999px">Coming soon</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+            <div style="display:flex;gap:9px;align-items:center"><svg class="ic" width="14" height="14" style="color:var(--lav)"><use href="#i-check"/></svg><span style="font:400 13.5px 'Figtree';color:var(--text)">Unlimited generations</span></div>
+            <div style="display:flex;gap:9px;align-items:center"><svg class="ic" width="14" height="14" style="color:var(--lav)"><use href="#i-check"/></svg><span style="font:400 13.5px 'Figtree';color:var(--text)">Advanced memory</span></div>
+            <div style="display:flex;gap:9px;align-items:center"><svg class="ic" width="14" height="14" style="color:var(--lav)"><use href="#i-check"/></svg><span style="font:400 13.5px 'Figtree';color:var(--text)">More reply styles</span></div>
+            <div style="display:flex;gap:9px;align-items:center"><svg class="ic" width="14" height="14" style="color:var(--lav)"><use href="#i-check"/></svg><span style="font:400 13.5px 'Figtree';color:var(--text)">Early access to new AI features</span></div>
+          </div>
+          <div class="cta" style="margin-top:16px;height:46px">Get Early Access</div>
+        </div>
+        <p class="helper" style="text-align:center;font-size:11.5px;color:var(--faint)">We'll only email you about Pro early access.</p>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-message"/></svg>Reply</div>
+      <div class="tab on"><svg class="ic" width="19" height="19"><use href="#i-sparkles"/></svg>Pro</div>
+      <div class="tab"><svg class="ic" width="19" height="19"><use href="#i-brain"/></svg>Memory</div>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+
+  <!-- E2 SETTINGS -->
+  <div class="fw"><div class="flabel">E2 · Settings — top-right cog entry only</div>
+  <div class="frame">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="content">
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 0 2px">
+        <div class="icbtn" style="width:30px;height:30px"><svg class="ic" width="15" height="15" style="color:var(--text-soft)"><use href="#i-chev-l"/></svg></div>
+        <div class="h2" style="font-size:18px">Settings</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;margin-top:14px">
+        <div class="cardx" style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:8px"><svg class="ic" width="14" height="14" style="color:var(--lav)"><use href="#i-user"/></svg><span style="font:600 13px 'Figtree';color:var(--text)">Account</span></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><span class="label">Name</span><div class="input filled">Aman</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><span class="label">Email</span><div class="input" style="opacity:.55">iamandwivedi@gmail.com</div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0"><span class="helper">Login method</span><span class="badge-plan">Google</span></div>
+          <div class="cta" style="height:42px;font-size:13.5px">Save changes</div>
+          <div class="ghost" style="height:40px;font-size:13px">Logout</div>
+        </div>
+        <div class="cardx" style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:8px"><svg class="ic" width="14" height="14" style="color:var(--lav)"><use href="#i-sliders"/></svg><span style="font:600 13px 'Figtree';color:var(--text)">Preferences</span></div>
+          <div style="display:flex;flex-direction:column;gap:8px"><span class="label">Default language</span>
+            <div class="chips"><span class="chip" style="min-height:32px">English</span><span class="chip on" style="min-height:32px">Hinglish</span><span class="chip" style="min-height:32px">Hindi + English</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px"><span class="label">Default platform</span>
+            <div class="chips"><span class="chip on" style="min-height:32px">Instagram</span><span class="chip" style="min-height:32px">Dating platform</span><span class="chip" style="min-height:32px">WhatsApp</span></div>
+          </div>
+        </div>
+        <div class="cardx" style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:8px"><svg class="ic" width="14" height="14" style="color:var(--lav)"><use href="#i-badge"/></svg><span style="font:600 13px 'Figtree';color:var(--text)">Plan</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><span class="badge-plan">Free</span><span class="helper" style="font-size:12px">3 of 8 used today</span></div>
+          <span style="font:500 12.5px 'Figtree';color:var(--lav)">Get early access to Pro ›</span>
+        </div>
+        <div class="cardx" style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px"><svg class="ic" width="14" height="14" style="color:var(--lav)"><use href="#i-shield"/></svg><span style="font:600 13px 'Figtree';color:var(--text)">Privacy</span></div>
+          <p class="helper">Private by design. You control what gets saved. Screenshots are never stored.</p>
+        </div>
+      </div>
+    </div>
+    <div class="homebar"></div>
+  </div></div>
+
+  <!-- E3 STATES -->
+  <div class="fw"><div class="flabel">E3 · System states — toasts, errors, offline</div>
+  <div class="frame" style="height:auto;min-height:844px">
+    <div class="status"><span>9:41</span><span class="sig"><i style="width:16px;height:10px"></i><i style="width:14px;height:10px"></i><i style="width:22px;height:10px;border-radius:3px"></i></span></div>
+    <div class="content" style="display:flex;flex-direction:column;gap:18px;padding-bottom:30px">
+      <div class="h2" style="margin-top:6px">System states</div>
+      <div>
+        <p class="tinycap" style="margin-bottom:8px">Success toast</p>
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:999px;padding:10px 18px;display:inline-flex;gap:8px;align-items:center">
+          <svg class="ic" width="14" height="14" style="color:var(--lav)"><use href="#i-check"/></svg>
+          <span style="font:500 13px 'Figtree'">Copied. Go send it.</span>
+        </div>
+      </div>
+      <div>
+        <p class="tinycap" style="margin-bottom:8px">Error toast — generation failed</p>
+        <div style="background:var(--card2);border:1px solid rgba(251,113,133,.3);border-radius:14px;padding:12px 16px;display:flex;gap:9px;align-items:center">
+          <svg class="ic" width="14" height="14" style="color:#FDA4AF"><use href="#i-x"/></svg>
+          <span style="font:400 13px 'Figtree';color:var(--text-soft)">Lovli couldn't generate replies right now. Try again.</span>
+        </div>
+      </div>
+      <div>
+        <p class="tinycap" style="margin-bottom:8px">Offline banner</p>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 16px;display:flex;gap:9px;align-items:center">
+          <svg class="ic" width="14" height="14" style="color:var(--muted)"><use href="#i-wifi-off"/></svg>
+          <span style="font:400 13px 'Figtree';color:var(--text-soft)">You're offline. Replies need a connection.</span>
+        </div>
+      </div>
+      <div>
+        <p class="tinycap" style="margin-bottom:8px">Image too large</p>
+        <div style="background:var(--card2);border:1px solid rgba(251,113,133,.3);border-radius:14px;padding:12px 16px">
+          <span style="font:400 13px 'Figtree';color:var(--text-soft)">That image is over 6MB. Try a smaller screenshot (JPG, PNG, or WEBP).</span>
+        </div>
+      </div>
+      <div>
+        <p class="tinycap" style="margin-bottom:8px">Usage — 2 left (lavender whisper, no popup)</p>
+        <span class="chip" style="border-color:rgba(167,139,250,.4);color:var(--lav-soft);background:rgba(167,139,250,.07)">6 of 8 used today · 2 left</span>
+      </div>
+      <div>
+        <p class="tinycap" style="margin-bottom:8px">Regenerate confirm — styled inline (replaces window.confirm)</p>
+        <div class="glass" style="padding:16px">
+          <span style="font:500 14px 'Figtree';color:var(--text)">Use 1 generation to regenerate?</span>
+          <p class="helper" style="margin-top:4px;font-size:12px">You have 2 left today.</p>
+          <div style="display:flex;gap:10px;margin-top:12px">
+            <div class="cta" style="height:38px;flex:1;font-size:13px;box-shadow:none">Regenerate</div>
+            <div class="ghost" style="height:38px;flex:1;font-size:13px">Cancel</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p class="tinycap" style="margin-bottom:8px">Empty memory selector (inside Customize)</p>
+        <div class="cardx" style="padding:11px 14px">
+          <span style="font:400 12px 'Figtree';color:var(--muted)">No memories yet — add one from the Memory tab to personalize replies.</span>
+        </div>
+      </div>
+    </div>
+  </div></div>
+</div>
+
+</body>
+</html>
