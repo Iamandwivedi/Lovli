@@ -1,404 +1,861 @@
-import React, { useState, useRef, useCallback } from 'react';
+// Reply screen — the most important screen in the app.
+// Upload screenshot or paste chat → choose language → generate 3 replies.
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  ScrollView,
-  StyleSheet,
-  Pressable,
+  ActivityIndicator,
+  Animated,
   Image,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
-import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
-import { MotiView } from 'moti';
-import { Screen, Header, PrimaryCTA, SegmentedControl, Chip, Card, ErrorBanner, Icon } from '../../src/components/ui';
-import { colors, typography, spacing, radius } from '../../src/theme';
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import * as Clipboard from "expo-clipboard";
+import { useFocusEffect } from "expo-router";
+import { Screen } from "@/src/components/Screen";
+import { AppHeader } from "@/src/components/AppHeader";
+import { GlassCard } from "@/src/components/GlassCard";
+import { Chip } from "@/src/components/Chip";
+import { Input } from "@/src/components/Input";
+import { PrimaryButton } from "@/src/components/PrimaryButton";
+import { SecondaryButton } from "@/src/components/SecondaryButton";
+import { useAuth } from "@/src/context/AuthContext";
+import { useToast } from "@/src/context/ToastContext";
 import {
-  PLATFORMS,
-  LANGUAGES,
-  VIBES,
-  EXAMPLE_CHAT,
-  TRUST_PHRASES,
-} from '../../src/constants/product';
-import type { Platform as LovliPlatform, Language, Vibe } from '../../src/constants/product';
-import { generateReplies } from '../../src/services/generationApi';
-import { getToken, deleteToken } from '../../src/lib/storage';
-import { localDateString, ianaTimezone } from '../../src/lib/date';
-import { extractErrorMessage, ApiError } from '../../src/lib/errors';
+  Language,
+  MemoryCard,
+  PlatformLabel,
+  Replies,
+  Vibe,
+  generateReplies,
+  getUsage,
+  getClientLocalDate,
+  listMemoryCards,
+  platformLabelToValue,
+  platformValueToLabel,
+  postFeedback,
+} from "@/src/api/endpoints";
+import { extractErrorMessage } from "@/src/api/client";
+import { colors, fontSize, radii, space } from "@/src/theme/colors";
 
-const SIGN_IN_PROMPT = 'Please sign in to generate replies.';
+const PLATFORMS: PlatformLabel[] = ["Instagram", "Dating platform", "WhatsApp"];
+const VIBES: Vibe[] = ["Playful", "Flirty", "Sincere", "Respectful", "Confident"];
+const LANGUAGES: Language[] = ["English", "Hinglish", "Hindi + English mixed"];
+// Human-feel tone label mapped from chosen vibe.
+const TONE_LABEL: Record<Vibe, string> = {
+  Playful: "Playful",
+  Flirty: "Smooth",
+  Sincere: "Sincere",
+  Respectful: "Respectful",
+  Confident: "Confident",
+};
 
-type InputMode = 'screenshot' | 'paste';
+type Pick = ImagePicker.ImagePickerAsset;
 
 export default function ReplyScreen() {
-  const router = useRouter();
-  const sheetRef = useRef<BottomSheet>(null);
+  const { user, updateUser } = useAuth();
+  const toast = useToast();
 
-  const [inputMode, setInputMode] = useState<InputMode>('screenshot');
-  const [screenshotUri, setScreenshotUri] = useState<string | null>(null);
-  const [pasteText, setPasteText] = useState('');
-  const [isFirstRun, setIsFirstRun] = useState(true);
+  const [image, setImage] = useState<Pick | null>(null);
+  const [manual, setManual] = useState("");
+  const [language, setLanguage] = useState<Language>(
+    (user?.language_preference as Language) || "Hinglish",
+  );
+  const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [platform, setPlatform] = useState<PlatformLabel>(
+    platformValueToLabel(user?.preferred_platform || "instagram"),
+  );
+  const [vibe, setVibe] = useState<Vibe>("Playful");
+  const [memoryId, setMemoryId] = useState<string | null>(null);
+  const [memoryPickerOpen, setMemoryPickerOpen] = useState(false);
+  const [memoryCards, setMemoryCards] = useState<MemoryCard[]>([]);
 
-  const [platform, setPlatform] = useState<LovliPlatform>('Instagram');
-  const [vibe, setVibe] = useState<Vibe>('Playful');
-  const [language, setLanguage] = useState<Language>('Hinglish');
-  const [userNote, setUserNote] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [result, setResult] = useState<Replies | null>(null);
+  const [usage, setUsage] = useState({
+    daily_generation_count: user?.daily_generation_count ?? 0,
+    daily_limit: user?.daily_limit ?? 8,
+    plan: user?.plan ?? "free",
+  });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const hasInput = inputMode === 'screenshot' ? !!screenshotUri : pasteText.trim().length > 0;
-
-  const pickScreenshot = useCallback(async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      setError('Photo access needed to upload a screenshot.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      quality: 0.85,
-    });
-    if (!result.canceled && result.assets[0]) {
-      setScreenshotUri(result.assets[0].uri);
-      setIsFirstRun(false);
-      setError('');
-    }
-  }, []);
-
-  const tryExample = useCallback(() => {
-    setInputMode('paste');
-    setPasteText(EXAMPLE_CHAT);
-    setIsFirstRun(false);
-  }, []);
-
-  const openCustomize = useCallback(() => {
-    sheetRef.current?.expand();
-  }, []);
-
-  const handleGenerate = useCallback(async () => {
-    if (!hasInput) return;
-
-    // Generation is a protected endpoint — require a stored JWT before calling.
-    const token = await getToken();
-    if (!token) {
-      setError(SIGN_IN_PROMPT);
-      router.push('/auth/login');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
+  const refreshUsageAndMemory = useCallback(async () => {
     try {
-      const result = await generateReplies({
-        platform,
+      const u = await getUsage(getClientLocalDate());
+      setUsage(u);
+    } catch {
+      // silent
+    }
+    try {
+      const cards = await listMemoryCards();
+      setMemoryCards(cards || []);
+    } catch {
+      setMemoryCards([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshUsageAndMemory();
+  }, [refreshUsageAndMemory]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshUsageAndMemory();
+    }, [refreshUsageAndMemory]),
+  );
+
+  const selectedMemoryName = useMemo(
+    () => (memoryId ? memoryCards.find((m) => m.id === memoryId)?.nickname : null),
+    [memoryId, memoryCards],
+  );
+
+  const summary = useMemo(
+    () => [platform, vibe, selectedMemoryName || "No memory"].filter(Boolean).join(" • "),
+    [platform, vibe, selectedMemoryName],
+  );
+
+  const remaining = useMemo(() => {
+    if (usage.plan === "pro") return Infinity;
+    return Math.max(0, (usage.daily_limit ?? 8) - (usage.daily_generation_count ?? 0));
+  }, [usage]);
+
+  const pickImage = async () => {
+    try {
+      // Check permission first
+      const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
+      let granted = status === "granted";
+      if (!granted) {
+        const req = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        granted = req.status === "granted";
+        if (!granted && !req.canAskAgain) {
+          toast.error("Enable Photos in Settings to upload a screenshot.");
+          return;
+        }
+        if (!granted) return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsMultipleSelection: false,
+        quality: 0.85,
+        exif: false,
+      });
+      if (result.canceled) return;
+      const asset = result.assets[0];
+      // 8MB safety check
+      if (asset.fileSize && asset.fileSize > 8 * 1024 * 1024) {
+        toast.error("This image is too large.");
+        return;
+      }
+      setImage(asset);
+    } catch {
+      toast.error("Could not open your photos.");
+    }
+  };
+
+  const removeImage = () => setImage(null);
+
+  const onGenerate = async () => {
+    if (!image && !manual.trim()) {
+      toast.error("Upload a screenshot or paste the chat first.");
+      return;
+    }
+    if (usage.plan !== "pro" && remaining <= 0) {
+      toast.error("You've used today's free generations.");
+      return;
+    }
+    try {
+      setGenerating(true);
+      const data = await generateReplies({
+        platform: platformLabelToValue(platform),
         vibe,
         language,
-        timezone: ianaTimezone(),
-        client_local_date: localDateString(),
-        imageUri: inputMode === 'screenshot' ? screenshotUri ?? undefined : undefined,
-        manual_text: inputMode === 'paste' ? pasteText : undefined,
-        user_note: userNote || undefined,
+        manual_text: manual,
+        memory_card_id: memoryId,
+        image: image
+          ? {
+              uri: image.uri,
+              name: image.fileName || `chat.${(image.mimeType || "image/jpeg").split("/").pop()}`,
+              type: image.mimeType || "image/jpeg",
+            }
+          : null,
       });
-      router.push({
-        pathname: '/results',
-        params: { data: JSON.stringify(result), platform, vibe, language },
+      setResult(data);
+      setUsage({
+        daily_generation_count: data.daily_generation_count,
+        daily_limit: data.daily_limit,
+        plan: data.plan,
       });
-    } catch (err) {
-      if (err instanceof ApiError && err.isLimitReached) {
-        router.push('/limit-reached');
-      } else if (err instanceof ApiError && (err.statusCode === 401 || err.statusCode === 403)) {
-        await deleteToken();
-        setError(SIGN_IN_PROMPT);
-        router.push('/auth/login');
-      } else {
-        setError(extractErrorMessage(err));
+      if (user) {
+        updateUser({
+          ...user,
+          daily_generation_count: data.daily_generation_count,
+          daily_limit: data.daily_limit,
+          plan: data.plan,
+        });
       }
+    } catch (err) {
+      toast.error(extractErrorMessage(err, "Something went wrong. Try again."));
     } finally {
-      setLoading(false);
+      setGenerating(false);
     }
-  }, [hasInput, platform, vibe, language, inputMode, screenshotUri, pasteText, userNote]);
+  };
+
+  const onRegenerate = async () => {
+    setResult(null);
+    await onGenerate();
+  };
+
+  const onCopy = async (text: string, index: number) => {
+    try {
+      await Clipboard.setStringAsync(text);
+      toast.success("Copied. Go send it.");
+      if (result?.generation_id) {
+        postFeedback(result.generation_id, index).catch(() => {});
+      }
+    } catch {
+      toast.error("Could not copy.");
+    }
+  };
 
   return (
-    <Screen edges={['top']}>
-      <Header plan="free" onSettingsPress={() => router.push('/settings')} />
+    <Screen testID="reply-page" bottomTabSpacing>
+      <AppHeader />
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          {error ? <ErrorBanner message={error} onDismiss={() => setError('')} /> : null}
+      <View style={{ marginTop: space.m }}>
+        <Text style={styles.h1} testID="reply-heading">
+          Stuck on what to reply?
+        </Text>
+        <Text style={styles.sub}>
+          Upload the chat, choose language, and get 3 natural replies.
+        </Text>
+      </View>
 
-          <View style={styles.hero}>
-            <Text style={styles.heroTitle}>Stuck on what to reply?</Text>
-            <Text style={styles.heroSub}>
-              Upload the chat, choose language, and get 3 natural replies.
-            </Text>
-          </View>
-
-          <View style={styles.modeRail}>
-            <SegmentedControl
-              options={['Screenshot', 'Paste']}
-              value={inputMode === 'screenshot' ? 'Screenshot' : 'Paste'}
-              onChange={v => setInputMode(v === 'Screenshot' ? 'screenshot' : 'paste')}
-            />
-          </View>
-
-          <Card variant="float" style={styles.canvas}>
-            {inputMode === 'screenshot' ? (
-              <ScreenshotCanvas
-                uri={screenshotUri}
-                isFirstRun={isFirstRun}
-                onPick={pickScreenshot}
-                onRemove={() => setScreenshotUri(null)}
-                onTryExample={tryExample}
-              />
-            ) : (
-              <PasteCanvas
-                value={pasteText}
-                onChange={setPasteText}
-                onTryExample={tryExample}
-              />
-            )}
-          </Card>
-
-          <Text style={styles.privacy}>{TRUST_PHRASES.screenshotNeverStored}</Text>
-
-          <Pressable style={styles.customizeRow} onPress={openCustomize}>
-            <Text style={styles.customizeLabel}>
-              {platform} · {vibe} · {language}
-            </Text>
-            <Icon name="chevron-right" size={18} color={colors.textMuted} />
-          </Pressable>
-        </ScrollView>
-
-        <View style={styles.ctaZone}>
-          <PrimaryCTA
-            label="Get my replies"
-            onPress={handleGenerate}
-            loading={loading}
-            disabled={!hasInput}
-          />
-          <Text style={styles.ctaMeta}>
-            8 free today · {TRUST_PHRASES.privateByDesign}
-          </Text>
-          {/* Quiet upgrade nudge — hide when user.plan === 'pro' once auth context provides it */}
-          <Pressable style={styles.unlimitedRow} onPress={() => router.push('/pro')}>
-            <Text style={styles.unlimitedLabel}>Get unlimited replies</Text>
-            <Icon name="chevron-right" size={16} color={colors.lavenderSoft} />
-          </Pressable>
+      {/* Upload card */}
+      <GlassCard padded variant="solid" testID="upload-card">
+        <View style={styles.uploadHeader}>
+          <Text style={styles.cardTitle}>Upload chat screenshot</Text>
+          <Text style={styles.cardSub}>Instagram, Dating platform, or WhatsApp</Text>
         </View>
-      </KeyboardAvoidingView>
 
-      <BottomSheet
-        ref={sheetRef}
-        index={-1}
-        snapPoints={['70%']}
-        enablePanDownToClose
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.6} />
+        {image ? (
+          <View style={styles.preview} testID="upload-preview">
+            <Image source={{ uri: image.uri }} style={styles.previewImg} resizeMode="cover" />
+            <Pressable
+              onPress={removeImage}
+              testID="upload-remove-button"
+              style={({ pressed }) => [styles.removeBtn, pressed && { opacity: 0.8 }]}
+              hitSlop={10}
+            >
+              <Ionicons name="close" size={16} color={colors.text} />
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable
+            onPress={pickImage}
+            testID="upload-area"
+            style={({ pressed }) => [styles.upload, pressed && styles.uploadPressed]}
+          >
+            <View style={styles.uploadIcon}>
+              <Ionicons name="cloud-upload-outline" size={26} color={colors.lavender} />
+            </View>
+            <Text style={styles.uploadTitle}>Tap to browse</Text>
+            <Text style={styles.uploadHint}>JPG, PNG, or WEBP</Text>
+          </Pressable>
         )}
-        backgroundStyle={{ backgroundColor: colors.float, borderTopLeftRadius: radius.sheet, borderTopRightRadius: radius.sheet }}
-        handleIndicatorStyle={{ backgroundColor: colors.border }}
-      >
-        <BottomSheetView style={styles.sheetContent}>
-          <CustomizeSheet
-            platform={platform}
-            vibe={vibe}
-            language={language}
-            userNote={userNote}
-            onPlatformChange={setPlatform}
-            onVibeChange={setVibe}
-            onLanguageChange={setLanguage}
-            onNoteChange={setUserNote}
-            onDone={() => sheetRef.current?.close()}
+
+        <View style={styles.privacyLine}>
+          <Ionicons name="shield-checkmark-outline" size={12} color={colors.lavender} />
+          <Text style={styles.privacyText}>Only upload chats you're comfortable sharing.</Text>
+        </View>
+      </GlassCard>
+
+      {/* Manual paste */}
+      <Input
+        label="Or paste the chat"
+        placeholder="Paste the chat or explain the situation…"
+        multiline
+        numberOfLines={4}
+        value={manual}
+        onChangeText={setManual}
+        inputTestID="manual-text-input"
+      />
+
+      {/* Reply language */}
+      <View>
+        <Text style={styles.section}>Reply language</Text>
+        <View style={styles.chipsRow}>
+          {LANGUAGES.map((l) => (
+            <Chip
+              key={l}
+              label={l}
+              selected={language === l}
+              onPress={() => setLanguage(l)}
+              testID={`language-${l}`}
+            />
+          ))}
+        </View>
+      </View>
+
+      {/* Customize reply */}
+      <GlassCard padded variant="solid" testID="customize-card">
+        <Pressable
+          onPress={() => setCustomizeOpen((v) => !v)}
+          testID="customize-toggle"
+          style={styles.customHeader}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.cardTitle}>Customize reply</Text>
+            <Text style={styles.cardSub} numberOfLines={1}>
+              {summary}
+            </Text>
+          </View>
+          <Ionicons
+            name={customizeOpen ? "chevron-up" : "chevron-down"}
+            size={20}
+            color={colors.textMuted}
           />
-        </BottomSheetView>
-      </BottomSheet>
+        </Pressable>
+
+        {customizeOpen ? (
+          <View style={{ marginTop: space.l, gap: space.l }}>
+            <View>
+              <Text style={styles.subSection}>Platform</Text>
+              <View style={styles.chipsRow}>
+                {PLATFORMS.map((p) => (
+                  <Chip
+                    key={p}
+                    label={p}
+                    selected={platform === p}
+                    onPress={() => setPlatform(p)}
+                    testID={`platform-${p}`}
+                  />
+                ))}
+              </View>
+            </View>
+            <View>
+              <Text style={styles.subSection}>Vibe</Text>
+              <View style={styles.chipsRow}>
+                {VIBES.map((v) => (
+                  <Chip
+                    key={v}
+                    label={v}
+                    selected={vibe === v}
+                    onPress={() => setVibe(v)}
+                    testID={`vibe-${v}`}
+                  />
+                ))}
+              </View>
+            </View>
+            <View>
+              <Text style={styles.subSection}>Personalize with memory</Text>
+              <Pressable
+                onPress={() => setMemoryPickerOpen(true)}
+                testID="memory-picker-open"
+                style={({ pressed }) => [styles.memorySelect, pressed && { opacity: 0.85 }]}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.memorySelectText}>
+                    {selectedMemoryName || "None"}
+                  </Text>
+                  <Text style={styles.memorySelectHint}>
+                    Memory is optional — tap to choose.
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
+      </GlassCard>
+
+      {/* Usage / privacy row */}
+      <View style={styles.usageRow} testID="usage-privacy-row">
+        <View style={styles.usagePill} testID="reply-usage-counter">
+          {usage.plan === "pro" ? (
+            <>
+              <View style={[styles.usageDot, { backgroundColor: colors.lavender }]} />
+              <Text style={styles.usageText}>Pro — unlimited</Text>
+            </>
+          ) : (
+            <>
+              <View style={styles.usageDot} />
+              <Text style={styles.usageText}>
+                {usage.daily_generation_count} of {usage.daily_limit} used today
+              </Text>
+            </>
+          )}
+        </View>
+        <View style={styles.privatePill}>
+          <Ionicons name="lock-closed" size={11} color={colors.lavender} />
+          <Text style={styles.usageText}>Private</Text>
+        </View>
+      </View>
+
+      {/* Generate button */}
+      <PrimaryButton
+        label={generating ? "Generating replies…" : "Generate replies"}
+        onPress={onGenerate}
+        loading={generating}
+        testID="generate-replies-button"
+      />
+
+      {/* Results */}
+      {generating && !result ? (
+        <View style={styles.loadingBlock}>
+          <ActivityIndicator color={colors.lavender} />
+          <Text style={styles.loadingText}>Lovli is reading the vibe…</Text>
+        </View>
+      ) : null}
+
+      {result ? (
+        <View testID="reply-results-block" style={{ gap: space.l }}>
+          <View>
+            <Text style={styles.h2}>Choose a reply</Text>
+            <Text style={styles.sub}>Edit it if you want. Make it yours.</Text>
+          </View>
+          {result.replies.map((reply, i) => (
+            <ReplyResultCard
+              key={`${result.generation_id}-${i}`}
+              text={reply}
+              toneLabel={TONE_LABEL[vibe] || "Warm"}
+              index={i}
+              onCopy={() => onCopy(reply, i)}
+              onRegenerate={onRegenerate}
+              regenerating={generating}
+            />
+          ))}
+        </View>
+      ) : null}
+
+      {/* Memory picker modal */}
+      <MemoryPickerModal
+        open={memoryPickerOpen}
+        onClose={() => setMemoryPickerOpen(false)}
+        cards={memoryCards}
+        selectedId={memoryId}
+        onPick={(id) => {
+          setMemoryId(id);
+          setMemoryPickerOpen(false);
+        }}
+      />
     </Screen>
   );
 }
 
-function ScreenshotCanvas({ uri, isFirstRun, onPick, onRemove, onTryExample }: {
-  uri: string | null; isFirstRun: boolean;
-  onPick: () => void; onRemove: () => void; onTryExample: () => void;
-}) {
-  if (uri) {
-    return (
-      <View style={styles.screenshotContainer}>
-        <MotiView
-          from={{ scale: 1.05, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'timing', duration: 320 }}
+// --- Reply result card ---
+const ReplyResultCard: React.FC<{
+  text: string;
+  toneLabel: string;
+  index: number;
+  onCopy: () => void;
+  onRegenerate: () => void;
+  regenerating?: boolean;
+}> = ({ text, toneLabel, index, onCopy, onRegenerate, regenerating }) => {
+  const [copied, setCopied] = useState(false);
+  const fade = React.useRef(new Animated.Value(0)).current;
+  const slide = React.useRef(new Animated.Value(10)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fade, {
+        toValue: 1,
+        duration: 320,
+        delay: index * 80,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slide, {
+        toValue: 0,
+        duration: 360,
+        delay: index * 80,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [fade, slide, index]);
+
+  const handleCopy = async () => {
+    setCopied(true);
+    await onCopy();
+    setTimeout(() => setCopied(false), 1800);
+  };
+
+  return (
+    <Animated.View
+      style={[styles.replyCard, { opacity: fade, transform: [{ translateY: slide }] }]}
+      testID="reply-result-card"
+    >
+      <View style={styles.toneRow}>
+        <View style={styles.toneDot} />
+        <Text style={styles.toneLabel} testID="reply-tone-label">
+          {toneLabel}
+        </Text>
+      </View>
+      <Text style={styles.replyText} testID="reply-result-text">
+        {text}
+      </Text>
+      <View style={styles.replyActions}>
+        <Pressable
+          onPress={handleCopy}
+          style={({ pressed }) => [styles.copyBtn, pressed && { opacity: 0.85 }]}
+          testID="reply-copy-button"
         >
-          <Image source={{ uri }} style={styles.screenshotImage} resizeMode="contain" />
-        </MotiView>
-        <Pressable style={styles.removeChip} onPress={onRemove}>
-          <Icon name="x" size={12} color={colors.textMuted} />
-          <Text style={styles.removeChipText}>Remove</Text>
+          <Ionicons
+            name={copied ? "checkmark-circle" : "copy-outline"}
+            size={14}
+            color={colors.bg}
+          />
+          <Text style={styles.copyText}>{copied ? "Copied" : "Copy"}</Text>
+        </Pressable>
+        <Pressable
+          onPress={onRegenerate}
+          disabled={regenerating}
+          style={({ pressed }) => [styles.regenBtn, pressed && { opacity: 0.8 }]}
+          testID="reply-regenerate-button"
+        >
+          <Ionicons name="refresh" size={14} color={colors.textSoft} />
+          <Text style={styles.regenText}>Regenerate</Text>
         </Pressable>
       </View>
-    );
-  }
-  return (
-    <Pressable style={styles.uploadZone} onPress={onPick}>
-      <View style={styles.uploadIconWrap}>
-        <Icon name="image" size={24} color={colors.lavender} />
-      </View>
-      <Text style={styles.uploadLabel}>Upload a screenshot</Text>
-      <Text style={styles.uploadSub}>JPG, PNG or WEBP · max 6MB</Text>
-      {isFirstRun && (
-        <Pressable style={styles.exampleLink} onPress={onTryExample}>
-          <Text style={styles.exampleLinkText}>No screenshot? Try an example</Text>
-        </Pressable>
-      )}
-    </Pressable>
+    </Animated.View>
   );
-}
+};
 
-function PasteCanvas({ value, onChange, onTryExample }: {
-  value: string; onChange: (t: string) => void; onTryExample: () => void;
-}) {
+// --- Memory picker modal ---
+const MemoryPickerModal: React.FC<{
+  open: boolean;
+  onClose: () => void;
+  cards: MemoryCard[];
+  selectedId: string | null;
+  onPick: (id: string | null) => void;
+}> = ({ open, onClose, cards, selectedId, onPick }) => {
   return (
-    <View style={styles.pasteContainer}>
-      {value.trim().length === 0 ? (
-        <Pressable style={styles.uploadZone} onPress={onTryExample}>
-          <View style={styles.uploadIconWrap}>
-            <Icon name="message-square" size={24} color={colors.lavender} />
-          </View>
-          <Text style={styles.uploadLabel}>Paste your chat here</Text>
-          <Text style={styles.uploadSub}>Copy the last few messages and paste below</Text>
-          <View style={styles.exampleLink}>
-            <Text style={styles.exampleLinkText}>Or try an example</Text>
-          </View>
-        </Pressable>
-      ) : (
-        <View style={styles.bubbleList}>
-          {value.trim().split('\n').filter(Boolean).map((line, i) => (
-            <View key={i} style={[styles.bubble, i % 2 === 0 ? styles.bubbleTheirs : styles.bubbleYours]}>
-              <Text style={styles.bubbleText}>{line}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-      <TextInput
-        style={styles.pasteInput}
-        multiline
-        placeholder="Paste chat messages here…"
-        placeholderTextColor={colors.textFaint}
-        value={value}
-        onChangeText={onChange}
-        textAlignVertical="top"
-      />
-    </View>
-  );
-}
+    <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
+      <Pressable style={styles.modalBackdrop} onPress={onClose} />
+      <View style={styles.modalSheet} testID="memory-picker-modal">
+        <View style={styles.sheetHandle} />
+        <Text style={styles.modalTitle}>Personalize with memory</Text>
+        <Text style={styles.modalSub}>Optional — leaves your replies more thoughtful.</Text>
 
-function CustomizeSheet({ platform, vibe, language, userNote, onPlatformChange, onVibeChange, onLanguageChange, onNoteChange, onDone }: {
-  platform: string; vibe: string; language: string; userNote: string;
-  onPlatformChange: (v: any) => void; onVibeChange: (v: any) => void;
-  onLanguageChange: (v: any) => void; onNoteChange: (v: string) => void; onDone: () => void;
-}) {
-  return (
-    <ScrollView contentContainerStyle={styles.sheetScroll} showsVerticalScrollIndicator={false}>
-      <Text style={styles.sheetTitle}>Customize</Text>
-      <Text style={styles.sheetLabel}>Platform</Text>
-      <SegmentedControl options={PLATFORMS} value={platform} onChange={onPlatformChange} scrollable />
-      <Text style={styles.sheetLabel}>Vibe</Text>
-      <View style={styles.chipRow}>
-        {VIBES.map(v => (
-          <Chip key={v} label={v} active={vibe === v} onPress={() => onVibeChange(v)} />
-        ))}
+        <Pressable
+          onPress={() => onPick(null)}
+          style={({ pressed }) => [
+            styles.memoryOption,
+            !selectedId && styles.memoryOptionActive,
+            pressed && { opacity: 0.85 },
+          ]}
+          testID="memory-option-none"
+        >
+          <Text style={styles.memoryOptionText}>None</Text>
+          {!selectedId ? <Ionicons name="checkmark" size={16} color={colors.lavender} /> : null}
+        </Pressable>
+
+        {cards.length === 0 ? (
+          <Text style={styles.memoryEmpty}>
+            No memories yet. You can add one on the Memory tab.
+          </Text>
+        ) : (
+          cards.map((c) => (
+            <Pressable
+              key={c.id}
+              onPress={() => onPick(c.id)}
+              style={({ pressed }) => [
+                styles.memoryOption,
+                selectedId === c.id && styles.memoryOptionActive,
+                pressed && { opacity: 0.85 },
+              ]}
+              testID={`memory-option-${c.id}`}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.memoryOptionText}>{c.nickname}</Text>
+                {c.relationship_stage ? (
+                  <Text style={styles.memoryOptionHint}>{c.relationship_stage}</Text>
+                ) : null}
+              </View>
+              {selectedId === c.id ? (
+                <Ionicons name="checkmark" size={16} color={colors.lavender} />
+              ) : null}
+            </Pressable>
+          ))
+        )}
+
+        <SecondaryButton
+          label="Close"
+          onPress={onClose}
+          style={{ marginTop: space.l }}
+          testID="memory-picker-close"
+        />
       </View>
-      <Text style={styles.sheetLabel}>Language</Text>
-      <SegmentedControl options={LANGUAGES} value={language} onChange={onLanguageChange} scrollable />
-      <Text style={styles.sheetLabel}>Quick note (optional)</Text>
-      <TextInput
-        style={styles.noteInput}
-        multiline
-        numberOfLines={3}
-        placeholder="e.g. we met at a wedding last week"
-        placeholderTextColor={colors.textFaint}
-        value={userNote}
-        onChangeText={onNoteChange}
-      />
-      <PrimaryCTA label="Done" onPress={onDone} style={{ marginTop: spacing[4] }} />
-    </ScrollView>
+    </Modal>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  scroll: { paddingBottom: spacing[6], paddingHorizontal: spacing[4], gap: spacing[3] },
-  hero: { marginTop: spacing[1], gap: spacing[1] },
-  heroTitle: { ...typography.title, color: colors.text },
-  heroSub: { ...typography.body, color: colors.textMuted },
-  modeRail: { marginTop: spacing[1] },
-  canvas: { borderRadius: radius.canvas, overflow: 'hidden', minHeight: 200 },
-  privacy: { ...typography.meta, color: colors.textFaint, textAlign: 'center', fontSize: 12 },
-  customizeRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: colors.surface, borderRadius: radius.row,
-    borderWidth: 1, borderColor: colors.hairline,
-    paddingHorizontal: spacing[4], paddingVertical: spacing[3],
+  h1: {
+    color: colors.text,
+    fontSize: 26,
+    fontWeight: "700",
+    letterSpacing: -0.5,
   },
-  customizeLabel: { ...typography.meta, color: colors.textMuted, fontSize: 13 },
-  ctaZone: {
-    paddingHorizontal: spacing[4], paddingBottom: spacing[4], paddingTop: spacing[3],
-    gap: spacing[2], borderTopWidth: 1, borderTopColor: colors.hairline, backgroundColor: colors.bg,
+  h2: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: "700",
+    letterSpacing: -0.3,
   },
-  ctaMeta: { ...typography.meta, color: colors.textFaint, textAlign: 'center', fontSize: 12 },
-  unlimitedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[2],
-    borderTopWidth: 1,
-    borderTopColor: colors.hairline,
-    marginTop: spacing[1],
+  sub: {
+    color: colors.textMuted,
+    fontSize: fontSize.base,
+    marginTop: 6,
+    lineHeight: 20,
   },
-  unlimitedLabel: { ...typography.meta, color: colors.lavenderSoft, fontSize: 13 },
-  screenshotContainer: { alignItems: 'center', padding: spacing[4], gap: spacing[3] },
-  screenshotImage: { width: 148, height: 196, borderRadius: 12 },
-  removeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  removeChipText: { ...typography.meta, color: colors.textMuted, fontSize: 12 },
-  uploadZone: { alignItems: 'center', padding: spacing[6], gap: spacing[2] },
-  uploadIconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(167,139,250,0.10)',
+  cardTitle: {
+    color: colors.text,
+    fontSize: fontSize.lg,
+    fontWeight: "600",
+    letterSpacing: -0.2,
+  },
+  cardSub: {
+    color: colors.textMuted,
+    fontSize: fontSize.sm,
+    marginTop: 4,
+  },
+  uploadHeader: { marginBottom: space.m },
+  upload: {
+    minHeight: 160,
     borderWidth: 1,
-    borderColor: 'rgba(167,139,250,0.20)',
-    marginBottom: spacing[1],
+    borderColor: colors.border,
+    borderStyle: "dashed",
+    borderRadius: radii.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: space.xl,
+    backgroundColor: "rgba(167, 139, 250, 0.04)",
   },
-  uploadLabel: { ...typography.bodyMedium, color: colors.textSoft },
-  uploadSub: { ...typography.meta, color: colors.textFaint, fontSize: 12 },
-  exampleLink: { marginTop: spacing[2], paddingHorizontal: spacing[4], paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(167,139,250,0.3)', backgroundColor: 'rgba(167,139,250,0.06)' },
-  exampleLinkText: { ...typography.meta, color: colors.lavender, fontSize: 13 },
-  pasteContainer: { padding: spacing[3], gap: spacing[3] },
-  bubbleList: { gap: spacing[2] },
-  bubble: { maxWidth: '80%', borderRadius: 14, padding: spacing[3] },
-  bubbleTheirs: { alignSelf: 'flex-start', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairline },
-  bubbleYours: { alignSelf: 'flex-end', borderWidth: 1, borderColor: colors.lavender, backgroundColor: 'rgba(167,139,250,0.08)' },
-  bubbleText: { ...typography.body, color: colors.textSoft },
-  pasteInput: { ...typography.body, color: colors.text, minHeight: 80, borderTopWidth: 1, borderTopColor: colors.hairline, paddingTop: spacing[3] },
-  sheetContent: { flex: 1 },
-  sheetScroll: { padding: spacing[4], paddingBottom: spacing[8], gap: spacing[4] },
-  sheetTitle: { ...typography.title, color: colors.text, marginBottom: spacing[2] },
-  sheetLabel: { ...typography.inputLabel, color: colors.textMuted, marginBottom: spacing[1] },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2] },
-  noteInput: { ...typography.body, color: colors.text, backgroundColor: colors.surface, borderRadius: radius.card, borderWidth: 1, borderColor: colors.hairline, padding: spacing[3], minHeight: 80, textAlignVertical: 'top' },
+  uploadPressed: {
+    borderColor: colors.lavender,
+    backgroundColor: "rgba(167, 139, 250, 0.08)",
+  },
+  uploadIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 999,
+    backgroundColor: "rgba(167, 139, 250, 0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: space.m,
+  },
+  uploadTitle: { color: colors.text, fontSize: fontSize.md, fontWeight: "600" },
+  uploadHint: { color: colors.textMuted, fontSize: fontSize.sm, marginTop: 4 },
+  preview: {
+    position: "relative",
+    borderRadius: radii.lg,
+    overflow: "hidden",
+    backgroundColor: colors.bg,
+  },
+  previewImg: { width: "100%", height: 220 },
+  removeBtn: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 999,
+    backgroundColor: "rgba(5, 5, 9, 0.7)",
+    borderColor: colors.border,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  privacyLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: space.m,
+  },
+  privacyText: { color: colors.textMuted, fontSize: 11.5 },
+  section: {
+    color: colors.textSoft,
+    fontSize: fontSize.base,
+    fontWeight: "600",
+    marginBottom: 10,
+  },
+  subSection: {
+    color: colors.textSoft,
+    fontSize: fontSize.sm,
+    fontWeight: "600",
+    marginBottom: 10,
+  },
+  chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  customHeader: { flexDirection: "row", alignItems: "center" },
+  memorySelect: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    paddingHorizontal: space.l,
+    paddingVertical: space.m,
+  },
+  memorySelectText: { color: colors.text, fontSize: fontSize.md, fontWeight: "500" },
+  memorySelectHint: { color: colors.textMuted, fontSize: 11.5, marginTop: 3 },
+  usageRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  usagePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radii.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  privatePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radii.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  usageDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 999,
+    backgroundColor: colors.textMuted,
+  },
+  usageText: { color: colors.textSoft, fontSize: fontSize.xs },
+  loadingBlock: {
+    alignItems: "center",
+    padding: space.xl,
+  },
+  loadingText: { color: colors.textMuted, fontSize: fontSize.sm, marginTop: 10 },
+  replyCard: {
+    backgroundColor: colors.cardElevated,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radii.xl,
+    padding: space.l + 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.45,
+    shadowRadius: 22,
+    elevation: 4,
+  },
+  toneRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  toneDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 999,
+    backgroundColor: colors.lavender,
+    shadowColor: colors.lavender,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
+  },
+  toneLabel: {
+    color: colors.lavenderSoft,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+  },
+  replyText: {
+    color: colors.text,
+    fontSize: 17,
+    lineHeight: 26,
+    marginTop: space.m,
+  },
+  replyActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: space.l,
+    flexWrap: "wrap",
+  },
+  copyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#FFFFFF",
+    borderRadius: radii.pill,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+  copyText: { color: colors.bg, fontWeight: "700", fontSize: fontSize.sm },
+  regenBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radii.pill,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  regenText: { color: colors.textSoft, fontWeight: "600", fontSize: fontSize.sm },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.scrim,
+  },
+  modalSheet: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.midnight,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    paddingHorizontal: space.l,
+    paddingTop: 10,
+    paddingBottom: space.xl + space.l,
+    gap: 8,
+    maxHeight: "80%",
+  },
+  sheetHandle: {
+    alignSelf: "center",
+    width: 36,
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: colors.border,
+    marginBottom: space.m,
+  },
+  modalTitle: {
+    color: colors.text,
+    fontSize: fontSize.lg,
+    fontWeight: "700",
+  },
+  modalSub: { color: colors.textMuted, fontSize: fontSize.sm, marginBottom: space.m },
+  memoryOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    paddingHorizontal: space.l,
+    paddingVertical: space.m + 2,
+    marginTop: 8,
+  },
+  memoryOptionActive: {
+    borderColor: colors.lavender,
+    backgroundColor: "rgba(167, 139, 250, 0.08)",
+  },
+  memoryOptionText: { color: colors.text, fontSize: fontSize.md, fontWeight: "500" },
+  memoryOptionHint: { color: colors.textMuted, fontSize: 11.5, marginTop: 3 },
+  memoryEmpty: { color: colors.textMuted, fontSize: fontSize.sm, paddingVertical: 10 },
 });
