@@ -13,7 +13,7 @@ export default function LimitReachedScreen() {
         <Text style={styles.headline}>That's 8 for today.</Text>
         <Text style={styles.sub}>Resets at midnight · Your chats stay yours.</Text>
         <View style={styles.actions}>
-          <PrimaryCTA label="Get Early Access" onPress={() => {}} />
+          <PrimaryCTA label="Get Early Access" onPress={() => router.push('/pro')} />
           <GhostButton label="Back to Reply" onPress={() => router.replace('/(tabs)/reply')} />
         </View>
       </View>

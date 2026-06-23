@@ -49,6 +49,7 @@ export default function RootLayout() {
           <Stack.Screen name="results" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="limit-reached" options={{ animation: 'fade' }} />
           <Stack.Screen name="settings" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="pro" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="auth/login" />
           <Stack.Screen name="auth/signup" />
         </Stack>

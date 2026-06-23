@@ -192,6 +192,11 @@ export default function ReplyScreen() {
           <Text style={styles.ctaMeta}>
             8 free today · {TRUST_PHRASES.privateByDesign}
           </Text>
+          {/* Quiet upgrade nudge — hide when user.plan === 'pro' once auth context provides it */}
+          <Pressable style={styles.unlimitedRow} onPress={() => router.push('/pro')}>
+            <Text style={styles.unlimitedLabel}>Get unlimited replies</Text>
+            <Text style={styles.unlimitedChevron}>›</Text>
+          </Pressable>
         </View>
       </KeyboardAvoidingView>
 
@@ -348,6 +353,18 @@ const styles = StyleSheet.create({
     gap: spacing[2], borderTopWidth: 1, borderTopColor: colors.hairline, backgroundColor: colors.bg,
   },
   ctaMeta: { ...typography.meta, color: colors.textFaint, textAlign: 'center', fontSize: 12 },
+  unlimitedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+    borderTopWidth: 1,
+    borderTopColor: colors.hairline,
+    marginTop: spacing[1],
+  },
+  unlimitedLabel: { ...typography.meta, color: colors.lavenderSoft, fontSize: 13 },
+  unlimitedChevron: { color: colors.lavenderSoft, fontSize: 16 },
   screenshotContainer: { alignItems: 'center', padding: spacing[4], gap: spacing[3] },
   screenshotImage: { width: 148, height: 196, borderRadius: 12 },
   removeChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
