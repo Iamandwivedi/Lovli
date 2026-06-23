@@ -1,6 +1,7 @@
 import React from 'react';
-import { Text } from 'react-native';
 import { Tabs } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { colors } from '../../src/theme';
 
 // 2-tab nav: Reply / Memory.
@@ -23,22 +24,31 @@ export default function TabsLayout() {
           fontSize: 11,
         },
         // Center-align items so 2 tabs don't stretch awkwardly on wide screens (390/360).
-        tabBarItemStyle: { flex: 0, minWidth: 80 },
-        tabBarContentContainerStyle: { justifyContent: 'center' },
+        tabBarItemStyle: { flex: 0, minWidth: 100, maxWidth: 160 },
+      }}
+      screenListeners={{
+        // Subtle native haptic on tab change. Silent on most Androids — by design.
+        tabPress: () => {
+          Haptics.selectionAsync().catch(() => {});
+        },
       }}
     >
       <Tabs.Screen
         name="reply"
         options={{
           title: 'Reply',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>💬</Text>,
+          tabBarIcon: ({ color }) => (
+            <Feather name="message-circle" size={20} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="memory"
         options={{
           title: 'Memory',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>◎</Text>,
+          tabBarIcon: ({ color }) => (
+            <Feather name="bookmark" size={20} color={color} />
+          ),
         }}
       />
     </Tabs>

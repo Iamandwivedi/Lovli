@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { MotiView } from 'moti';
-import { Screen, Header, PrimaryCTA, SegmentedControl, Chip, Card, ErrorBanner } from '../../src/components/ui';
+import { Screen, Header, PrimaryCTA, SegmentedControl, Chip, Card, ErrorBanner, Icon } from '../../src/components/ui';
 import { colors, typography, spacing, radius } from '../../src/theme';
 import {
   PLATFORMS,
@@ -178,7 +178,7 @@ export default function ReplyScreen() {
             <Text style={styles.customizeLabel}>
               {platform} · {vibe} · {language}
             </Text>
-            <Text style={styles.customizeChevron}>›</Text>
+            <Icon name="chevron-right" size={18} color={colors.textMuted} />
           </Pressable>
         </ScrollView>
 
@@ -195,7 +195,7 @@ export default function ReplyScreen() {
           {/* Quiet upgrade nudge — hide when user.plan === 'pro' once auth context provides it */}
           <Pressable style={styles.unlimitedRow} onPress={() => router.push('/pro')}>
             <Text style={styles.unlimitedLabel}>Get unlimited replies</Text>
-            <Text style={styles.unlimitedChevron}>›</Text>
+            <Icon name="chevron-right" size={16} color={colors.lavenderSoft} />
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -244,14 +244,17 @@ function ScreenshotCanvas({ uri, isFirstRun, onPick, onRemove, onTryExample }: {
           <Image source={{ uri }} style={styles.screenshotImage} resizeMode="contain" />
         </MotiView>
         <Pressable style={styles.removeChip} onPress={onRemove}>
-          <Text style={styles.removeChipText}>✕  Remove</Text>
+          <Icon name="x" size={12} color={colors.textMuted} />
+          <Text style={styles.removeChipText}>Remove</Text>
         </Pressable>
       </View>
     );
   }
   return (
     <Pressable style={styles.uploadZone} onPress={onPick}>
-      <Text style={styles.uploadIcon}>📷</Text>
+      <View style={styles.uploadIconWrap}>
+        <Icon name="image" size={24} color={colors.lavender} />
+      </View>
       <Text style={styles.uploadLabel}>Upload a screenshot</Text>
       <Text style={styles.uploadSub}>JPG, PNG or WEBP · max 6MB</Text>
       {isFirstRun && (
@@ -270,11 +273,13 @@ function PasteCanvas({ value, onChange, onTryExample }: {
     <View style={styles.pasteContainer}>
       {value.trim().length === 0 ? (
         <Pressable style={styles.uploadZone} onPress={onTryExample}>
-          <Text style={styles.uploadIcon}>💬</Text>
+          <View style={styles.uploadIconWrap}>
+            <Icon name="message-square" size={24} color={colors.lavender} />
+          </View>
           <Text style={styles.uploadLabel}>Paste your chat here</Text>
           <Text style={styles.uploadSub}>Copy the last few messages and paste below</Text>
           <View style={styles.exampleLink}>
-            <Text style={styles.exampleLinkText}>Or try an example →</Text>
+            <Text style={styles.exampleLinkText}>Or try an example</Text>
           </View>
         </Pressable>
       ) : (
@@ -347,7 +352,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[4], paddingVertical: spacing[3],
   },
   customizeLabel: { ...typography.meta, color: colors.textMuted, fontSize: 13 },
-  customizeChevron: { color: colors.textMuted, fontSize: 18 },
   ctaZone: {
     paddingHorizontal: spacing[4], paddingBottom: spacing[4], paddingTop: spacing[3],
     gap: spacing[2], borderTopWidth: 1, borderTopColor: colors.hairline, backgroundColor: colors.bg,
@@ -364,13 +368,22 @@ const styles = StyleSheet.create({
     marginTop: spacing[1],
   },
   unlimitedLabel: { ...typography.meta, color: colors.lavenderSoft, fontSize: 13 },
-  unlimitedChevron: { color: colors.lavenderSoft, fontSize: 16 },
   screenshotContainer: { alignItems: 'center', padding: spacing[4], gap: spacing[3] },
   screenshotImage: { width: 148, height: 196, borderRadius: 12 },
-  removeChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  removeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   removeChipText: { ...typography.meta, color: colors.textMuted, fontSize: 12 },
   uploadZone: { alignItems: 'center', padding: spacing[6], gap: spacing[2] },
-  uploadIcon: { fontSize: 28 },
+  uploadIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(167,139,250,0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(167,139,250,0.20)',
+    marginBottom: spacing[1],
+  },
   uploadLabel: { ...typography.bodyMedium, color: colors.textSoft },
   uploadSub: { ...typography.meta, color: colors.textFaint, fontSize: 12 },
   exampleLink: { marginTop: spacing[2], paddingHorizontal: spacing[4], paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(167,139,250,0.3)', backgroundColor: 'rgba(167,139,250,0.06)' },

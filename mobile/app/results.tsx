@@ -66,7 +66,7 @@ export default function ResultsScreen() {
         ))}
 
         <View style={styles.memoryNudge}>
-          <Text style={styles.memoryNudgeText}>Save context for next time →</Text>
+          <Text style={styles.memoryNudgeText}>Save context for next time</Text>
         </View>
 
         {showRegenerateConfirm ? (
@@ -103,7 +103,7 @@ function ReplyCard({ text, toneLabel, isLead, isCopied, onCopy }: {
         onPress={onCopy}
       >
         <Text style={[styles.copyBtnText, isCopied && styles.copyBtnTextCopied]}>
-          {isCopied ? 'Copied ✓' : 'Copy'}
+          {isCopied ? 'Copied' : 'Copy'}
         </Text>
       </Pressable>
       {isLead && (

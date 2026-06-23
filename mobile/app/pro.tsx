@@ -1,14 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, Header, PrimaryCTA } from '../src/components/ui';
+import { Screen, Header, PrimaryCTA, Icon } from '../src/components/ui';
+import type { IconName } from '../src/components/ui';
 import { colors, typography, spacing } from '../src/theme';
 
-const FEATURES = [
-  { icon: '∞', label: 'Unlimited replies per day' },
-  { icon: '◎', label: 'Advanced memory' },
-  { icon: '✦', label: 'More reply styles' },
-  { icon: '⚡', label: 'Early access to new AI features' },
+const FEATURES: { icon: IconName; label: string }[] = [
+  { icon: 'repeat', label: 'Unlimited replies per day' },
+  { icon: 'bookmark', label: 'Advanced memory' },
+  { icon: 'sliders', label: 'More reply styles' },
+  { icon: 'zap', label: 'Early access to new AI features' },
 ];
 
 export default function ProScreen() {
@@ -27,7 +28,9 @@ export default function ProScreen() {
         <View style={styles.features}>
           {FEATURES.map(f => (
             <View key={f.label} style={styles.featureRow}>
-              <Text style={styles.featureIcon}>{f.icon}</Text>
+              <View style={styles.featureIconWrap}>
+                <Icon name={f.icon} size={16} color={colors.lavender} />
+              </View>
               <Text style={styles.featureLabel}>{f.label}</Text>
             </View>
           ))}
@@ -82,11 +85,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.hairline,
   },
-  featureIcon: {
-    fontSize: 18,
-    color: colors.lavender,
-    width: 28,
-    textAlign: 'center',
+  featureIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(167,139,250,0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(167,139,250,0.18)',
   },
   featureLabel: {
     ...typography.body,

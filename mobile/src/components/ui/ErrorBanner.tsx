@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors, typography, radius, spacing } from '@/theme';
+import { Icon } from './Icon';
 
 interface ErrorBannerProps {
   message: string;
@@ -13,8 +14,8 @@ export function ErrorBanner({ message, onDismiss }: ErrorBannerProps) {
     <View style={styles.root}>
       <Text style={styles.text}>{message}</Text>
       {onDismiss && (
-        <Pressable onPress={onDismiss} hitSlop={8}>
-          <Text style={styles.dismiss}>✕</Text>
+        <Pressable onPress={onDismiss} hitSlop={8} style={styles.dismiss}>
+          <Icon name="x" size={14} color={colors.error} />
         </Pressable>
       )}
     </View>
@@ -42,8 +43,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   dismiss: {
-    color: colors.error,
-    fontSize: 14,
     marginLeft: spacing[2],
+    padding: 2,
   },
 });

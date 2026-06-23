@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -8,11 +9,16 @@ import Animated, {
 } from 'react-native-reanimated';
 import { colors, typography, spacing } from '@/theme';
 import { BOTTOM_TABS, BottomTab } from '@/constants/product';
+import { Icon, IconName } from './Icon';
 
-const TAB_ICONS: Record<BottomTab, string> = {
-  Reply: '💬',
-  Pro: '✦',
-  Memory: '◎',
+// Custom 2-segment tab bar. Per-segment indicator math (no 3-segment hardcoding).
+// Note: the live navigation uses expo-router's <Tabs> in app/(tabs)/_layout.tsx;
+// this component is kept for screens that want the same look outside the
+// router (kept in sync visually).
+const TAB_ICONS: Record<BottomTab, { idle: IconName; active: IconName }> = {
+  Reply: { idle: 'message-circle', active: 'message-circle' },
+  Pro: { idle: 'star', active: 'star' },
+  Memory: { idle: 'bookmark', active: 'bookmark' },
 };
 
 interface BottomNavProps {
@@ -24,6 +30,7 @@ export function BottomNav({ activeTab, onTabPress }: BottomNavProps) {
   const activeIndex = BOTTOM_TABS.indexOf(activeTab);
   const indicatorLeft = useSharedValue(activeIndex);
 
+  // Per-segment width. Avoids the old 3-segment hardcoded math.
   const TAB_WIDTH = 100 / BOTTOM_TABS.length;
 
   useDerivedValue(() => {
@@ -37,22 +44,31 @@ export function BottomNav({ activeTab, onTabPress }: BottomNavProps) {
     width: `${TAB_WIDTH}%`,
   }));
 
+  function handlePress(tab: BottomTab) {
+    Haptics.selectionAsync().catch(() => {});
+    onTabPress(tab);
+  }
+
   return (
     <View style={styles.root}>
-      {/* Gliding lavender indicator */}
       <Animated.View style={[styles.indicator, indicatorStyle]} />
 
       {BOTTOM_TABS.map(tab => {
         const isActive = tab === activeTab;
+        const iconName = isActive ? TAB_ICONS[tab].active : TAB_ICONS[tab].idle;
         return (
           <Pressable
             key={tab}
             style={styles.tab}
-            onPress={() => onTabPress(tab)}
+            onPress={() => handlePress(tab)}
+            accessibilityRole="tab"
+            accessibilityLabel={tab}
           >
-            <Text style={[styles.icon, isActive && styles.iconActive]}>
-              {TAB_ICONS[tab]}
-            </Text>
+            <Icon
+              name={iconName}
+              size={20}
+              color={isActive ? colors.lavender : colors.textMuted}
+            />
             <Text style={[styles.label, isActive && styles.labelActive]}>
               {tab}
             </Text>
@@ -85,14 +101,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: spacing[3],
     paddingBottom: spacing[2],
-    gap: 3,
-  },
-  icon: {
-    fontSize: 18,
-    opacity: 0.5,
-  },
-  iconActive: {
-    opacity: 1,
+    gap: 4,
   },
   label: {
     ...typography.meta,

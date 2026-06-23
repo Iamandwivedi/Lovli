@@ -1,46 +1,73 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { colors, typography, spacing } from '@/theme';
+import { Icon } from './Icon';
+import { LovliMark } from './LovliMark';
 
 interface HeaderProps {
-  plan?: 'free' | 'pro';
-  onSettingsPress?: () => void;
+  // On Reply: shows Lovli mark + wordmark + cog. On other screens: pass `title`.
   title?: string;
+  plan?: 'free' | 'pro';
   showBack?: boolean;
   onBackPress?: () => void;
+  onSettingsPress?: () => void;
 }
 
-export function Header({ plan, onSettingsPress, title, showBack, onBackPress }: HeaderProps) {
+export function Header({
+  title,
+  plan,
+  showBack = false,
+  onBackPress,
+  onSettingsPress,
+}: HeaderProps) {
+  const isHome = !showBack && !title;
+
+  function pressBack() {
+    Haptics.selectionAsync().catch(() => {});
+    onBackPress?.();
+  }
+
+  function pressSettings() {
+    Haptics.selectionAsync().catch(() => {});
+    onSettingsPress?.();
+  }
+
   return (
     <View style={styles.root}>
-      <View style={styles.left}>
-        {showBack ? (
-          <Pressable onPress={onBackPress} style={styles.backBtn} hitSlop={12}>
-            <Text style={styles.backArrow}>←</Text>
-          </Pressable>
-        ) : (
-          <View style={styles.brandRow}>
-            {/* Mark — stylised dot */}
-            <View style={styles.mark} />
-            <Text style={styles.wordmark}>lovli</Text>
-          </View>
-        )}
-        {title && <Text style={styles.title}>{title}</Text>}
-      </View>
+      {showBack ? (
+        <Pressable hitSlop={12} onPress={pressBack} style={styles.iconBtn}>
+          <Icon name="chevron-left" size={24} color={colors.textSoft} />
+        </Pressable>
+      ) : (
+        <View style={styles.brand}>
+          <LovliMark size={28} />
+          <Text style={styles.wordmark}>lovli</Text>
+        </View>
+      )}
+
+      {title ? (
+        <Text style={styles.title} numberOfLines={1}>
+          {title}
+        </Text>
+      ) : null}
 
       <View style={styles.right}>
-        {plan && (
-          <View style={[styles.planBadge, plan === 'pro' && styles.planBadgePro]}>
-            <Text style={[styles.planText, plan === 'pro' && styles.planTextPro]}>
-              {plan === 'pro' ? 'Pro' : 'Free'}
-            </Text>
+        {isHome && plan === 'free' ? (
+          <View style={styles.planBadge}>
+            <Text style={styles.planText}>Free</Text>
           </View>
-        )}
-        {onSettingsPress && (
-          <Pressable onPress={onSettingsPress} style={styles.cogBtn} hitSlop={12}>
-            <Text style={styles.cogIcon}>⚙</Text>
+        ) : null}
+        {isHome && plan === 'pro' ? (
+          <View style={[styles.planBadge, styles.planBadgePro]}>
+            <Text style={[styles.planText, styles.planTextPro]}>Pro</Text>
+          </View>
+        ) : null}
+        {onSettingsPress ? (
+          <Pressable hitSlop={12} onPress={pressSettings} style={styles.iconBtn}>
+            <Icon name="settings" size={20} color={colors.textSoft} />
           </Pressable>
-        )}
+        ) : null}
       </View>
     </View>
   );
@@ -52,72 +79,60 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    backgroundColor: colors.bg,
+    paddingTop: spacing[2],
+    paddingBottom: spacing[3],
+    gap: spacing[3],
   },
-  left: {
+  brand: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing[2],
+  },
+  wordmark: {
+    ...typography.bodyMedium,
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: '600',
+    letterSpacing: -0.3,
+  },
+  title: {
+    ...typography.meta,
+    flex: 1,
+    textAlign: 'center',
+    color: colors.textMuted,
+    fontSize: 13,
   },
   right: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing[2],
   },
-  brandRow: {
-    flexDirection: 'row',
+  iconBtn: {
+    width: 36,
+    height: 36,
     alignItems: 'center',
-    gap: 6,
-  },
-  mark: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.lavender,
-  },
-  wordmark: {
-    ...typography.sectionTitle,
-    color: colors.text,
-    letterSpacing: -0.5,
-  },
-  title: {
-    ...typography.bodyMedium,
-    color: colors.textMuted,
-  },
-  backBtn: {
-    padding: 4,
-  },
-  backArrow: {
-    ...typography.body,
-    color: colors.textSoft,
-    fontSize: 20,
+    justifyContent: 'center',
+    borderRadius: 999,
   },
   planBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.hairline,
     backgroundColor: colors.surface,
   },
   planBadgePro: {
-    borderColor: colors.lavender,
-    backgroundColor: `rgba(167,139,250,0.12)`,
+    borderColor: 'rgba(167,139,250,0.35)',
+    backgroundColor: 'rgba(167,139,250,0.10)',
   },
   planText: {
-    ...typography.toneLabel,
+    ...typography.meta,
     color: colors.textMuted,
-    fontSize: 10,
+    fontSize: 11,
+    letterSpacing: 0.4,
   },
   planTextPro: {
-    color: colors.lavender,
-  },
-  cogBtn: {
-    padding: 4,
-  },
-  cogIcon: {
-    fontSize: 18,
-    color: colors.textMuted,
+    color: colors.lavenderSoft,
   },
 });
