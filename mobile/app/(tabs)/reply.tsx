@@ -39,7 +39,7 @@ import {
   postFeedback,
 } from "@/src/api/endpoints";
 import { extractErrorMessage } from "@/src/api/client";
-import { colors, fontSize, radii, space } from "@/src/theme/colors";
+import { colors, fontSize, radii, space, typography } from "@/src/theme";
 
 const PLATFORMS: PlatformLabel[] = ["Instagram", "Dating platform", "WhatsApp"];
 const VIBES: Vibe[] = ["Playful", "Flirty", "Sincere", "Respectful", "Confident"];
@@ -592,32 +592,25 @@ const MemoryPickerModal: React.FC<{
 
 const styles = StyleSheet.create({
   h1: {
+    ...typography.display.h1,
     color: colors.text,
-    fontSize: 26,
-    fontWeight: "700",
-    letterSpacing: -0.5,
   },
   h2: {
+    ...typography.display.h2,
     color: colors.text,
-    fontSize: 22,
-    fontWeight: "700",
-    letterSpacing: -0.3,
   },
   sub: {
+    ...typography.body.base,
     color: colors.textMuted,
-    fontSize: fontSize.base,
     marginTop: 6,
-    lineHeight: 20,
   },
   cardTitle: {
+    ...typography.display.h3,
     color: colors.text,
-    fontSize: fontSize.lg,
-    fontWeight: "600",
-    letterSpacing: -0.2,
   },
   cardSub: {
+    ...typography.body.caption,
     color: colors.textMuted,
-    fontSize: fontSize.sm,
     marginTop: 4,
   },
   uploadHeader: { marginBottom: space.m },
@@ -645,8 +638,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: space.m,
   },
-  uploadTitle: { color: colors.text, fontSize: fontSize.md, fontWeight: "600" },
-  uploadHint: { color: colors.textMuted, fontSize: fontSize.sm, marginTop: 4 },
+  uploadTitle: { ...typography.body.bodySemibold, color: colors.text },
+  uploadHint: { ...typography.body.caption, color: colors.textMuted, marginTop: 4 },
   preview: {
     position: "relative",
     borderRadius: radii.lg,
@@ -673,17 +666,16 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: space.m,
   },
-  privacyText: { color: colors.textMuted, fontSize: 11.5 },
+  privacyText: { ...typography.body.caption, color: colors.textMuted },
   section: {
+    ...typography.body.bodySemibold,
     color: colors.textSoft,
-    fontSize: fontSize.base,
-    fontWeight: "600",
     marginBottom: 10,
   },
   subSection: {
+    ...typography.body.bodySemibold,
     color: colors.textSoft,
     fontSize: fontSize.sm,
-    fontWeight: "600",
     marginBottom: 10,
   },
   chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
@@ -698,8 +690,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.l,
     paddingVertical: space.m,
   },
-  memorySelectText: { color: colors.text, fontSize: fontSize.md, fontWeight: "500" },
-  memorySelectHint: { color: colors.textMuted, fontSize: 11.5, marginTop: 3 },
+  memorySelectText: { ...typography.body.bodyMedium, color: colors.text },
+  memorySelectHint: { ...typography.body.caption, color: colors.textMuted, marginTop: 3 },
   usageRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -735,12 +727,12 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: colors.textMuted,
   },
-  usageText: { color: colors.textSoft, fontSize: fontSize.xs },
+  usageText: { ...typography.body.caption, color: colors.textSoft },
   loadingBlock: {
     alignItems: "center",
     padding: space.xl,
   },
-  loadingText: { color: colors.textMuted, fontSize: fontSize.sm, marginTop: 10 },
+  loadingText: { ...typography.body.caption, color: colors.textMuted, marginTop: 10 },
   replyCard: {
     backgroundColor: colors.cardElevated,
     borderColor: colors.border,
@@ -765,13 +757,15 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
   },
   toneLabel: {
+    ...typography.body.caption,
+    fontFamily: typography.fonts.bodySemibold,
     color: colors.lavenderSoft,
     fontSize: 11,
-    fontWeight: "600",
     letterSpacing: 1.2,
     textTransform: "uppercase",
   },
   replyText: {
+    ...typography.body.large,
     color: colors.text,
     fontSize: 17,
     lineHeight: 26,
@@ -793,7 +787,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 10,
   },
-  copyText: { color: colors.bg, fontWeight: "700", fontSize: fontSize.sm },
+  copyText: { ...typography.body.bodySemibold, color: colors.bg, fontSize: fontSize.sm },
   regenBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -805,7 +799,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  regenText: { color: colors.textSoft, fontWeight: "600", fontSize: fontSize.sm },
+  regenText: { ...typography.body.bodySemibold, color: colors.textSoft, fontSize: fontSize.sm },
   modalBackdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: colors.scrim,
@@ -835,11 +829,10 @@ const styles = StyleSheet.create({
     marginBottom: space.m,
   },
   modalTitle: {
+    ...typography.display.h3,
     color: colors.text,
-    fontSize: fontSize.lg,
-    fontWeight: "700",
   },
-  modalSub: { color: colors.textMuted, fontSize: fontSize.sm, marginBottom: space.m },
+  modalSub: { ...typography.body.caption, color: colors.textMuted, marginBottom: space.m },
   memoryOption: {
     flexDirection: "row",
     alignItems: "center",
@@ -855,7 +848,7 @@ const styles = StyleSheet.create({
     borderColor: colors.lavender,
     backgroundColor: "rgba(167, 139, 250, 0.08)",
   },
-  memoryOptionText: { color: colors.text, fontSize: fontSize.md, fontWeight: "500" },
-  memoryOptionHint: { color: colors.textMuted, fontSize: 11.5, marginTop: 3 },
-  memoryEmpty: { color: colors.textMuted, fontSize: fontSize.sm, paddingVertical: 10 },
+  memoryOptionText: { ...typography.body.bodyMedium, color: colors.text },
+  memoryOptionHint: { ...typography.body.caption, color: colors.textMuted, marginTop: 3 },
+  memoryEmpty: { ...typography.body.caption, color: colors.textMuted, paddingVertical: 10 },
 });

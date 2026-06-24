@@ -174,8 +174,8 @@ export default function SettingsScreen() {
           </View>
         </View>
         <SecondaryButton
-          label="Get Early Access"
-          onPress={() => router.push("/(tabs)/pro")}
+          label="Get Lovli Pro"
+          onPress={() => router.push("/paywall")}
           style={{ marginTop: space.m }}
           testID="settings-early-access-button"
         />

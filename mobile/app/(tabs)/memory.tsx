@@ -9,7 +9,7 @@ import { GlassCard } from "@/src/components/GlassCard";
 import { PrimaryButton } from "@/src/components/PrimaryButton";
 import { useToast } from "@/src/context/ToastContext";
 import { MemoryCard, deleteMemoryCard, listMemoryCards } from "@/src/api/endpoints";
-import { colors, fontSize, radii, space } from "@/src/theme/colors";
+import { colors, fontSize, radii, space, typography } from "@/src/theme";
 
 const LABELS: { key: keyof MemoryCard; label: string }[] = [
   { key: "likes", label: "Good to remember" },
@@ -181,19 +181,18 @@ const MemoryItem: React.FC<{
 };
 
 const styles = StyleSheet.create({
-  h1: { color: colors.text, fontSize: 26, fontWeight: "700", letterSpacing: -0.5 },
+  h1: { ...typography.display.h1, color: colors.text },
   headline: {
+    ...typography.display.h3,
     color: colors.text,
-    fontSize: fontSize.lg,
-    fontWeight: "600",
     marginTop: 6,
   },
-  sub: { color: colors.textMuted, fontSize: fontSize.base, marginTop: 6, lineHeight: 20 },
+  sub: { ...typography.body.base, color: colors.textMuted, marginTop: 6 },
   trust: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 10 },
-  trustText: { color: colors.textMuted, fontSize: 11.5 },
-  emptyTitle: { color: colors.text, fontSize: fontSize.lg, fontWeight: "700" },
+  trustText: { ...typography.body.caption, color: colors.textMuted },
+  emptyTitle: { ...typography.display.h3, color: colors.text },
   cardHeader: { flexDirection: "row", alignItems: "flex-start" },
-  nickname: { color: colors.text, fontSize: fontSize.lg, fontWeight: "700" },
+  nickname: { ...typography.display.h3, color: colors.text },
   stagePill: {
     alignSelf: "flex-start",
     marginTop: 6,
@@ -204,16 +203,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: colors.card,
   },
-  stageText: { color: colors.textSoft, fontSize: 11 },
-  situation: { color: colors.textSoft, fontSize: fontSize.base, marginTop: space.m, lineHeight: 20 },
+  stageText: { ...typography.body.caption, color: colors.textSoft },
+  situation: { ...typography.body.base, color: colors.textSoft, marginTop: space.m },
   fieldLabel: {
+    ...typography.body.caption,
+    fontFamily: typography.fonts.bodySemibold,
     color: colors.lavenderSoft,
     fontSize: 11,
-    fontWeight: "600",
     letterSpacing: 0.6,
     textTransform: "uppercase",
   },
-  fieldValue: { color: colors.textSoft, fontSize: fontSize.base, marginTop: 3, lineHeight: 20 },
+  fieldValue: { ...typography.body.base, color: colors.textSoft, marginTop: 3 },
   actions: { flexDirection: "row", gap: 10, marginTop: space.l },
   editBtn: {
     flexDirection: "row",
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
-  editText: { color: colors.textSoft, fontSize: fontSize.sm, fontWeight: "600" },
+  editText: { ...typography.body.bodySemibold, color: colors.textSoft, fontSize: fontSize.sm },
   deleteBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -238,5 +238,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
-  deleteText: { color: colors.dangerSoft, fontSize: fontSize.sm, fontWeight: "600" },
+  deleteText: { ...typography.body.bodySemibold, color: colors.dangerSoft, fontSize: fontSize.sm },
 });
