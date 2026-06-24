@@ -1,7 +1,11 @@
-// Primary white pill CTA — only for main actions.
+// Primary CTA — rose → coral gradient pill with a small ✦ sparkle.
+// Hero action across the app. Replaces the v1 solid white pill.
+// Behaviour API is unchanged — same props, same call sites.
 import React from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
-import { colors, fontSize, radii } from "@/src/theme/colors";
+import { ActivityIndicator, Pressable, StyleSheet, View, ViewStyle, Text } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors, gradients, radii, typography } from "@/src/theme";
+import { Sparkle } from "./Sparkle";
 
 type Props = {
   label: string;
@@ -10,9 +14,19 @@ type Props = {
   disabled?: boolean;
   style?: ViewStyle;
   testID?: string;
+  /** Hide the trailing sparkle on secondary-feeling primary CTAs. Defaults true. */
+  withSparkle?: boolean;
 };
 
-export const PrimaryButton: React.FC<Props> = ({ label, onPress, loading, disabled, style, testID }) => {
+export const PrimaryButton: React.FC<Props> = ({
+  label,
+  onPress,
+  loading,
+  disabled,
+  style,
+  testID,
+  withSparkle = true,
+}) => {
   const isDisabled = disabled || loading;
   return (
     <Pressable
@@ -20,56 +34,70 @@ export const PrimaryButton: React.FC<Props> = ({ label, onPress, loading, disabl
       disabled={isDisabled}
       testID={testID}
       style={({ pressed }) => [
-        styles.btn,
+        styles.wrap,
         isDisabled && styles.disabled,
         pressed && !isDisabled && styles.pressed,
         style,
       ]}
     >
-      <View style={styles.glow} pointerEvents="none" />
-      {loading ? (
-        <ActivityIndicator color={colors.bg} size="small" />
-      ) : (
-        <Text style={styles.label}>{label}</Text>
-      )}
+      {!isDisabled ? <View style={styles.glow} pointerEvents="none" /> : null}
+      <LinearGradient
+        colors={gradients.primary as unknown as readonly [string, string]}
+        start={gradients.primaryAngled.start}
+        end={gradients.primaryAngled.end}
+        style={styles.btn}
+      >
+        {loading ? (
+          <ActivityIndicator color={colors.text} size="small" />
+        ) : (
+          <View style={styles.row}>
+            <Text style={styles.label}>{label}</Text>
+            {withSparkle ? (
+              <Sparkle size={14} color={colors.text} />
+            ) : null}
+          </View>
+        )}
+      </LinearGradient>
     </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
-  btn: {
-    height: 52,
+  wrap: {
+    height: 54,
     borderRadius: radii.pill,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 22,
-    shadowColor: "#FFFFFF",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    elevation: 4,
   },
   glow: {
     position: "absolute",
-    top: -6,
-    left: -6,
-    right: -6,
-    bottom: -6,
+    top: -8,
+    left: -8,
+    right: -8,
+    bottom: -8,
     borderRadius: radii.pill,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: colors.ctaGlow,
+    shadowColor: colors.rose,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.45,
+    shadowRadius: 22,
+    elevation: 8,
   },
+  btn: {
+    flex: 1,
+    borderRadius: radii.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 22,
+  },
+  row: { flexDirection: "row", alignItems: "center", gap: 8 },
   label: {
-    color: colors.bg,
-    fontWeight: "700",
-    fontSize: fontSize.md,
+    ...typography.body.bodySemibold,
+    color: colors.text,
+    fontSize: 16,
     letterSpacing: 0.1,
   },
-  disabled: {
-    opacity: 0.5,
-  },
+  disabled: { opacity: 0.45 },
   pressed: {
-    transform: [{ scale: 0.985 }],
-    opacity: 0.92,
+    transform: [{ scale: 0.97 }],
+    opacity: 0.94,
   },
 });

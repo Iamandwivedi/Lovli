@@ -1,9 +1,8 @@
-// Temporary Lovli mark — small SVG-style composition using Views.
-// Per spec: do not redesign the final brand logo yet.
+// Lovli wordmark + sparkle. Temporary mark — final logo will be swapped in here.
 import React from "react";
 import { StyleSheet, Text, View, ViewStyle } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { colors, fontSize } from "@/src/theme/colors";
+import { colors, typography } from "@/src/theme";
+import { Sparkle } from "./Sparkle";
 
 type Props = {
   size?: number;
@@ -12,16 +11,13 @@ type Props = {
 };
 
 export const LovliLogo: React.FC<Props> = ({ size = 36, showName = true, style }) => {
+  const sparkleSize = Math.round(size * 0.6);
+  const wordSize = Math.max(20, Math.round(size * 0.7));
   return (
     <View style={[styles.row, style]} testID="lovli-mark">
-      <View style={[styles.markWrap, { width: size, height: size, borderRadius: size * 0.32 }]}>
-        <View style={[styles.glow, { width: size, height: size, borderRadius: size * 0.32 }]} />
-        <View style={[styles.markInner, { width: size, height: size, borderRadius: size * 0.32 }]}>
-          <Ionicons name="sparkles" size={size * 0.5} color="#FFFFFF" />
-        </View>
-      </View>
+      <Sparkle size={sparkleSize} glow />
       {showName ? (
-        <Text style={[styles.name, { fontSize: Math.max(18, size * 0.55) }]}>Lovli</Text>
+        <Text style={[styles.name, { fontSize: wordSize }]}>lovli</Text>
       ) : null}
     </View>
   );
@@ -31,27 +27,11 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-  },
-  markWrap: {
-    position: "relative",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  glow: {
-    position: "absolute",
-    backgroundColor: colors.lavenderGlow,
-  },
-  markInner: {
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.violet,
-    overflow: "hidden",
+    gap: 8,
   },
   name: {
-    fontWeight: "700",
+    ...typography.display.h1,
     color: colors.text,
-    letterSpacing: -0.4,
-    fontSize: fontSize.xl,
+    letterSpacing: -0.6,
   },
 });

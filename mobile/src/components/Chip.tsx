@@ -1,7 +1,8 @@
 // Chip — used for vibe / language / platform selection.
+// New "selected" state: subtle violet sparkle border + soft glow.
 import React from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
-import { colors, fontSize, radii, space } from "@/src/theme/colors";
+import { colors, radii, space, typography } from "@/src/theme";
 
 type Props = {
   label: string;
@@ -26,7 +27,7 @@ export const Chip: React.FC<Props> = ({ label, selected, onPress, testID, size =
       <Text
         style={[
           styles.label,
-          size === "sm" && { fontSize: fontSize.sm },
+          size === "sm" && styles.labelSmall,
           selected && styles.labelSelected,
         ]}
       >
@@ -48,26 +49,28 @@ const styles = StyleSheet.create({
   },
   small: { minHeight: 32, paddingHorizontal: 12, paddingVertical: 6 },
   unselected: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    borderColor: colors.hairline,
   },
   selected: {
-    backgroundColor: "rgba(167, 139, 250, 0.12)",
-    borderColor: colors.lavender,
-    shadowColor: colors.lavender,
+    backgroundColor: "rgba(124, 92, 255, 0.14)",
+    borderColor: colors.sparkle,
+    shadowColor: colors.sparkle,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.45,
     shadowRadius: 10,
     elevation: 4,
   },
-  pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
+  pressed: { opacity: 0.85, transform: [{ scale: 0.97 }] },
   label: {
+    ...typography.body.bodyMedium,
     color: colors.textSoft,
-    fontSize: fontSize.base,
-    fontWeight: "500",
+    fontSize: 14,
   },
+  labelSmall: { fontSize: 13 },
   labelSelected: {
     color: colors.text,
-    fontWeight: "600",
+    ...typography.body.bodySemibold,
+    fontSize: 14,
   },
 });

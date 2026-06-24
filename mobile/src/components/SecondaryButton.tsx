@@ -1,7 +1,7 @@
-// Dark glass secondary button — for non-primary actions.
+// Dark glass / ghost secondary button. Used everywhere primary CTA is not.
 import React from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
-import { colors, fontSize, radii, space } from "@/src/theme/colors";
+import { colors, radii, space, typography } from "@/src/theme";
 
 type Props = {
   label: string;
@@ -49,7 +49,7 @@ export const SecondaryButton: React.FC<Props> = ({
           <Text
             style={[
               styles.label,
-              variant === "danger" && { color: colors.dangerSoft },
+              variant === "danger" && { color: colors.redFlag },
             ]}
           >
             {label}
@@ -63,10 +63,10 @@ export const SecondaryButton: React.FC<Props> = ({
 
 const styles = StyleSheet.create({
   btn: {
-    minHeight: 48,
+    minHeight: 50,
     borderRadius: radii.pill,
-    backgroundColor: colors.card,
-    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    borderColor: colors.hairline,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -83,10 +83,10 @@ const styles = StyleSheet.create({
   },
   inner: { flexDirection: "row", alignItems: "center" },
   label: {
-    color: colors.text,
-    fontWeight: "600",
-    fontSize: fontSize.base,
+    ...typography.body.bodySemibold,
+    color: colors.textSoft,
+    fontSize: 15,
   },
   disabled: { opacity: 0.5 },
-  pressed: { transform: [{ scale: 0.985 }], opacity: 0.9 },
+  pressed: { transform: [{ scale: 0.97 }], opacity: 0.92 },
 });

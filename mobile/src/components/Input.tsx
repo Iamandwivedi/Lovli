@@ -1,4 +1,4 @@
-// Dark inset input with optional label / helper. Auto focus border lavender.
+// Dark inset input. Radius 16 per new spec, focus border violet (sparkle accent).
 import React, { forwardRef, useState } from "react";
 import {
   NativeSyntheticEvent,
@@ -10,7 +10,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { colors, fontSize, radii, space } from "@/src/theme/colors";
+import { colors, radii, space, typography } from "@/src/theme";
 
 type Props = TextInputProps & {
   label?: string;
@@ -32,8 +32,8 @@ export const Input = forwardRef<TextInput, Props>(function Input(
       <TextInput
         ref={ref}
         placeholderTextColor={colors.textFaint}
-        cursorColor={colors.lavender}
-        selectionColor={colors.lavender}
+        cursorColor={colors.sparkle}
+        selectionColor={colors.sparkle}
         {...rest}
         multiline={multiline}
         onFocus={(e: NativeSyntheticEvent<TextInputFocusEventData>) => {
@@ -60,21 +60,20 @@ export const Input = forwardRef<TextInput, Props>(function Input(
 const styles = StyleSheet.create({
   container: { gap: 6 },
   label: {
+    ...typography.body.label,
     color: colors.textSoft,
-    fontSize: fontSize.sm,
-    fontWeight: "500",
     marginLeft: 2,
   },
   input: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    borderColor: colors.hairline,
     borderWidth: 1,
-    borderRadius: radii.md,
+    borderRadius: radii.input,
     paddingHorizontal: space.l,
     paddingVertical: 14,
+    ...typography.body.base,
     color: colors.text,
-    fontSize: fontSize.md,
-    minHeight: 48,
+    minHeight: 50,
   },
   multiline: {
     minHeight: 96,
@@ -82,16 +81,16 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   focused: {
-    borderColor: colors.lavender,
-    shadowColor: colors.lavender,
+    borderColor: colors.sparkle,
+    shadowColor: colors.sparkle,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 3,
   },
   helper: {
+    ...typography.body.caption,
     color: colors.textMuted,
-    fontSize: fontSize.xs,
     marginLeft: 2,
     marginTop: 2,
   },
