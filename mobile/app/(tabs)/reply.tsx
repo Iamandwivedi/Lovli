@@ -53,6 +53,17 @@ const TONE_LABEL: Record<Vibe, string> = {
   Confident: "Confident",
 };
 
+// PR3: rotating hero headlines — one picked deterministically per app open.
+const HERO_HEADLINES = [
+  "Stuck on what to reply?",
+  "Don't overthink the text.",
+  "Reply like you — just smoother.",
+  "Know what they actually mean.",
+  "Win the conversation.",
+];
+// Picked once at module load → stable across re-focuses within an app session.
+const HERO_HEADLINE = HERO_HEADLINES[Math.floor(Math.random() * HERO_HEADLINES.length)];
+
 type Pick = ImagePicker.ImagePickerAsset;
 
 export default function ReplyScreen() {
@@ -114,6 +125,15 @@ export default function ReplyScreen() {
   const summary = useMemo(
     () => [platform, vibe, selectedMemoryName || "No memory"].filter(Boolean).join(" • "),
     [platform, vibe, selectedMemoryName],
+  );
+
+  // PR3: "Using:" context chip — live read of the four selections shown right above the CTA.
+  const usingSummary = useMemo(
+    () =>
+      [platform, vibe, language, selectedMemoryName || "No memory"]
+        .filter(Boolean)
+        .join(" · "),
+    [platform, vibe, language, selectedMemoryName],
   );
 
   const remaining = useMemo(() => {
@@ -225,7 +245,7 @@ export default function ReplyScreen() {
 
       <View style={{ marginTop: space.m }}>
         <Text style={styles.h1} testID="reply-heading">
-          Stuck on what to reply?
+          {HERO_HEADLINE}
         </Text>
         <Text style={styles.sub}>
           Upload the chat, choose language, and get 3 natural replies.
@@ -258,15 +278,15 @@ export default function ReplyScreen() {
             style={({ pressed }) => [styles.upload, pressed && styles.uploadPressed]}
           >
             <View style={styles.uploadIcon}>
-              <Ionicons name="cloud-upload-outline" size={26} color={colors.lavender} />
+              <Ionicons name="cloud-upload-outline" size={26} color={colors.violet} />
             </View>
             <Text style={styles.uploadTitle}>Tap to browse</Text>
-            <Text style={styles.uploadHint}>JPG, PNG, or WEBP</Text>
+            <Text style={styles.uploadHint}>JPG, PNG, WEBP</Text>
           </Pressable>
         )}
 
         <View style={styles.privacyLine}>
-          <Ionicons name="shield-checkmark-outline" size={12} color={colors.lavender} />
+          <Ionicons name="shield-checkmark-outline" size={12} color={colors.violet} />
           <Text style={styles.privacyText}>Only upload chats you're comfortable sharing.</Text>
         </View>
       </GlassCard>
@@ -284,7 +304,10 @@ export default function ReplyScreen() {
 
       {/* Reply language */}
       <View>
-        <Text style={styles.section}>Reply language</Text>
+        <View style={styles.sectionRow}>
+          <Ionicons name="globe-outline" size={14} color={colors.textSecondary} />
+          <Text style={styles.section}>Reply language</Text>
+        </View>
         <View style={styles.chipsRow}>
           {LANGUAGES.map((l) => (
             <Chip
@@ -321,7 +344,10 @@ export default function ReplyScreen() {
         {customizeOpen ? (
           <View style={{ marginTop: space.l, gap: space.l }}>
             <View>
-              <Text style={styles.subSection}>Platform</Text>
+              <View style={styles.sectionRow}>
+                <Ionicons name="phone-portrait-outline" size={13} color={colors.textSecondary} />
+                <Text style={styles.subSection}>Platform</Text>
+              </View>
               <View style={styles.chipsRow}>
                 {PLATFORMS.map((p) => (
                   <Chip
@@ -335,7 +361,10 @@ export default function ReplyScreen() {
               </View>
             </View>
             <View>
-              <Text style={styles.subSection}>Vibe</Text>
+              <View style={styles.sectionRow}>
+                <Ionicons name="sparkles-outline" size={13} color={colors.textSecondary} />
+                <Text style={styles.subSection}>Vibe</Text>
+              </View>
               <View style={styles.chipsRow}>
                 {VIBES.map((v) => (
                   <Chip
@@ -349,7 +378,10 @@ export default function ReplyScreen() {
               </View>
             </View>
             <View>
-              <Text style={styles.subSection}>Personalize with memory</Text>
+              <View style={styles.sectionRow}>
+                <Ionicons name="bookmark-outline" size={13} color={colors.textSecondary} />
+                <Text style={styles.subSection}>Personalize with memory</Text>
+              </View>
               <Pressable
                 onPress={() => setMemoryPickerOpen(true)}
                 testID="memory-picker-open"
@@ -388,9 +420,17 @@ export default function ReplyScreen() {
           )}
         </View>
         <View style={styles.privatePill}>
-          <Ionicons name="lock-closed" size={11} color={colors.lavender} />
+          <Ionicons name="lock-closed" size={11} color={colors.violet} />
           <Text style={styles.usageText}>Private</Text>
         </View>
+      </View>
+
+      {/* PR3: "Using:" context chip — live read of current selections, right above the CTA */}
+      <View style={styles.usingChip} testID="using-context-chip">
+        <Text style={styles.usingPrefix}>Using</Text>
+        <Text style={styles.usingText} numberOfLines={1}>
+          {usingSummary}
+        </Text>
       </View>
 
       {/* Generate button */}
@@ -616,24 +656,24 @@ const styles = StyleSheet.create({
   uploadHeader: { marginBottom: space.m },
   upload: {
     minHeight: 160,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 1.5,
+    borderColor: colors.borderStrong,
     borderStyle: "dashed",
     borderRadius: radii.lg,
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: space.xl,
-    backgroundColor: "rgba(167, 139, 250, 0.04)",
+    backgroundColor: colors.surface,
   },
   uploadPressed: {
-    borderColor: colors.lavender,
-    backgroundColor: "rgba(167, 139, 250, 0.08)",
+    borderColor: colors.violet,
+    backgroundColor: colors.violetTint,
   },
   uploadIcon: {
     width: 48,
     height: 48,
     borderRadius: 999,
-    backgroundColor: "rgba(167, 139, 250, 0.12)",
+    backgroundColor: colors.violetTint,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: space.m,
@@ -672,11 +712,17 @@ const styles = StyleSheet.create({
     color: colors.textSoft,
     marginBottom: 10,
   },
+  // PR3: row that holds a section label + a small contextual icon
+  sectionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 10,
+  },
   subSection: {
     ...typography.body.bodySemibold,
     color: colors.textSoft,
     fontSize: fontSize.sm,
-    marginBottom: 10,
   },
   chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   customHeader: { flexDirection: "row", alignItems: "center" },
@@ -728,6 +774,30 @@ const styles = StyleSheet.create({
     backgroundColor: colors.textMuted,
   },
   usageText: { ...typography.body.caption, color: colors.textSoft },
+  // PR3: "Using" context chip — live read of selections shown right above the CTA.
+  usingChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    backgroundColor: colors.violetTint,
+    borderRadius: radii.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    gap: 6,
+    maxWidth: "100%",
+  },
+  usingPrefix: {
+    ...typography.body.bodySemibold,
+    color: colors.violetDeep,
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+  usingText: {
+    ...typography.body.caption,
+    color: colors.textMuted,
+    flexShrink: 1,
+  },
   loadingBlock: {
     alignItems: "center",
     padding: space.xl,
@@ -769,13 +839,13 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 17,
     lineHeight: 26,
-    marginTop: space.m,
+    marginTop: 10,
   },
   replyActions: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    marginTop: space.l,
+    marginTop: space.m,
     flexWrap: "wrap",
   },
   copyBtn: {

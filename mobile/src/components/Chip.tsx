@@ -55,8 +55,9 @@ const styles = StyleSheet.create({
     borderColor: colors.hairline,
   },
   selected: {
-    backgroundColor: colors.violetTint,
-    borderColor: colors.violet,
+    // PR3: filled lavender state — no visible outline, deeper fill
+    backgroundColor: "#E4DCFF",
+    borderColor: "#E4DCFF",
   },
   pressed: { opacity: 0.85, transform: [{ scale: 0.97 }] },
   label: {
