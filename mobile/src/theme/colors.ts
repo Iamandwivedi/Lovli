@@ -1,56 +1,72 @@
-// Lovli design tokens — Dark Core (v2 redesign per PR1).
-// Keep the existing dark base. Layer the rose→coral gradient + violet sparkle
-// as the hero accent on top. Do NOT switch to a warm/white background.
+// Lovli design tokens — LIGHT (v2 redesign — PR2.1).
+// Light/near-white background, dark text, glossy black primary CTA, violet accent.
+// All PR1 token names are kept as aliases pointing at the new light values so no screen breaks.
 
 export const colors = {
-  // -- Surfaces (dark core) --
-  bg: "#050509",            // App background — Lovli core near-black with slight violet tint
-  surface: "#101019",       // Card surface 1
-  surfaceRaised: "#16131F", // Card surface 2 (elevated / hero cards)
-  hairline: "#1E1B29",      // 1px borders
-  border: "#1E1B29",        // alias
+  // -- Base surfaces (light) --
+  bg: "#F7F6FB",            // App background — soft near-white with faint cool-violet tint
+  surface: "#FFFFFF",       // Card / sheet background
+  surfaceRaised: "#FFFFFF", // Raised card — lifted by shadow, not color
+  hairline: "#ECEAF3",      // 1px borders
+  border: "#ECEAF3",        // alias
 
-  // -- Hero gradient (rose → coral) — used for primary CTAs --
-  gradientStart: "#FF5E7E", // rose
-  gradientEnd:   "#FF8A5B", // coral
+  // -- Glossy black primary CTA --
+  ctaBase: "#0B0B10",       // Button base
+  ctaGlossTop: "#2A2733",   // Top of vertical gloss gradient → bottom = ctaBase
+  ctaText: "#FFFFFF",       // Label + ✦
+  ctaHighlight: "rgba(255,255,255,0.12)", // 1px inner top highlight
 
-  // -- Accents --
+  // -- Retired rose→coral gradient → aliased to glossy black so stragglers don't show rose --
+  gradientStart: "#2A2733", // was rose — now black-gloss top
+  gradientEnd:   "#0B0B10", // was coral — now black-gloss base
+
+  // -- Accents (violet is THE primary accent) --
   sparkle: "#7C5CFF",       // Violet — Lovli's AI signature ✦
-  lavender: "#B9A8FF",      // Secondary / active state
-  lavenderSoft: "#C4B5FD",
-  rose: "#FF5E7E",
-  coral: "#FF8A5B",
+  violet: "#7C5CFF",        // alias
+  violetDeep: "#6A4BEE",    // Violet TEXT / links (small-text contrast)
+  lavender: "#B9A8FF",      // Soft secondary accent
+  lavenderSoft: "#6A4BEE",  // Was a dark-theme soft lavender; on light, point at violetDeep for text contrast
+  violetTint: "#EDE9FF",    // Selected-chip fill, icon-tile background
 
   // -- Text --
-  text: "#F5F3FA",
-  textSoft: "#E5E0EE",
-  textMuted: "#9B96A8",
-  textFaint: "#6E687C",
+  text: "#14121C",          // Near-black headings & body
+  textPrimary: "#14121C",   // alias
+  textSoft: "#14121C",      // On dark theme this was a slightly-softer near-white. On light, headings stay primary.
+  textMuted: "#6A6577",     // Sub-copy / helper
+  textSecondary: "#6A6577", // alias
+  textFaint: "#9A95A8",     // Placeholders, captions, disabled
 
-  // -- States --
-  greenFlag: "#34D399",
-  amber: "#FBBF24",
-  redFlag: "#F87171",
+  // -- Semantic flags (darkened for contrast on white) --
+  greenFlag: "#15A34A",
+  amber: "#D97706",
+  redFlag: "#DC2626",
+
+  // -- Shadows --
+  shadowCard: "rgba(20,18,28,0.06)",  // Soft card lift
+  shadowCta:  "rgba(11,11,16,0.28)",  // Black-CTA drop shadow
+
+  // -- Retired rose/coral — alias to ctaBase so leftover usage renders black, not rose --
+  rose: "#0B0B10",
+  coral: "#0B0B10",
 
   // -- Legacy aliases (kept so PR1 doesn't break v1 callers) --
-  card: "#101019",
-  cardGlass: "#16131F",
-  cardElevated: "#16131F",
-  borderStrong: "#2A2738",
-  violet: "#7C5CFF",
+  card: "#FFFFFF",          // was dark surface — now white
+  cardGlass: "#FFFFFF",
+  cardElevated: "#FFFFFF",
+  borderStrong: "#D8D3E6",
   sky: "#38BDF8",
   blue: "#60A5FA",
-  danger: "#F87171",
-  dangerSoft: "#FCA5A5",
-  success: "#34D399",
-  lavenderGlow: "rgba(124, 92, 255, 0.20)",
-  lavenderGlowSoft: "rgba(124, 92, 255, 0.10)",
-  overlayDark: "rgba(5, 5, 9, 0.78)",
-  scrim: "rgba(0, 0, 0, 0.55)",
-  midnight: "#090A14",
+  danger: "#DC2626",
+  dangerSoft: "#DC2626",    // small red text — needs contrast on white
+  success: "#15A34A",
+  lavenderGlow: "rgba(124, 92, 255, 0.16)",
+  lavenderGlowSoft: "rgba(124, 92, 255, 0.08)",
+  overlayDark: "rgba(20, 18, 28, 0.55)",
+  scrim: "rgba(20, 18, 28, 0.45)",
+  midnight: "#FFFFFF",      // was a dark sheet bg — now white (modal sheets are white on light theme)
 
-  // Gradient glow color for primary CTAs
-  ctaGlow: "rgba(255, 94, 126, 0.22)",
+  // Soft black-CTA halo (retired ctaGlow rose — now soft black/violet tint)
+  ctaGlow: "rgba(11, 11, 16, 0.18)",
 } as const;
 
 export const space = {
@@ -84,9 +100,10 @@ export const fontSize = {
   xxxl: 30,
 } as const;
 
-// Hero gradient color stops (use with expo-linear-gradient).
+// Hero gradient color stops — now the glossy black gradient (vertical top→bottom).
+// Any caller still using gradients.primary will render the new black gloss, not rose.
 export const gradients = {
-  primary: ["#FF5E7E", "#FF8A5B"] as const,        // rose → coral
-  primaryAngled: { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } }, // 135°
-  glow: ["rgba(255,94,126,0.18)", "rgba(255,138,91,0.10)"] as const,
+  primary: ["#2A2733", "#0B0B10"] as const,           // ctaGlossTop → ctaBase
+  primaryAngled: { start: { x: 0, y: 0 }, end: { x: 0, y: 1 } }, // vertical gloss
+  glow: ["rgba(11,11,16,0.18)", "rgba(11,11,16,0.04)"] as const,
 } as const;

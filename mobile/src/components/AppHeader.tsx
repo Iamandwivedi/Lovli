@@ -1,5 +1,6 @@
 // Top header — Lovli wordmark + sparkle on left, settings cog on right.
-// CreditsChip (e.g. "3 free left" / "Pro") slots between the wordmark and the cog.
+// CreditsChip ("3 free left" / "Pro") slots between wordmark and cog.
+// Light variant per PR2.1.
 import React from "react";
 import { Pressable, StyleSheet, View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -46,7 +47,7 @@ export const AppHeader: React.FC<Props> = ({ showSettings = true, rightElement, 
             style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.7 }]}
             hitSlop={10}
           >
-            <Ionicons name="settings-outline" size={20} color={colors.textSoft} />
+            <Ionicons name="settings-outline" size={20} color={colors.textPrimary} />
           </Pressable>
         ) : null}
       </View>
@@ -81,16 +82,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   creditsChipPro: {
-    backgroundColor: "rgba(124, 92, 255, 0.12)",
-    borderColor: colors.sparkle,
+    backgroundColor: colors.violetTint,
+    borderColor: colors.violet,
   },
   creditsText: {
     ...typography.body.caption,
-    color: colors.textMuted,
+    color: colors.textSecondary,
   },
   creditsTextPro: {
-    color: colors.lavenderSoft,
     ...typography.body.bodySemibold,
+    color: colors.violetDeep,
     fontSize: 12,
   },
 });

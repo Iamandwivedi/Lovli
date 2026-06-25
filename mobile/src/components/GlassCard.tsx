@@ -1,4 +1,5 @@
-// Card container. New dark surfaces + warm rose-tinted soft shadow on primary cards.
+// Card container — light variant per PR2.1.
+// White surface, radius 22, soft shadow rgba(20,18,28,0.06). Optional 1px hairline.
 import React from "react";
 import { StyleSheet, View, ViewStyle } from "react-native";
 import { colors, radii, space } from "@/src/theme";
@@ -7,6 +8,11 @@ type Props = {
   children: React.ReactNode;
   style?: ViewStyle;
   padded?: boolean;
+  /**
+   * `glass`  — white card, 1px hairline, soft shadow (default)
+   * `solid`  — white card, no shadow, 1px hairline
+   * `elevated` — white card, stronger shadow, no border (Sitch-style "lifted")
+   */
   variant?: "glass" | "solid" | "elevated";
   testID?: string;
 };
@@ -40,19 +46,25 @@ const styles = StyleSheet.create({
     borderColor: colors.hairline,
     borderWidth: 1,
     borderRadius: radii.card,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.30,
-    shadowRadius: 22,
-    elevation: 4,
+    shadowColor: "#14121C",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 18,
+    elevation: 2,
   },
-  solid: { backgroundColor: colors.surface },
+  solid: {
+    backgroundColor: colors.surface,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
   elevated: {
-    backgroundColor: colors.surfaceRaised,
-    borderColor: "#272132",
-    shadowColor: colors.rose,
+    backgroundColor: colors.surface,
+    borderWidth: 0,
+    shadowColor: "#14121C",
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.10,
     shadowRadius: 28,
+    elevation: 4,
   },
   padded: { padding: space.l },
 });

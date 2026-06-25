@@ -1,4 +1,5 @@
-// Dark glass / ghost secondary button. Used everywhere primary CTA is not.
+// Secondary / ghost button — light variant.
+// White or transparent fill, hairline border, textPrimary label. Danger uses redFlag.
 import React from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { colors, radii, space, typography } from "@/src/theme";
@@ -42,7 +43,7 @@ export const SecondaryButton: React.FC<Props> = ({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={colors.text} size="small" />
+        <ActivityIndicator color={colors.textPrimary} size="small" />
       ) : (
         <View style={styles.inner}>
           {iconLeft ? <View style={{ marginRight: 8 }}>{iconLeft}</View> : null}
@@ -78,13 +79,13 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   danger: {
-    backgroundColor: "rgba(248, 113, 113, 0.08)",
-    borderColor: "rgba(248, 113, 113, 0.25)",
+    backgroundColor: "rgba(220, 38, 38, 0.06)",
+    borderColor: "rgba(220, 38, 38, 0.22)",
   },
   inner: { flexDirection: "row", alignItems: "center" },
   label: {
     ...typography.body.bodySemibold,
-    color: colors.textSoft,
+    color: colors.textPrimary,
     fontSize: 15,
   },
   disabled: { opacity: 0.5 },

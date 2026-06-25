@@ -1,4 +1,6 @@
 // Root layout — wraps the app in providers, loads Lovli fonts, configures Stack routes.
+// PR2.1 light redesign: loads Fraunces (serif headers) + Plus Jakarta Sans (body).
+// Clash Display is retired — no longer loaded.
 import "react-native-gesture-handler";
 import React, { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
@@ -14,6 +16,10 @@ import {
   PlusJakartaSans_600SemiBold,
   PlusJakartaSans_700Bold,
 } from "@expo-google-fonts/plus-jakarta-sans";
+import {
+  Fraunces_600SemiBold,
+  Fraunces_700Bold,
+} from "@expo-google-fonts/fraunces";
 import { AuthProvider } from "@/src/context/AuthContext";
 import { ToastProvider } from "@/src/context/ToastContext";
 import { colors } from "@/src/theme/colors";
@@ -27,11 +33,10 @@ export default function RootLayout() {
   useEffect(() => {
     let mounted = true;
     Font.loadAsync({
-      // Clash Display — bundled TTFs under /assets/fonts
-      "ClashDisplay-Bold": require("../assets/fonts/ClashDisplay-Bold.ttf"),
-      "ClashDisplay-Semibold": require("../assets/fonts/ClashDisplay-Semibold.ttf"),
-      "ClashDisplay-Medium": require("../assets/fonts/ClashDisplay-Medium.ttf"),
-      // Plus Jakarta Sans — via @expo-google-fonts
+      // Fraunces — serif headers (PR2.1)
+      Fraunces_600SemiBold,
+      Fraunces_700Bold,
+      // Plus Jakarta Sans — body / UI (unchanged from PR1)
       PlusJakartaSans_400Regular,
       PlusJakartaSans_500Medium,
       PlusJakartaSans_600SemiBold,
@@ -61,7 +66,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <AuthProvider>
           <ToastProvider>
-            <StatusBar style="light" />
+            <StatusBar style="dark" />
             <Stack
               screenOptions={{
                 headerShown: false,

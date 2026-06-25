@@ -503,7 +503,7 @@ const ReplyResultCard: React.FC<{
           <Ionicons
             name={copied ? "checkmark-circle" : "copy-outline"}
             size={14}
-            color={colors.bg}
+            color={colors.ctaText}
           />
           <Text style={styles.copyText}>{copied ? "Copied" : "Copy"}</Text>
         </Pressable>
@@ -734,16 +734,16 @@ const styles = StyleSheet.create({
   },
   loadingText: { ...typography.body.caption, color: colors.textMuted, marginTop: 10 },
   replyCard: {
-    backgroundColor: colors.cardElevated,
-    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    borderColor: colors.hairline,
     borderWidth: 1,
     borderRadius: radii.xl,
     padding: space.l + 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.45,
-    shadowRadius: 22,
-    elevation: 4,
+    shadowColor: "#14121C",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 18,
+    elevation: 2,
   },
   toneRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   toneDot: {
@@ -782,12 +782,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.ctaBase,
     borderRadius: radii.pill,
     paddingHorizontal: 18,
     paddingVertical: 10,
   },
-  copyText: { ...typography.body.bodySemibold, color: colors.bg, fontSize: fontSize.sm },
+  copyText: { ...typography.body.bodySemibold, color: colors.ctaText, fontSize: fontSize.sm },
   regenBtn: {
     flexDirection: "row",
     alignItems: "center",

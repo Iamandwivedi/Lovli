@@ -1,10 +1,17 @@
-// Primary CTA — rose → coral gradient pill with a small ✦ sparkle.
-// Hero action across the app. Replaces the v1 solid white pill.
-// Behaviour API is unchanged — same props, same call sites.
+// Primary CTA — glossy black pill with a small ✦ sparkle (PR2.1 light redesign).
+// Vertical gradient #2A2733 → #0B0B10, 1px inner top highlight, drop shadow.
+// Public props are unchanged from PR1 — same call sites everywhere.
 import React from "react";
-import { ActivityIndicator, Pressable, StyleSheet, View, ViewStyle, Text } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  View,
+  ViewStyle,
+  Text,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { colors, gradients, radii, typography } from "@/src/theme";
+import { colors, radii, typography } from "@/src/theme";
 import { Sparkle } from "./Sparkle";
 
 type Props = {
@@ -40,20 +47,21 @@ export const PrimaryButton: React.FC<Props> = ({
         style,
       ]}
     >
-      {!isDisabled ? <View style={styles.glow} pointerEvents="none" /> : null}
       <LinearGradient
-        colors={gradients.primary as unknown as readonly [string, string]}
-        start={gradients.primaryAngled.start}
-        end={gradients.primaryAngled.end}
+        colors={[colors.ctaGlossTop, colors.ctaBase] as unknown as readonly [string, string]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
         style={styles.btn}
       >
+        {/* 1px inner top highlight — the "shine" */}
+        <View pointerEvents="none" style={styles.innerHighlight} />
         {loading ? (
-          <ActivityIndicator color={colors.text} size="small" />
+          <ActivityIndicator color={colors.ctaText} size="small" />
         ) : (
           <View style={styles.row}>
             <Text style={styles.label}>{label}</Text>
             {withSparkle ? (
-              <Sparkle size={14} color={colors.text} />
+              <Sparkle size={14} color={colors.ctaText} />
             ) : null}
           </View>
         )}
@@ -66,20 +74,12 @@ const styles = StyleSheet.create({
   wrap: {
     height: 54,
     borderRadius: radii.pill,
-  },
-  glow: {
-    position: "absolute",
-    top: -8,
-    left: -8,
-    right: -8,
-    bottom: -8,
-    borderRadius: radii.pill,
-    backgroundColor: colors.ctaGlow,
-    shadowColor: colors.rose,
+    // Black-CTA drop shadow per spec
+    shadowColor: "#0B0B10",
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.45,
-    shadowRadius: 22,
-    elevation: 8,
+    shadowOpacity: 0.28,
+    shadowRadius: 24,
+    elevation: 6,
   },
   btn: {
     flex: 1,
@@ -87,17 +87,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 22,
+    overflow: "hidden",
+  },
+  innerHighlight: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.12)",
   },
   row: { flexDirection: "row", alignItems: "center", gap: 8 },
   label: {
     ...typography.body.bodySemibold,
-    color: colors.text,
+    color: colors.ctaText,
     fontSize: 16,
     letterSpacing: 0.1,
   },
   disabled: { opacity: 0.45 },
   pressed: {
     transform: [{ scale: 0.97 }],
-    opacity: 0.94,
+    opacity: 0.96,
   },
 });

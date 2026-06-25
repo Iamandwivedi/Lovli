@@ -1,13 +1,13 @@
 // Bottom tab layout — 3 tabs: Reply · More · Memory.
-// Pro is NOT a tab. It lives behind the /paywall screen reachable from
-// Settings + the More-tab upsell row.
+// PR2.1 light redesign: light tab bar, top hairline #ECEAF3, active violet, inactive textMuted.
+// Pro is NOT a tab — lives behind /paywall reached from Settings + More-tab upsell row.
 import React from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, fontSize, typography } from "@/src/theme";
+import { colors, typography } from "@/src/theme";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -20,15 +20,15 @@ const TAB_ICON: Record<string, { active: IoniconName; inactive: IoniconName }> =
 function TabBarBackground() {
   if (Platform.OS === "ios") {
     return (
-      <BlurView tint="dark" intensity={28} style={StyleSheet.absoluteFill}>
+      <BlurView tint="light" intensity={32} style={StyleSheet.absoluteFill}>
         <View
-          style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(11,12,20,0.78)" }]}
+          style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(255,255,255,0.85)" }]}
         />
       </BlurView>
     );
   }
   return (
-    <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(11,12,20,0.92)" }]} />
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: "#FFFFFF" }]} />
   );
 }
 
@@ -60,8 +60,8 @@ export default function TabsLayout() {
           },
         ],
         tabBarBackground: () => <TabBarBackground />,
-        tabBarActiveTintColor: colors.sparkle,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarActiveTintColor: colors.violet,
+        tabBarInactiveTintColor: colors.textFaint,
         tabBarLabelStyle: { fontFamily: typography.fonts.bodyMedium, fontSize: 11 },
         tabBarButton: TabButton,
       }}

@@ -1,4 +1,5 @@
-// Dark inset input. Radius 16 per new spec, focus border violet (sparkle accent).
+// Input — light variant per PR2.1.
+// White field, hairline border, radius 16; focus border violet #7C5CFF.
 import React, { forwardRef, useState } from "react";
 import {
   NativeSyntheticEvent,
@@ -32,8 +33,8 @@ export const Input = forwardRef<TextInput, Props>(function Input(
       <TextInput
         ref={ref}
         placeholderTextColor={colors.textFaint}
-        cursorColor={colors.sparkle}
-        selectionColor={colors.sparkle}
+        cursorColor={colors.violet}
+        selectionColor={colors.violet}
         {...rest}
         multiline={multiline}
         onFocus={(e: NativeSyntheticEvent<TextInputFocusEventData>) => {
@@ -61,7 +62,7 @@ const styles = StyleSheet.create({
   container: { gap: 6 },
   label: {
     ...typography.body.label,
-    color: colors.textSoft,
+    color: colors.textPrimary,
     marginLeft: 2,
   },
   input: {
@@ -72,7 +73,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.l,
     paddingVertical: 14,
     ...typography.body.base,
-    color: colors.text,
+    color: colors.textPrimary,
     minHeight: 50,
   },
   multiline: {
@@ -81,16 +82,16 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   focused: {
-    borderColor: colors.sparkle,
-    shadowColor: colors.sparkle,
+    borderColor: colors.violet,
+    shadowColor: colors.violet,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 2,
   },
   helper: {
     ...typography.body.caption,
-    color: colors.textMuted,
+    color: colors.textSecondary,
     marginLeft: 2,
     marginTop: 2,
   },

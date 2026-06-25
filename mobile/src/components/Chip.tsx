@@ -1,5 +1,7 @@
-// Chip — used for vibe / language / platform selection.
-// New "selected" state: subtle violet sparkle border + soft glow.
+// Chip — vibe / language / platform selection.
+// Light variant per PR2.1:
+//   unselected: white fill, hairline border, textSecondary label
+//   selected:   violetTint fill, violet border, violetDeep label
 import React from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 import { colors, radii, space, typography } from "@/src/theme";
@@ -53,24 +55,19 @@ const styles = StyleSheet.create({
     borderColor: colors.hairline,
   },
   selected: {
-    backgroundColor: "rgba(124, 92, 255, 0.14)",
-    borderColor: colors.sparkle,
-    shadowColor: colors.sparkle,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.45,
-    shadowRadius: 10,
-    elevation: 4,
+    backgroundColor: colors.violetTint,
+    borderColor: colors.violet,
   },
   pressed: { opacity: 0.85, transform: [{ scale: 0.97 }] },
   label: {
     ...typography.body.bodyMedium,
-    color: colors.textSoft,
+    color: colors.textSecondary,
     fontSize: 14,
   },
   labelSmall: { fontSize: 13 },
   labelSelected: {
-    color: colors.text,
     ...typography.body.bodySemibold,
+    color: colors.violetDeep,
     fontSize: 14,
   },
 });

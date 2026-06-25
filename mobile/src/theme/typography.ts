@@ -1,51 +1,51 @@
-// Typography tokens — Clash Display (display/headers) + Plus Jakarta Sans (body/UI).
-// Use these style objects directly in StyleSheet.create — do NOT pass fontFamily
-// strings around manually elsewhere.
+// Typography tokens — Fraunces (display/headers) + Plus Jakarta Sans (body/UI).
+// Editorial serif Fraunces replaces Clash Display for headers (PR2.1 light redesign).
+// All token names from PR1 are preserved — only the underlying font family changed.
 
 import { TextStyle } from "react-native";
 
 export const fonts = {
-  // Loaded via expo-font in app/_layout.tsx
-  displayBold: "ClashDisplay-Bold",        // 700
-  displaySemibold: "ClashDisplay-Semibold", // 600
-  displayMedium: "ClashDisplay-Medium",    // 500
+  // Loaded via @expo-google-fonts/fraunces in app/_layout.tsx
+  displayBold: "Fraunces_700Bold",
+  displaySemibold: "Fraunces_600SemiBold",
+  displayMedium: "Fraunces_600SemiBold", // Fraunces SDK doesn't ship 500; map medium → 600 SemiBold
 
-  // Loaded via @expo-google-fonts/plus-jakarta-sans
+  // Loaded via @expo-google-fonts/plus-jakarta-sans (unchanged from PR1)
   bodyRegular: "PlusJakartaSans_400Regular",
   bodyMedium: "PlusJakartaSans_500Medium",
   bodySemibold: "PlusJakartaSans_600SemiBold",
   bodyBold: "PlusJakartaSans_700Bold",
 } as const;
 
-// Display scale — tight line-height, characterful.
+// Display scale — Fraunces serif, tight line-height, characterful.
 export const display: Record<string, TextStyle> = {
   hero: {
     fontFamily: fonts.displayBold,
     fontSize: 32,
     lineHeight: 36,
-    letterSpacing: -0.6,
+    letterSpacing: -0.4,
   },
   h1: {
     fontFamily: fonts.displayBold,
     fontSize: 28,
     lineHeight: 32,
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
   },
   h2: {
     fontFamily: fonts.displaySemibold,
     fontSize: 22,
     lineHeight: 26,
-    letterSpacing: -0.3,
+    letterSpacing: -0.2,
   },
   h3: {
     fontFamily: fonts.displaySemibold,
     fontSize: 18,
     lineHeight: 22,
-    letterSpacing: -0.2,
+    letterSpacing: -0.1,
   },
 };
 
-// Body scale — calm, readable.
+// Body scale — Plus Jakarta Sans, calm and readable.
 export const body: Record<string, TextStyle> = {
   large: {
     fontFamily: fonts.bodyRegular,
