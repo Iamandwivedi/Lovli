@@ -1,5 +1,6 @@
-// Input — light variant per PR2.1.
-// White field, hairline border, radius 16; focus border violet #7C5CFF.
+// Input — light variant (PR2.2 polish).
+// Resting border slightly stronger so the field is defined inside white cards.
+// Focus border violet #7C5CFF (unchanged).
 import React, { forwardRef, useState } from "react";
 import {
   NativeSyntheticEvent,
@@ -67,7 +68,8 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: colors.surface,
-    borderColor: colors.hairline,
+    // PR2.2: stronger resting border so the field is defined inside white cards
+    borderColor: "#DAD6E8",
     borderWidth: 1,
     borderRadius: radii.input,
     paddingHorizontal: space.l,
