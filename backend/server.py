@@ -620,6 +620,7 @@ async def generate_replies_endpoint(
     # rich=false, the result is exactly the legacy shape (replies: [str]).
     rich_reply_labels: Optional[list[str]] = None
     rich_read: Optional[dict] = None
+    response_replies: list[str]
     if rich:
         raw_replies = result.get("replies") or []
         # validate_payload_v2 has already guaranteed shape, but stay defensive.
@@ -632,9 +633,11 @@ async def generate_replies_endpoint(
             else:
                 flat_replies.append(str(r))
                 labels.append("")
-        result["replies"] = flat_replies
+        response_replies = flat_replies
         rich_reply_labels = labels
         rich_read = result.get("read") if isinstance(result.get("read"), dict) else None
+    else:
+        response_replies = list(result["replies"])
 
     gen = Generation(
         user_id=user_id,
@@ -648,7 +651,7 @@ async def generate_replies_endpoint(
         user_note=user_note,
         manual_text=manual_text,
         memory_card_id=memory_card_id,
-        generated_replies=result["replies"],
+        generated_replies=response_replies,
         tone_notes=result.get("tone_notes"),
     )
     gdoc = gen.model_dump()
@@ -669,7 +672,7 @@ async def generate_replies_endpoint(
 
     return GenerateRepliesResponse(
         generation_id=gen.id,
-        replies=result["replies"],
+        replies=response_replies,
         tone_notes=result.get("tone_notes", ""),
         daily_generation_count=new_count,
         daily_limit=limit,
