@@ -241,6 +241,157 @@ def validate_payload(payload: dict) -> None:
         raise LovliValidationError("tone_notes empty/non-string")
 
 
+# ----- Rich mode (PR-INT) ---------------------------------------------------
+
+# Truthful-only labels the model may pick from. Order communicates progression
+# of register (Safe → Bold). The model selects exactly 3 that fit; we accept
+# any 3 from this allow-list (case-insensitive match, canonicalized below).
+RICH_LABELS_ALLOWED = (
+    "Safe",
+    "Flirty",
+    "Bold",
+    "Funny",
+    "Sincere",
+    "Confident",
+)
+_RICH_LABEL_LC = {lbl.lower(): lbl for lbl in RICH_LABELS_ALLOWED}
+RICH_TEMPERATURE_ALLOWED = ("interested", "neutral", "cold")
+
+
+def build_user_prompt_v2(
+    *,
+    platform: str,
+    vibe: str,
+    language: str,
+    manual_text: Optional[str],
+    user_note: Optional[str],
+    has_image: bool,
+    memory_context: Optional[str] = None,
+) -> str:
+    """Rich-mode prompt: situation read + 3 register-differentiated labeled replies.
+
+    Same language/platform/vibe scaffolding as build_user_prompt — the rich
+    instruction is appended on top so Claude keeps every other rule.
+    """
+    platform_value = _normalize_platform(platform)
+    parts = [
+        "Generate exactly 3 reply options for this chat conversation in RICH MODE.",
+        _platform_directive(platform_value),
+        f"Selected vibe: {vibe}",
+        _language_directive(language),
+    ]
+    if has_image:
+        parts.append(
+            "Chat context: extract the conversation from the attached "
+            "screenshot. The most recent message is from the OTHER person "
+            "and the user wants to reply to it. If multiple messages are "
+            "visible, focus on the latest message that the user needs to "
+            "respond to."
+        )
+    if manual_text:
+        parts.append(f'Chat text provided by user:\n"""\n{manual_text}\n"""')
+    if user_note:
+        parts.append(f"User note / extra context: {user_note}")
+    if memory_context:
+        parts.append(f"Memory context about this person: {memory_context}")
+
+    parts.append(
+        "RICH MODE INSTRUCTION:\n"
+        "First read the situation honestly. Then write exactly 3 reply options "
+        "that differ in register (e.g. Safe \u2192 Flirty \u2192 Bold) within the "
+        "user's selected vibe and language, each labeled truthfully. Base every "
+        "observation only on the actual chat \u2014 NEVER invent facts, times, or "
+        "numbers. Do not fabricate confidence scores, replied-after-Xh signals, "
+        "or anything that isn't visible in the chat itself.\n\n"
+        "Allowed labels (pick exactly 3 that fit the 3 replies): "
+        f"{', '.join(RICH_LABELS_ALLOWED)}.\n"
+        "Allowed temperature values: interested | neutral | cold.\n\n"
+        "Output ONLY this JSON (no markdown, no prose, no code fences):\n"
+        "{\n"
+        '  "read": {\n'
+        '    "situation": "one honest line on what\'s going on",\n'
+        '    "temperature": "interested | neutral | cold",\n'
+        '    "signals": ["1-3 short genuine tells from the chat"],\n'
+        '    "outcome": ["1-3 \'these replies will likely ...\' bullets"]\n'
+        "  },\n"
+        '  "replies": [\n'
+        '    {"text": "...", "label": "Safe"},\n'
+        '    {"text": "...", "label": "Flirty"},\n'
+        '    {"text": "...", "label": "Bold"}\n'
+        "  ],\n"
+        '  "tone_notes": "1 short sentence on why these work"\n'
+        "}"
+    )
+    parts.append(
+        "General rules: each reply text must be 1-3 sentences max, sound like a "
+        "real Indian Gen-Z / millennial would text, match the selected vibe, and "
+        "never use cringe pickup lines or manipulation. Replies must be directly "
+        "sendable but editable, lowercase-friendly, and free of corporate "
+        "language. signals/outcome bullets must be SHORT (max ~12 words each)."
+    )
+    parts.append(
+        f"FINAL REMINDER \u2014 LANGUAGE = {language}, "
+        f"PLATFORM = {_PLATFORM_DISPLAY.get(platform_value, platform_value)}. "
+        "All 3 replies MUST follow the language and platform rules above."
+    )
+    return "\n\n".join(parts)
+
+
+def validate_payload_v2(payload: dict) -> None:
+    """Strict shape check for rich-mode response. Raises LovliValidationError."""
+    if not isinstance(payload, dict):
+        raise LovliValidationError("payload not a dict")
+
+    # --- read block ---
+    read = payload.get("read")
+    if not isinstance(read, dict):
+        raise LovliValidationError("read must be an object")
+    situation = read.get("situation")
+    if not isinstance(situation, str) or not situation.strip():
+        raise LovliValidationError("read.situation empty/non-string")
+    temperature = read.get("temperature")
+    if not isinstance(temperature, str) or temperature.strip().lower() not in RICH_TEMPERATURE_ALLOWED:
+        raise LovliValidationError(
+            f"read.temperature must be one of {RICH_TEMPERATURE_ALLOWED}"
+        )
+    # Canonicalize to lowercase for the API contract.
+    read["temperature"] = temperature.strip().lower()
+
+    def _check_str_list(field_name: str, value, max_items: int = 3) -> None:
+        if not isinstance(value, list) or not (1 <= len(value) <= max_items):
+            raise LovliValidationError(f"read.{field_name} must be a list of 1-{max_items}")
+        for i, item in enumerate(value):
+            if not isinstance(item, str) or not item.strip():
+                raise LovliValidationError(f"read.{field_name}[{i}] empty/non-string")
+
+    _check_str_list("signals", read.get("signals"))
+    _check_str_list("outcome", read.get("outcome"))
+
+    # --- replies block (list of {text,label}) ---
+    replies = payload.get("replies")
+    if not isinstance(replies, list) or len(replies) != 3:
+        raise LovliValidationError("replies must be list of 3")
+    for i, r in enumerate(replies):
+        if not isinstance(r, dict):
+            raise LovliValidationError(f"reply[{i}] must be an object")
+        text = r.get("text")
+        if not isinstance(text, str) or not text.strip():
+            raise LovliValidationError(f"reply[{i}].text empty/non-string")
+        label = r.get("label")
+        if not isinstance(label, str) or not label.strip():
+            raise LovliValidationError(f"reply[{i}].label empty/non-string")
+        canonical = _RICH_LABEL_LC.get(label.strip().lower())
+        if canonical is None:
+            raise LovliValidationError(
+                f"reply[{i}].label '{label}' not in allowed set {RICH_LABELS_ALLOWED}"
+            )
+        r["label"] = canonical  # canonicalize case
+
+    tone = payload.get("tone_notes")
+    if not isinstance(tone, str) or not tone.strip():
+        raise LovliValidationError("tone_notes empty/non-string")
+
+
 # ----- Provider abstraction -------------------------------------------------
 
 @dataclass
@@ -254,6 +405,9 @@ class LovliRequest:
     image_mime: str = "image/png"
     memory_context: Optional[str] = None
     session_id: str = "lovli-session"
+    # PR-INT: when True, request the rich situation-read + labeled replies schema.
+    # Default False keeps the legacy behavior byte-identical.
+    rich: bool = False
 
 
 class LovliLlmError(RuntimeError):
@@ -279,7 +433,8 @@ async def _generate_anthropic(req: LovliRequest, retry: bool = False) -> dict:
 
     model = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-5-20250929")
 
-    user_prompt = build_user_prompt(
+    prompt_builder = build_user_prompt_v2 if req.rich else build_user_prompt
+    user_prompt = prompt_builder(
         platform=req.platform,
         vibe=req.vibe,
         language=req.language,
@@ -289,11 +444,22 @@ async def _generate_anthropic(req: LovliRequest, retry: bool = False) -> dict:
         memory_context=req.memory_context,
     )
     if retry:
-        user_prompt = (
-            "Your previous response was not valid JSON. "
-            'Output ONLY a JSON object: {"replies":["s","s","s"],'
-            '"tone_notes":"s"}. No prose. No code fences.\n\n' + user_prompt
-        )
+        if req.rich:
+            user_prompt = (
+                "Your previous response was not valid JSON for rich mode. "
+                "Output ONLY a JSON object with the EXACT shape: "
+                '{"read":{"situation":"s","temperature":"interested|neutral|cold",'
+                '"signals":["s"],"outcome":["s"]},'
+                '"replies":[{"text":"s","label":"Safe"},{"text":"s","label":"Flirty"},'
+                '{"text":"s","label":"Bold"}],"tone_notes":"s"}. '
+                "No prose. No code fences.\n\n" + user_prompt
+            )
+        else:
+            user_prompt = (
+                "Your previous response was not valid JSON. "
+                'Output ONLY a JSON object: {"replies":["s","s","s"],'
+                '"tone_notes":"s"}. No prose. No code fences.\n\n' + user_prompt
+            )
 
     content_blocks: list[dict] = []
     if req.image_base64:
@@ -314,7 +480,7 @@ async def _generate_anthropic(req: LovliRequest, retry: bool = False) -> dict:
     try:
         msg = await client.messages.create(
             model=model,
-            max_tokens=1024,
+            max_tokens=1536 if req.rich else 1024,
             system=LOVLI_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": content_blocks}],
         )
@@ -324,7 +490,7 @@ async def _generate_anthropic(req: LovliRequest, retry: bool = False) -> dict:
     raw = "".join(
         block.text for block in msg.content if getattr(block, "type", None) == "text"
     ).strip()
-    return _parse_with_validation(raw)
+    return _parse_with_validation(raw, rich=req.rich)
 
 
 # ---- Emergent provider (fallback) -----------------------------------------
@@ -350,7 +516,8 @@ async def _generate_emergent(req: LovliRequest, retry: bool = False) -> dict:
     if not api_key:
         raise LovliLlmError("EMERGENT_LLM_KEY not configured")
 
-    user_prompt = build_user_prompt(
+    prompt_builder = build_user_prompt_v2 if req.rich else build_user_prompt
+    user_prompt = prompt_builder(
         platform=req.platform,
         vibe=req.vibe,
         language=req.language,
@@ -360,11 +527,22 @@ async def _generate_emergent(req: LovliRequest, retry: bool = False) -> dict:
         memory_context=req.memory_context,
     )
     if retry:
-        user_prompt = (
-            "Your previous response was not valid JSON. "
-            'Output ONLY a JSON object: {"replies":["s","s","s"],'
-            '"tone_notes":"s"}. No prose. No code fences.\n\n' + user_prompt
-        )
+        if req.rich:
+            user_prompt = (
+                "Your previous response was not valid JSON for rich mode. "
+                "Output ONLY a JSON object with the EXACT shape: "
+                '{"read":{"situation":"s","temperature":"interested|neutral|cold",'
+                '"signals":["s"],"outcome":["s"]},'
+                '"replies":[{"text":"s","label":"Safe"},{"text":"s","label":"Flirty"},'
+                '{"text":"s","label":"Bold"}],"tone_notes":"s"}. '
+                "No prose. No code fences.\n\n" + user_prompt
+            )
+        else:
+            user_prompt = (
+                "Your previous response was not valid JSON. "
+                'Output ONLY a JSON object: {"replies":["s","s","s"],'
+                '"tone_notes":"s"}. No prose. No code fences.\n\n' + user_prompt
+            )
 
     chat = LlmChat(
         api_key=api_key,
@@ -382,12 +560,15 @@ async def _generate_emergent(req: LovliRequest, retry: bool = False) -> dict:
     except Exception as e:
         raise LovliLlmError(f"emergent call failed: {e}") from e
 
-    return _parse_with_validation(raw)
+    return _parse_with_validation(raw, rich=req.rich)
 
 
-def _parse_with_validation(raw: str) -> dict:
+def _parse_with_validation(raw: str, *, rich: bool = False) -> dict:
     payload = parse_lovli_json(raw)
-    validate_payload(payload)
+    if rich:
+        validate_payload_v2(payload)
+    else:
+        validate_payload(payload)
     return payload
 
 

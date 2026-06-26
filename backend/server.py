@@ -485,7 +485,13 @@ async def usage(
 # =============================================================================
 # Generate replies
 # =============================================================================
-@api.post("/generate-replies", response_model=GenerateRepliesResponse)
+@api.post(
+    "/generate-replies",
+    response_model=GenerateRepliesResponse,
+    # PR-INT: drop None-valued response fields so rich=false stays byte-identical
+    # to the legacy shape (no stray reply_labels: null / read: null keys).
+    response_model_exclude_none=True,
+)
 async def generate_replies_endpoint(
     platform: str = Form(...),
     vibe: str = Form(...),
@@ -495,6 +501,8 @@ async def generate_replies_endpoint(
     memory_card_id: Optional[str] = Form(None),
     client_local_date: Optional[str] = Form(None),
     timezone_str: Optional[str] = Form(None, alias="timezone"),
+    # PR-INT: opt-in rich mode. Default False keeps the response byte-identical.
+    rich: bool = Form(False),
     image: Optional[UploadFile] = File(None),
     user_id: str = Depends(get_current_user_id),
 ):
@@ -596,6 +604,7 @@ async def generate_replies_endpoint(
                 image_mime=image_mime,
                 memory_context=memory_context,
                 session_id=f"u-{user_id}",
+                rich=rich,
             )
         )
     except LovliLlmError as e:
@@ -604,6 +613,28 @@ async def generate_replies_endpoint(
             status_code=503,
             detail="Lovli couldn't generate replies right now. Try again.",
         )
+
+    # PR-INT: when rich=true, the LLM result has replies as [{text,label}] +
+    # an additional "read" block. Flatten replies → [str] for the contract,
+    # extract labels into reply_labels, and surface read alongside. When
+    # rich=false, the result is exactly the legacy shape (replies: [str]).
+    rich_reply_labels: Optional[list[str]] = None
+    rich_read: Optional[dict] = None
+    if rich:
+        raw_replies = result.get("replies") or []
+        # validate_payload_v2 has already guaranteed shape, but stay defensive.
+        flat_replies: list[str] = []
+        labels: list[str] = []
+        for r in raw_replies:
+            if isinstance(r, dict):
+                flat_replies.append(str(r.get("text", "")))
+                labels.append(str(r.get("label", "")))
+            else:
+                flat_replies.append(str(r))
+                labels.append("")
+        result["replies"] = flat_replies
+        rich_reply_labels = labels
+        rich_read = result.get("read") if isinstance(result.get("read"), dict) else None
 
     gen = Generation(
         user_id=user_id,
@@ -643,6 +674,8 @@ async def generate_replies_endpoint(
         daily_generation_count=new_count,
         daily_limit=limit,
         plan=user["plan"],
+        reply_labels=rich_reply_labels,
+        read=rich_read,  # type: ignore[arg-type]  # pydantic coerces dict → ReplyRead
     )
 
 

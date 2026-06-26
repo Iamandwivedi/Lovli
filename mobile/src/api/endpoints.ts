@@ -29,6 +29,13 @@ export type Usage = {
   plan: Plan;
 };
 
+export type ReplyRead = {
+  situation: string;
+  temperature: "interested" | "neutral" | "cold";
+  signals: string[];
+  outcome: string[];
+};
+
 export type Replies = {
   generation_id: string;
   replies: string[];
@@ -36,6 +43,9 @@ export type Replies = {
   daily_generation_count: number;
   daily_limit: number;
   plan: Plan;
+  // PR-INT additive fields. Both undefined when rich=false (server omits them).
+  reply_labels?: string[] | null;
+  read?: ReplyRead | null;
 };
 
 export type MemoryCard = {
@@ -170,6 +180,8 @@ export type GenerateInput = {
   user_note?: string;
   memory_card_id?: string | null;
   image?: { uri: string; name: string; type: string } | null;
+  // PR-INT: opt-in rich-mode (situation read + labeled replies).
+  rich?: boolean;
 };
 
 export const generateReplies = async (input: GenerateInput) => {
@@ -182,6 +194,7 @@ export const generateReplies = async (input: GenerateInput) => {
   if (input.manual_text && input.manual_text.trim()) form.append("manual_text", input.manual_text.trim());
   if (input.user_note && input.user_note.trim()) form.append("user_note", input.user_note.trim());
   if (input.memory_card_id) form.append("memory_card_id", input.memory_card_id);
+  if (input.rich) form.append("rich", "true");
   if (input.image) {
     // React Native FormData: pass an object with uri/name/type
     form.append("image", input.image as unknown as Blob);

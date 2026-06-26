@@ -29,6 +29,7 @@ import {
   MemoryCard,
   PlatformLabel,
   Replies,
+  ReplyRead,
   Vibe,
   generateReplies,
   getUsage,
@@ -193,6 +194,10 @@ export default function ReplyScreen() {
         language,
         manual_text: manual,
         memory_card_id: memoryId,
+        // PR-INT: ask for the situation read + labeled replies. Server is
+        // backward compatible — if rich isn't honored or the LLM produces
+        // a malformed rich payload, the renderer falls back to the plain view.
+        rich: true,
         image: image
           ? {
               uri: image.uri,
@@ -451,21 +456,35 @@ export default function ReplyScreen() {
 
       {result ? (
         <View testID="reply-results-block" style={{ gap: space.l }}>
+          {/* PR-INT: situation read card (rich-mode). Guarded — if read shape
+              is malformed/missing, we silently fall back to the plain view. */}
+          {(() => {
+            const read = safeRead(result.read);
+            return read ? <ReadCard read={read} /> : null;
+          })()}
+
           <View>
             <Text style={styles.h2}>Choose a reply</Text>
             <Text style={styles.sub}>Edit it if you want. Make it yours.</Text>
           </View>
-          {result.replies.map((reply, i) => (
-            <ReplyResultCard
-              key={`${result.generation_id}-${i}`}
-              text={reply}
-              toneLabel={TONE_LABEL[vibe] || "Warm"}
-              index={i}
-              onCopy={() => onCopy(reply, i)}
-              onRegenerate={onRegenerate}
-              regenerating={generating}
-            />
-          ))}
+          {result.replies.map((reply, i) => {
+            // PR-INT: prefer the model's truthful label; fall back to vibe tone.
+            const richLabel = Array.isArray(result.reply_labels)
+              ? (result.reply_labels[i] || "").trim()
+              : "";
+            const label = richLabel || TONE_LABEL[vibe] || "Warm";
+            return (
+              <ReplyResultCard
+                key={`${result.generation_id}-${i}`}
+                text={reply}
+                toneLabel={label}
+                index={i}
+                onCopy={() => onCopy(reply, i)}
+                onRegenerate={onRegenerate}
+                regenerating={generating}
+              />
+            );
+          })}
         </View>
       ) : null}
 
@@ -483,6 +502,87 @@ export default function ReplyScreen() {
     </Screen>
   );
 }
+
+// --- PR-INT: Read card (situation read + temperature chip + signals/outcome ticks) ---
+
+// Defensive parser: only returns a ReplyRead if the shape is well-formed.
+// Any malformed/missing field → returns null → caller falls back to plain view.
+function safeRead(value: ReplyRead | null | undefined): ReplyRead | null {
+  if (!value || typeof value !== "object") return null;
+  const v = value as ReplyRead;
+  if (typeof v.situation !== "string" || !v.situation.trim()) return null;
+  if (v.temperature !== "interested" && v.temperature !== "neutral" && v.temperature !== "cold") {
+    return null;
+  }
+  const signals = Array.isArray(v.signals)
+    ? v.signals.filter((s) => typeof s === "string" && s.trim())
+    : [];
+  const outcome = Array.isArray(v.outcome)
+    ? v.outcome.filter((s) => typeof s === "string" && s.trim())
+    : [];
+  if (signals.length === 0 && outcome.length === 0 && !v.situation) return null;
+  return {
+    situation: v.situation,
+    temperature: v.temperature,
+    signals: signals.slice(0, 3),
+    outcome: outcome.slice(0, 3),
+  };
+}
+
+const TEMPERATURE_META: Record<
+  ReplyRead["temperature"],
+  { emoji: string; label: string }
+> = {
+  interested: { emoji: "🔥", label: "Interested" },
+  neutral: { emoji: "🙂", label: "Neutral" },
+  cold: { emoji: "❄", label: "Cold" },
+};
+
+const ReadCard: React.FC<{ read: ReplyRead }> = ({ read }) => {
+  const temp = TEMPERATURE_META[read.temperature];
+  return (
+    <GlassCard padded variant="elevated" testID="read-card">
+      <View style={styles.readHeader}>
+        <View style={styles.readTitleRow}>
+          <Ionicons name="eye-outline" size={14} color={colors.violetDeep} />
+          <Text style={styles.readEyebrow}>What's going on</Text>
+        </View>
+        <View style={styles.tempChip} testID="read-temperature-chip">
+          <Text style={styles.tempEmoji}>{temp.emoji}</Text>
+          <Text style={styles.tempLabel}>{temp.label}</Text>
+        </View>
+      </View>
+
+      <Text style={styles.readSituation} testID="read-situation">
+        {read.situation}
+      </Text>
+
+      {read.signals.length > 0 ? (
+        <View style={styles.readSection}>
+          <Text style={styles.readSectionTitle}>Signals from the chat</Text>
+          {read.signals.map((s, i) => (
+            <View key={`sig-${i}`} style={styles.bulletRow}>
+              <Ionicons name="checkmark" size={14} color={colors.violet} />
+              <Text style={styles.bulletText}>{s}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
+      {read.outcome.length > 0 ? (
+        <View style={styles.readSection}>
+          <Text style={styles.readSectionTitle}>These replies will likely…</Text>
+          {read.outcome.map((s, i) => (
+            <View key={`out-${i}`} style={styles.bulletRow}>
+              <Ionicons name="arrow-forward" size={13} color={colors.violet} />
+              <Text style={styles.bulletText}>{s}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+    </GlassCard>
+  );
+};
 
 // --- Reply result card ---
 const ReplyResultCard: React.FC<{
@@ -921,4 +1021,65 @@ const styles = StyleSheet.create({
   memoryOptionText: { ...typography.body.bodyMedium, color: colors.text },
   memoryOptionHint: { ...typography.body.caption, color: colors.textMuted, marginTop: 3 },
   memoryEmpty: { ...typography.body.caption, color: colors.textMuted, paddingVertical: 10 },
+
+  // --- PR-INT: ReadCard styles ---
+  readHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+    gap: 8,
+  },
+  readTitleRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  readEyebrow: {
+    ...typography.body.bodySemibold,
+    color: colors.violetDeep,
+    fontSize: 11,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+  },
+  tempChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: colors.violetTint,
+    borderRadius: radii.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  tempEmoji: { fontSize: 13 },
+  tempLabel: {
+    ...typography.body.bodySemibold,
+    color: colors.violetDeep,
+    fontSize: 12,
+  },
+  readSituation: {
+    ...typography.body.large,
+    color: colors.text,
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: space.m,
+  },
+  readSection: { marginTop: space.s + 2, gap: 6 },
+  readSectionTitle: {
+    ...typography.body.bodySemibold,
+    color: colors.textMuted,
+    fontSize: 12,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  bulletRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    paddingVertical: 2,
+  },
+  bulletText: {
+    ...typography.body.base,
+    color: colors.textPrimary,
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+  },
 });

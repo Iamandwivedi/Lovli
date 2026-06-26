@@ -220,6 +220,15 @@ class WaitlistRequest(BaseModel):
 
 
 # -------- Generate replies ----------------------------------------------------
+
+class ReplyRead(BaseModel):
+    """Rich-mode (PR-INT) situation read. Only the model — no client computation."""
+    situation: str
+    temperature: Literal["interested", "neutral", "cold"]
+    signals: List[str]
+    outcome: List[str]
+
+
 class GenerateRepliesResponse(BaseModel):
     generation_id: str
     replies: List[str]
@@ -227,6 +236,12 @@ class GenerateRepliesResponse(BaseModel):
     daily_generation_count: int
     daily_limit: int
     plan: Literal["free", "pro"]
+    # PR-INT additive fields. Both are None when rich=false (default) so the
+    # legacy response shape is byte-identical (None is omitted from JSON by
+    # FastAPI's response model when response_model_exclude_none isn't set —
+    # we keep them explicit here; clients ignore unknown keys).
+    reply_labels: Optional[List[str]] = None
+    read: Optional[ReplyRead] = None
 
 
 class UsageResponse(BaseModel):
