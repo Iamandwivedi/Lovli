@@ -54,16 +54,10 @@ const TONE_LABEL: Record<Vibe, string> = {
   Confident: "Confident",
 };
 
-// PR3: rotating hero headlines — one picked deterministically per app open.
-const HERO_HEADLINES = [
-  "Stuck on what to reply?",
-  "Don't overthink the text.",
-  "Reply like you — just smoother.",
-  "Know what they actually mean.",
-  "Win the conversation.",
-];
-// Picked once at module load → stable across re-focuses within an app session.
-const HERO_HEADLINE = HERO_HEADLINES[Math.floor(Math.random() * HERO_HEADLINES.length)];
+// PR-DA1: single first-person headline (rotation retired — design wants one steady line).
+const HERO_HEADLINE = "Stuck on what to say back?";
+const HERO_SUB =
+  "Drop the screenshot. I'll read the vibe and write back — in your voice.";
 
 type Pick = ImagePicker.ImagePickerAsset;
 
@@ -126,15 +120,6 @@ export default function ReplyScreen() {
   const summary = useMemo(
     () => [platform, vibe, selectedMemoryName || "No memory"].filter(Boolean).join(" • "),
     [platform, vibe, selectedMemoryName],
-  );
-
-  // PR3: "Using:" context chip — live read of the four selections shown right above the CTA.
-  const usingSummary = useMemo(
-    () =>
-      [platform, vibe, language, selectedMemoryName || "No memory"]
-        .filter(Boolean)
-        .join(" · "),
-    [platform, vibe, language, selectedMemoryName],
   );
 
   const remaining = useMemo(() => {
@@ -248,22 +233,15 @@ export default function ReplyScreen() {
     <Screen testID="reply-page" bottomTabSpacing>
       <AppHeader />
 
-      <View style={{ marginTop: space.m }}>
+      <View style={{ marginTop: space.l }}>
         <Text style={styles.h1} testID="reply-heading">
           {HERO_HEADLINE}
         </Text>
-        <Text style={styles.sub}>
-          Upload the chat, choose language, and get 3 natural replies.
-        </Text>
+        <Text style={styles.sub}>{HERO_SUB}</Text>
       </View>
 
       {/* Upload card */}
       <GlassCard padded variant="solid" testID="upload-card">
-        <View style={styles.uploadHeader}>
-          <Text style={styles.cardTitle}>Upload chat screenshot</Text>
-          <Text style={styles.cardSub}>Instagram, Dating platform, or WhatsApp</Text>
-        </View>
-
         {image ? (
           <View style={styles.preview} testID="upload-preview">
             <Image source={{ uri: image.uri }} style={styles.previewImg} resizeMode="cover" />
@@ -285,8 +263,8 @@ export default function ReplyScreen() {
             <View style={styles.uploadIcon}>
               <Ionicons name="cloud-upload-outline" size={26} color={colors.violet} />
             </View>
-            <Text style={styles.uploadTitle}>Tap to browse</Text>
-            <Text style={styles.uploadHint}>JPG, PNG, WEBP</Text>
+            <Text style={styles.uploadTitle}>Upload a screenshot</Text>
+            <Text style={styles.uploadHint}>From any chat app — PNG or JPG</Text>
           </Pressable>
         )}
 
@@ -299,7 +277,7 @@ export default function ReplyScreen() {
       {/* Manual paste */}
       <Input
         label="Or paste the chat"
-        placeholder="Paste the chat or explain the situation…"
+        placeholder="Or paste the chat here…"
         multiline
         numberOfLines={4}
         value={manual}
@@ -430,17 +408,12 @@ export default function ReplyScreen() {
         </View>
       </View>
 
-      {/* PR3: "Using:" context chip — live read of current selections, right above the CTA */}
-      <View style={styles.usingChip} testID="using-context-chip">
-        <Text style={styles.usingPrefix}>Using</Text>
-        <Text style={styles.usingText} numberOfLines={1}>
-          {usingSummary}
-        </Text>
-      </View>
+      {/* PR-DA1: airier layout — Using chip removed, Customize card already
+          summarizes the selections. Generate button gets generous space above. */}
 
       {/* Generate button */}
       <PrimaryButton
-        label={generating ? "Generating replies…" : "Generate replies"}
+        label={generating ? "Reading the vibe…" : "Get replies"}
         onPress={onGenerate}
         loading={generating}
         testID="generate-replies-button"
@@ -450,7 +423,7 @@ export default function ReplyScreen() {
       {generating && !result ? (
         <View style={styles.loadingBlock}>
           <ActivityIndicator color={colors.lavender} />
-          <Text style={styles.loadingText}>Lovli is reading the vibe…</Text>
+          <Text style={styles.loadingText}>Reading the vibe…</Text>
         </View>
       ) : null}
 

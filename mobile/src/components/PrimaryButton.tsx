@@ -16,6 +16,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { colors, radii, typography } from "@/src/theme";
+import { Sparkle } from "./Sparkle";
 
 type Props = {
   label: string;
@@ -25,8 +26,8 @@ type Props = {
   style?: ViewStyle;
   testID?: string;
   /**
-   * @deprecated PR2.2 — ignored. Sparkle removed from all CTAs (lives in logo only).
-   * Prop is kept so existing call sites that still pass it don't error.
+   * PR-DA1: ✦ restored on primary CTAs. Default true. Pass `withSparkle={false}`
+   * for CTAs that shouldn't have one (e.g. destructive confirms).
    */
   withSparkle?: boolean;
 };
@@ -38,6 +39,7 @@ export const PrimaryButton: React.FC<Props> = ({
   disabled,
   style,
   testID,
+  withSparkle = true,
 }) => {
   const isDisabled = disabled || loading;
   // Animated values for the "press into surface" effect.
@@ -113,7 +115,10 @@ export const PrimaryButton: React.FC<Props> = ({
           {loading ? (
             <ActivityIndicator color={colors.ctaText} size="small" />
           ) : (
-            <Text style={styles.label} numberOfLines={1}>{label}</Text>
+            <View style={styles.row}>
+              {withSparkle ? <Sparkle size={14} color={colors.ctaText} /> : null}
+              <Text style={styles.label} numberOfLines={1}>{label}</Text>
+            </View>
           )}
         </LinearGradient>
       </Pressable>
@@ -159,6 +164,7 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "rgba(255,255,255,0.22)",
   },
+  row: { flexDirection: "row", alignItems: "center", gap: 8 },
   label: {
     ...typography.body.bodySemibold,
     color: colors.ctaText,

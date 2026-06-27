@@ -1,22 +1,29 @@
-// Top header — Lovli wordmark + sparkle on left, settings cog on right.
-// CreditsChip ("3 free left" / "Pro") slots between wordmark and cog.
-// Light variant per PR2.1.
+// Top header — Lovli wordmark + sparkle on left, profile avatar on right.
+// CreditsChip ("3 free left" / "Pro") slots between wordmark and avatar.
+// PR-DA1: replaces the settings gear with a round user-initial avatar.
 import React from "react";
 import { Pressable, StyleSheet, View, Text } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LovliLogo } from "@/src/components/LovliLogo";
+import { useAuth } from "@/src/context/AuthContext";
 import { colors, radii, space, typography } from "@/src/theme";
 
 type Props = {
   showSettings?: boolean;
   rightElement?: React.ReactNode;
-  /** Optional credits indicator e.g. "3 free left" — shown next to settings cog. */
+  /** Optional credits indicator e.g. "3 free left" — shown next to the avatar. */
   credits?: { text: string; tone?: "default" | "pro" };
 };
 
+function initialOf(name?: string | null, email?: string | null): string {
+  const seed = (name || email || "Y").trim();
+  return seed.charAt(0).toUpperCase();
+}
+
 export const AppHeader: React.FC<Props> = ({ showSettings = true, rightElement, credits }) => {
   const router = useRouter();
+  const { user } = useAuth();
+  const initial = initialOf(user?.name, user?.email);
   return (
     <View style={styles.row} testID="app-header">
       <LovliLogo size={32} />
@@ -44,10 +51,13 @@ export const AppHeader: React.FC<Props> = ({ showSettings = true, rightElement, 
           <Pressable
             onPress={() => router.push("/settings")}
             testID="open-settings-button"
-            style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.7 }]}
+            accessibilityLabel="Open settings"
+            style={({ pressed }) => [styles.avatar, pressed && { opacity: 0.75 }]}
             hitSlop={10}
           >
-            <Ionicons name="settings-outline" size={20} color={colors.textPrimary} />
+            <Text style={styles.avatarText} allowFontScaling={false}>
+              {initial}
+            </Text>
           </Pressable>
         ) : null}
       </View>
@@ -63,15 +73,18 @@ const styles = StyleSheet.create({
     marginTop: space.s,
   },
   right: { flexDirection: "row", alignItems: "center", gap: 8 },
-  iconBtn: {
+  avatar: {
     width: 40,
     height: 40,
     borderRadius: 999,
-    borderColor: colors.hairline,
-    borderWidth: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.violetTint,
     alignItems: "center",
     justifyContent: "center",
+  },
+  avatarText: {
+    ...typography.body.bodySemibold,
+    color: colors.violetDeep,
+    fontSize: 15,
   },
   creditsChip: {
     paddingHorizontal: 12,

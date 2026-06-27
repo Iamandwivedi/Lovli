@@ -13,8 +13,8 @@ type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
 const TAB_ICON: Record<string, { active: IoniconName; inactive: IoniconName }> = {
   reply: { active: "chatbubbles", inactive: "chatbubbles-outline" },
+  memory: { active: "heart", inactive: "heart-outline" },
   more: { active: "grid", inactive: "grid-outline" },
-  memory: { active: "bookmark", inactive: "bookmark-outline" },
 };
 
 function TabBarBackground() {
@@ -82,21 +82,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="more"
-        options={{
-          title: "More",
-          tabBarButtonTestID: "bottom-nav-more",
-          tabBarAccessibilityLabel: "More tab",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? TAB_ICON.more.active : TAB_ICON.more.inactive}
-              size={22}
-              color={color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="memory"
         options={{
           title: "Memory",
@@ -105,6 +90,21 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? TAB_ICON.memory.active : TAB_ICON.memory.inactive}
+              size={22}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="more"
+        options={{
+          title: "More",
+          tabBarButtonTestID: "bottom-nav-more",
+          tabBarAccessibilityLabel: "More tab",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? TAB_ICON.more.active : TAB_ICON.more.inactive}
               size={22}
               color={color}
             />
