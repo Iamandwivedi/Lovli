@@ -240,49 +240,44 @@ export default function ReplyScreen() {
         <Text style={styles.sub}>{HERO_SUB}</Text>
       </View>
 
-      {/* Upload card */}
-      <GlassCard padded variant="solid" testID="upload-card">
-        {image ? (
-          <View style={styles.preview} testID="upload-preview">
-            <Image source={{ uri: image.uri }} style={styles.previewImg} resizeMode="cover" />
-            <Pressable
-              onPress={removeImage}
-              testID="upload-remove-button"
-              style={({ pressed }) => [styles.removeBtn, pressed && { opacity: 0.8 }]}
-              hitSlop={10}
-            >
-              <Ionicons name="close" size={16} color={colors.text} />
-            </Pressable>
-          </View>
-        ) : (
+      {/* PR-FIX: compact upload — single-row dashed card (no outer GlassCard). */}
+      {image ? (
+        <View style={styles.preview} testID="upload-preview">
+          <Image source={{ uri: image.uri }} style={styles.previewImg} resizeMode="cover" />
           <Pressable
-            onPress={pickImage}
-            testID="upload-area"
-            style={({ pressed }) => [styles.upload, pressed && styles.uploadPressed]}
+            onPress={removeImage}
+            testID="upload-remove-button"
+            style={({ pressed }) => [styles.removeBtn, pressed && { opacity: 0.8 }]}
+            hitSlop={10}
           >
-            <View style={styles.uploadIcon}>
-              <Ionicons name="cloud-upload-outline" size={26} color={colors.violet} />
-            </View>
+            <Ionicons name="close" size={16} color={colors.text} />
+          </Pressable>
+        </View>
+      ) : (
+        <Pressable
+          onPress={pickImage}
+          testID="upload-area"
+          style={({ pressed }) => [styles.upload, pressed && styles.uploadPressed]}
+        >
+          <View style={styles.uploadIcon}>
+            <Ionicons name="cloud-upload-outline" size={22} color={colors.violet} />
+          </View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.uploadTitle}>Upload a screenshot</Text>
             <Text style={styles.uploadHint}>From any chat app — PNG or JPG</Text>
-          </Pressable>
-        )}
+          </View>
+        </Pressable>
+      )}
 
-        <View style={styles.privacyLine}>
-          <Ionicons name="shield-checkmark-outline" size={12} color={colors.violet} />
-          <Text style={styles.privacyText}>Only upload chats you're comfortable sharing.</Text>
-        </View>
-      </GlassCard>
-
-      {/* Manual paste */}
+      {/* Manual paste — compact one-row start, expands as needed */}
       <Input
-        label="Or paste the chat"
         placeholder="Or paste the chat here…"
         multiline
-        numberOfLines={4}
+        numberOfLines={2}
         value={manual}
         onChangeText={setManual}
         inputTestID="manual-text-input"
+        style={{ minHeight: 52 }}
       />
 
       {/* Reply language */}
@@ -727,15 +722,18 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   uploadHeader: { marginBottom: space.m },
+  // PR-FIX: compact single-row dashed card (icon left + text right).
   upload: {
-    minHeight: 160,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    gap: space.m,
     borderWidth: 1.5,
     borderColor: colors.borderStrong,
     borderStyle: "dashed",
-    borderRadius: radii.lg,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: space.xl,
+    borderRadius: radii.card,
+    paddingHorizontal: space.l,
+    paddingVertical: 14,
     backgroundColor: colors.surface,
   },
   uploadPressed: {
@@ -743,13 +741,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.violetTint,
   },
   uploadIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 999,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: colors.violetTint,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: space.m,
   },
   uploadTitle: { ...typography.body.bodySemibold, color: colors.text },
   uploadHint: { ...typography.body.caption, color: colors.textMuted, marginTop: 4 },
