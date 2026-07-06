@@ -169,3 +169,18 @@ agent_communication:
 - Root cause of hidden row: cold-boot fetch raced token restore (401 → empty). Fix: refetch on user?.id.
 - Person picker on Home between paste + CTA; removed from Intent; language row stays on Intent.
 - memory_card_id carry-through verified at network level; resets to "No one" on results→home.
+
+## PR-V2-4 (Ask Lovli live: POST /api/ask-lovli + chat UI) — implemented
+backend:
+  - task: "POST /api/ask-lovli (auth): {message, history[{role:user|lovli,text}], person_id?} → {reply}. History capped 20 turns; person_id pulls memory card context; coach persona prompt (warm wingman, Hinglish-aware, qualitative-only honesty); counts against daily usage (429 same shape); 400 empty msg; 503 LLM fail. Provider routing same as generate-replies."
+    implemented: true
+    working: true  # main agent curl: 200 happy / 401 bad token / 400 empty / 429 over-limit all verified
+    files: ["/app/backend/server.py", "/app/backend/llm_service.py", "/app/backend/models.py", "/app/docs/API_CONTRACT.md"]
+frontend:
+  - task: "Ask Lovli chat UI: enabled input + send, starter chips send + hide after thread starts, Lovli/user bubbles per V2 spec, typing indicator (pulsing ✦ + … bubble), thread persisted to AsyncStorage (lovli_ask_thread), auto-scroll, failed sends show retry affordance without wiping thread"
+    implemented: true
+    working: "NA"
+    files: ["/app/mobile/app/(tabs)/ask-lovli.tsx", "/app/mobile/src/api/endpoints.ts"]
+agent_communication:
+  - agent: "main"
+    message: "PR-V2-4: backend fully smoke-tested via curl. Tester daily count reset to 0 (full 8 quota). Greeting bubble is display-only (not sent in history). Each ask message consumes 1 daily generation."

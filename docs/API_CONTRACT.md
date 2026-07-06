@@ -58,3 +58,34 @@ MemoryCard fields (all optional except `nickname`): `id, user_id, nickname, goal
 - Daily-limit math is server-side; UI reads `daily_generation_count` + `daily_limit` from `/api/usage` or each generation response.
 - Always pass user's local date (`YYYY-MM-DD`) and timezone (IANA) so daily reset works correctly across timezones.
 - Errors: on 422, server returns `detail` as an ARRAY of `{type, loc, msg}` objects. Handle both string and array shapes. Web has `extractErrorMessage(err, fallback)` in `frontend/src/lib/api.js` — port that helper.
+
+## POST /api/ask-lovli  (PR-V2-4)
+
+Auth: Bearer JWT required.
+
+One Ask Lovli coach-chat turn. Each message counts against the same daily usage
+plumbing as generations (free plan shares `daily_limit`; over limit → `429`
+`{"detail": "Daily generation limit reached."}` — same shape clients already handle).
+
+Request (JSON):
+```json
+{
+  "message": "string (required, non-empty)",
+  "history": [{ "role": "user" | "lovli", "text": "string" }],
+  "person_id": "string | null"
+}
+```
+- `history` is capped server-side at the last ~20 turns.
+- `person_id` (optional) pulls that memory card into the coach's context.
+
+Response `200`:
+```json
+{ "reply": "string" }
+```
+
+Errors: `400` empty message · `401` bad/missing token · `429` daily limit ·
+`503` LLM unavailable.
+
+Persona: warm first-person wingman, Hinglish-aware, short conversational answers,
+one good follow-up when useful. HONESTY RULE enforced in the system prompt:
+qualitative only — no percentages, no scores, no invented facts.

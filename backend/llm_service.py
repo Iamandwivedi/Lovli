@@ -645,3 +645,145 @@ async def generate_replies(req: LovliRequest) -> dict:
                 f"primary({primary}) failed: {primary_err}; "
                 f"fallback({fallback}) failed: {fb_err}"
             ) from fb_err
+
+# ---- Ask Lovli (PR-V2-4) ----------------------------------------------------
+# Free-form coach chat. Plain-text responses (no JSON schema), same provider
+# routing as generate_replies (direct Anthropic primary, Emergent fallback).
+
+ASK_LOVLI_SYSTEM_PROMPT = """You are Lovli — a warm, witty wingman and relationship coach for Indian daters. You always speak in the first person ("I'd say...", "If I were your wingman...").
+
+Voice:
+- Short, conversational answers — usually 2 to 6 sentences. Talk like a sharp friend, never like a therapist or a listicle.
+- Hinglish-aware: mirror the user's language. If they write in Hinglish or Hindi+English, respond the same way. Otherwise natural Indian English.
+- Em-dashes, warmth, a little wit. Never clinical, never robotic, never "As an AI".
+
+Coaching:
+- Give honest, practical advice about texting, dating apps, situationships, fights, and relationships.
+- When it would genuinely help, ask exactly ONE good follow-up question at the end. Not every time.
+- If they ask for a message to send, give them one ready-to-send line (quoted), not three options.
+
+HONESTY RULE (hard): qualitative reads only. NEVER give numeric confidence, percentages, scores out of 10, or invented facts about the other person. If you can't know something, say so plainly.
+
+If a PERSON CONTEXT block is provided, weave those details in naturally (names, dates, preferences) — never recite the list back."""
+
+
+def _build_ask_prompt(
+    message: str,
+    history: list[dict],
+    memory_context: "Optional[str]",
+) -> str:
+    parts: list[str] = []
+    if memory_context:
+        parts.append(f"PERSON CONTEXT (about who we're discussing): {memory_context}")
+    if history:
+        lines = []
+        for turn in history:
+            who = "Me" if turn.get("role") == "user" else "You (Lovli)"
+            text = str(turn.get("text", "")).strip()
+            if text:
+                lines.append(f"{who}: {text}")
+        if lines:
+            parts.append("Conversation so far:\n" + "\n".join(lines))
+    parts.append(f"My new message: {message}")
+    parts.append("Reply as Lovli — plain text only, no JSON, no markdown headings.")
+    return "\n\n".join(parts)
+
+
+async def _ask_anthropic(prompt: str) -> str:
+    from anthropic import AsyncAnthropic  # local import to keep import-time light
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise LovliLlmError("ANTHROPIC_API_KEY not configured")
+    model = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-5-20250929")
+    client = AsyncAnthropic(api_key=api_key)
+    try:
+        msg = await client.messages.create(
+            model=model,
+            max_tokens=512,
+            system=ASK_LOVLI_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": [{"type": "text", "text": prompt}]}],
+        )
+    except Exception as e:
+        raise LovliLlmError(f"anthropic call failed: {e}") from e
+    raw = "".join(
+        block.text for block in msg.content if getattr(block, "type", None) == "text"
+    ).strip()
+    if not raw:
+        raise LovliLlmError("anthropic returned empty reply")
+    return raw
+
+
+async def _ask_emergent(prompt: str, session_id: str) -> str:
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage  # local import
+    except ImportError as e:
+        raise LovliLlmError(
+            "Emergent LLM fallback not available in this deployment "
+            "(emergentintegrations package not installed)."
+        ) from e
+
+    api_key = os.environ.get("EMERGENT_LLM_KEY")
+    if not api_key:
+        raise LovliLlmError("EMERGENT_LLM_KEY not configured")
+
+    chat = LlmChat(
+        api_key=api_key,
+        session_id=session_id,
+        system_message=ASK_LOVLI_SYSTEM_PROMPT,
+    ).with_model("anthropic", os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-5-20250929"))
+    try:
+        raw = await chat.send_message(UserMessage(text=prompt))
+    except Exception as e:
+        raise LovliLlmError(f"emergent call failed: {e}") from e
+    raw = (raw or "").strip()
+    if not raw:
+        raise LovliLlmError("emergent returned empty reply")
+    return raw
+
+
+async def ask_lovli(
+    message: str,
+    history: list[dict],
+    memory_context: "Optional[str]" = None,
+    session_id: str = "ask-lovli",
+) -> str:
+    """One coach-chat turn. Returns Lovli's plain-text reply.
+
+    Provider routing mirrors generate_replies: direct Anthropic when
+    ANTHROPIC_API_KEY is set, Emergent otherwise; transient Anthropic errors
+    fall back to Emergent when both keys exist.
+    """
+    explicit = (os.environ.get("LLM_PROVIDER") or "auto").lower().strip()
+    has_anthropic_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
+    has_emergent_key = bool(os.environ.get("EMERGENT_LLM_KEY"))
+
+    if explicit == "auto":
+        primary = "anthropic" if has_anthropic_key else "emergent"
+        fallback = "emergent" if primary == "anthropic" and has_emergent_key else None
+    else:
+        primary = explicit
+        fallback = None
+
+    prompt = _build_ask_prompt(message, history, memory_context)
+
+    async def _attempt(provider: str) -> str:
+        if provider == "anthropic":
+            return await _ask_anthropic(prompt)
+        if provider == "emergent":
+            return await _ask_emergent(prompt, session_id)
+        raise LovliLlmError(f"unknown provider {provider!r}")
+
+    try:
+        return await _attempt(primary)
+    except LovliLlmError as primary_err:
+        if fallback is None:
+            raise
+        msg = str(primary_err).lower()
+        transient_markers = (
+            "overload", "529", "rate limit", "ratelimit", "rate_limit",
+            "503", "502", "504", "timeout", "timed out", "connection",
+        )
+        if not any(m in msg for m in transient_markers):
+            raise
+        return await _attempt(fallback)

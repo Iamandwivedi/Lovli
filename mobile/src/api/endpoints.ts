@@ -146,6 +146,22 @@ export const patchSettings = async (body: {
 };
 
 // ---------- Usage ----------
+// ---- Ask Lovli (PR-V2-4) ----------------------------------------------------
+export type AskLovliTurn = { role: "user" | "lovli"; text: string };
+
+export const askLovli = async (
+  message: string,
+  history: AskLovliTurn[],
+  personId?: string | null,
+) => {
+  const { data } = await api.post<{ reply: string }>("/ask-lovli", {
+    message,
+    history,
+    person_id: personId ?? null,
+  });
+  return data;
+};
+
 export const getUsage = async (client_local_date: string) => {
   const { data } = await api.get<Usage>("/usage", { params: { client_local_date } });
   return data;

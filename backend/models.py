@@ -250,3 +250,19 @@ class UsageResponse(BaseModel):
     daily_limit: int
     last_generation_reset_date: Optional[str]
     timezone: str
+
+
+# ---- Ask Lovli (PR-V2-4) ----------------------------------------------------
+class AskLovliTurn(BaseModel):
+    role: Literal["user", "lovli"]
+    text: str
+
+
+class AskLovliRequest(BaseModel):
+    message: str
+    history: List[AskLovliTurn] = []
+    person_id: Optional[str] = None
+
+
+class AskLovliResponse(BaseModel):
+    reply: str

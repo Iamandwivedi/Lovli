@@ -54,11 +54,14 @@ from llm_service import (  # noqa: E402
     LovliLlmError,
     LovliRequest,
     _normalize_platform as _normalize_platform_value,
+    ask_lovli,
     generate_replies,
 )
 from models import (
     PLATFORMS,
     VIBES,
+    AskLovliRequest,
+    AskLovliResponse,
     AuthResponse,
     FeedbackRequest,
     GenerateRepliesResponse,
@@ -680,6 +683,91 @@ async def generate_replies_endpoint(
         reply_labels=rich_reply_labels,
         read=rich_read,  # type: ignore[arg-type]  # pydantic coerces dict → ReplyRead
     )
+
+
+@api.post("/ask-lovli", response_model=AskLovliResponse)
+async def ask_lovli_endpoint(
+    req: AskLovliRequest,
+    user_id: str = Depends(get_current_user_id),
+):
+    """PR-V2-4: one Ask Lovli coach-chat turn.
+
+    Each message counts against the same daily usage plumbing as generations
+    (free plan shares daily_limit; over limit → 429, same shape clients handle).
+    History is capped server-side at ~20 turns. person_id optionally pulls that
+    memory card into context.
+    """
+    message = (req.message or "").strip()
+    if not message:
+        raise HTTPException(status_code=400, detail="Say something first.")
+
+    user = await _get_user(user_id)
+    local_date = _normalize_local_date(None)
+    user = await _maybe_reset_daily(user, local_date)
+
+    limit = _daily_limit(user["plan"])
+    if user["plan"] == "free" and user["daily_generation_count"] >= limit:
+        raise HTTPException(status_code=429, detail="Daily generation limit reached.")
+
+    history = [{"role": t.role, "text": t.text} for t in req.history[-20:]]
+
+    memory_context: Optional[str] = None
+    if req.person_id:
+        mc = await db.memory_cards.find_one(
+            {"id": req.person_id, "user_id": user_id}, {"_id": 0}
+        )
+        if mc:
+            parts: list[str] = [f"Nickname: {mc.get('nickname','')}."]
+            if mc.get("goal"):
+                parts.append(f"What user wants with this person: {mc['goal']}.")
+            if mc.get("current_situation"):
+                parts.append(f"Current situation: {mc['current_situation']}.")
+            if mc.get("relationship_stage"):
+                parts.append(f"Stage: {mc['relationship_stage']}.")
+            if mc.get("where_met"):
+                parts.append(f"Where they met: {mc['where_met']}.")
+            if mc.get("likes"):
+                parts.append(f"Likes: {mc['likes']}.")
+            if mc.get("dislikes"):
+                parts.append(f"Avoid: {mc['dislikes']}.")
+            if mc.get("communication_style"):
+                parts.append(f"Communication style: {mc['communication_style']}.")
+            if mc.get("inside_jokes"):
+                parts.append(f"Inside jokes: {mc['inside_jokes']}.")
+            if mc.get("important_dates"):
+                parts.append(f"Important context: {mc['important_dates']}.")
+            if mc.get("best_approach"):
+                parts.append(f"Best approach: {mc['best_approach']}.")
+            if mc.get("notes"):
+                parts.append(f"Notes: {mc['notes']}.")
+            memory_context = " ".join(parts)
+
+    try:
+        reply = await ask_lovli(
+            message=message,
+            history=history,
+            memory_context=memory_context,
+            session_id=f"ask-{user_id}",
+        )
+    except LovliLlmError as e:
+        logger.warning("Ask Lovli failed for user %s: %s", user_id, e)
+        raise HTTPException(
+            status_code=503,
+            detail="Lovli couldn't reply right now. Try again.",
+        )
+
+    await db.users.update_one(
+        {"id": user_id},
+        {
+            "$inc": {"daily_generation_count": 1},
+            "$set": {
+                "last_generation_reset_date": local_date,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            },
+        },
+    )
+
+    return AskLovliResponse(reply=reply)
 
 
 @api.post("/feedback")
