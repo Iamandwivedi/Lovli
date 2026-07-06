@@ -135,3 +135,26 @@ frontend:
 agent_communication:
   - agent: "main"
     message: "PR-V2-1 done. NOTE: supervisor expo program pointed at /app/frontend after fork — fixed to /app/mobile. Backend untouched. Legacy screens (reply/memory/more/settings/paywall/login/signup) inherit dark tokens automatically; their dedicated restyles come in PR-V2-2..7, so don't fail them on pixel-perfection — only on broken/unreadable UI. No numeric confidence/scores anywhere (honesty rule)."
+
+## PR-V2-2 (Reply Home emotion-first + Intent screen + staged Generating loader) — implemented
+frontend:
+  - task: "Reply Home V2: 'What's happening?' H1, feeling chips (single-select toggle + Skip), compact dashed upload row 'Show me the conversation', paste field, ✦ Get replies. Language toggle + Customize row REMOVED (defaults still sent to API)."
+    implemented: true
+    working: "NA"
+    files: ["/app/mobile/app/(tabs)/reply.tsx"]
+  - task: "Intent phase: back header 'Got it. I read the chat.', parsed chat preview bubbles (them left / me right), WHAT DO YOU WANT? chips (Reply default), HOW SHOULD IT LAND? chips (optional toggle), ✦ Write it for me"
+    implemented: true
+    working: "NA"
+    files: ["/app/mobile/app/(tabs)/reply.tsx", "/app/mobile/src/components/reply/ChatPreview.tsx", "/app/mobile/src/utils/chatParse.ts"]
+  - task: "Generating phase: staged 5-step loader (done/active/pending states, ~650ms cadence, min 2.2s, holds last stage until response)"
+    implemented: true
+    working: "NA"
+    files: ["/app/mobile/src/components/reply/StagedLoader.tsx"]
+  - task: "Results phase: back header 'Your reply' + existing ReadCard/reply cards (full restyle in PR-V2-3)"
+    implemented: true
+    working: "NA"
+    files: ["/app/mobile/app/(tabs)/reply.tsx"]
+
+agent_communication:
+  - agent: "main"
+    message: "PR-V2-2: Reply tab is now a phase machine home→intent→generating→results (tab bar stays visible). feeling/intent/outcome stored client-side ONLY (sent in PR-V2-3). NO backend changes this PR; EMERGENT_LLM_KEY restored in backend/.env (was lost in fork) so real generation works. Main agent smoke-tested full happy path OK. NOTE: Metro runs in CI mode — code changes need `sudo supervisorctl restart expo`."

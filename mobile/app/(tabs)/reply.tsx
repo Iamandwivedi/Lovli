@@ -1,11 +1,16 @@
-// Reply screen — the most important screen in the app.
-// Upload screenshot or paste chat → choose language → generate 3 replies.
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+// Reply tab — V2 "Coach" flow as a phase machine:
+//   home → intent → generating → results
+// home:      "What's happening?" + feeling check-in + compact upload/paste + ✦ Get replies
+// intent:    "Got it. I read the chat." + chat preview + WHAT DO YOU WANT? / HOW SHOULD IT LAND?
+// generating: staged 5-step loader timed to the real request
+// results:   insight + reply cards (full "Generated" restyle lands in PR-V2-3)
+// NOTE (PR-V2-2): feeling/intent/outcome are stored client-side ONLY — they are
+// sent to the backend (with the onboarding goal from AsyncStorage `lovli_goal`)
+// in PR-V2-3. Language/platform/vibe defaults are sent unchanged.
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Animated,
   Image,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -21,12 +26,13 @@ import { GlassCard } from "@/src/components/GlassCard";
 import { Chip } from "@/src/components/Chip";
 import { Input } from "@/src/components/Input";
 import { PrimaryButton } from "@/src/components/PrimaryButton";
-import { SecondaryButton } from "@/src/components/SecondaryButton";
+import { ChatPreview } from "@/src/components/reply/ChatPreview";
+import { StagedLoader, GENERATION_STAGES } from "@/src/components/reply/StagedLoader";
+import { parseChatText } from "@/src/utils/chatParse";
 import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
 import {
   Language,
-  MemoryCard,
   PlatformLabel,
   Replies,
   ReplyRead,
@@ -34,7 +40,6 @@ import {
   generateReplies,
   getUsage,
   getClientLocalDate,
-  listMemoryCards,
   platformLabelToValue,
   platformValueToLabel,
   postFeedback,
@@ -42,44 +47,39 @@ import {
 import { extractErrorMessage } from "@/src/api/client";
 import { colors, fontSize, radii, space, typography } from "@/src/theme";
 
-const PLATFORMS: PlatformLabel[] = ["Instagram", "Dating platform", "WhatsApp"];
-const VIBES: Vibe[] = ["Playful", "Flirty", "Sincere", "Respectful", "Confident"];
-const LANGUAGES: Language[] = ["English", "Hinglish", "Hindi + English mixed"];
-// Human-feel tone label mapped from chosen vibe.
-const TONE_LABEL: Record<Vibe, string> = {
-  Playful: "Playful",
-  Flirty: "Smooth",
-  Sincere: "Sincere",
-  Respectful: "Respectful",
-  Confident: "Confident",
-};
-
-// PR-DA1: single first-person headline (rotation retired — design wants one steady line).
-const HERO_HEADLINE = "Stuck on what to say back?";
-const HERO_SUB =
-  "Drop the screenshot. I'll read the vibe and write back — in your voice.";
-
+type Phase = "home" | "intent" | "generating" | "results";
 type Pick = ImagePicker.ImagePickerAsset;
+
+const FEELINGS = [
+  "😊 Excited",
+  "😔 Confused",
+  "😰 Overthinking",
+  "❤️ Falling for someone",
+  "💔 Healing",
+  "😎 Just curious",
+];
+const INTENTS = ["Reply", "Understand", "Flirt", "Set boundaries", "End it", "Save the vibe"];
+const OUTCOMES = [
+  "Make them smile",
+  "Keep the mystery",
+  "Sound confident",
+  "Don't look desperate",
+  "Be funny",
+  "Stay casual",
+  "Be mature",
+];
 
 export default function ReplyScreen() {
   const { user, updateUser } = useAuth();
   const toast = useToast();
 
+  const [phase, setPhase] = useState<Phase>("home");
   const [image, setImage] = useState<Pick | null>(null);
   const [manual, setManual] = useState("");
-  const [language, setLanguage] = useState<Language>(
-    (user?.language_preference as Language) || "Hinglish",
-  );
-  const [customizeOpen, setCustomizeOpen] = useState(false);
-  const [platform, setPlatform] = useState<PlatformLabel>(
-    platformValueToLabel(user?.preferred_platform || "instagram"),
-  );
-  const [vibe, setVibe] = useState<Vibe>("Playful");
-  const [memoryId, setMemoryId] = useState<string | null>(null);
-  const [memoryPickerOpen, setMemoryPickerOpen] = useState(false);
-  const [memoryCards, setMemoryCards] = useState<MemoryCard[]>([]);
-
-  const [generating, setGenerating] = useState(false);
+  const [feeling, setFeeling] = useState<string | null>(null);
+  const [intent, setIntent] = useState<string>("Reply");
+  const [outcome, setOutcome] = useState<string | null>(null);
+  const [stage, setStage] = useState(0);
   const [result, setResult] = useState<Replies | null>(null);
   const [usage, setUsage] = useState({
     daily_generation_count: user?.daily_generation_count ?? 0,
@@ -87,49 +87,49 @@ export default function ReplyScreen() {
     plan: user?.plan ?? "free",
   });
 
-  const refreshUsageAndMemory = useCallback(async () => {
+  // Defaults now live in Settings — sent unchanged with every generation.
+  const language: Language = (user?.language_preference as Language) || "Hinglish";
+  const platform: PlatformLabel = platformValueToLabel(user?.preferred_platform || "instagram");
+  const vibe: Vibe = "Playful";
+
+  const refreshUsage = useCallback(async () => {
     try {
       const u = await getUsage(getClientLocalDate());
       setUsage(u);
     } catch {
       // silent
     }
-    try {
-      const cards = await listMemoryCards();
-      setMemoryCards(cards || []);
-    } catch {
-      setMemoryCards([]);
-    }
   }, []);
-
-  useEffect(() => {
-    refreshUsageAndMemory();
-  }, [refreshUsageAndMemory]);
 
   useFocusEffect(
     useCallback(() => {
-      refreshUsageAndMemory();
-    }, [refreshUsageAndMemory]),
+      refreshUsage();
+    }, [refreshUsage]),
   );
 
-  const selectedMemoryName = useMemo(
-    () => (memoryId ? memoryCards.find((m) => m.id === memoryId)?.nickname : null),
-    [memoryId, memoryCards],
-  );
-
-  const summary = useMemo(
-    () => [platform, vibe, selectedMemoryName || "No memory"].filter(Boolean).join(" • "),
-    [platform, vibe, selectedMemoryName],
-  );
+  // Staged loader: advance sequentially (~650ms per stage), hold on the last
+  // until the real request resolves.
+  useEffect(() => {
+    if (phase !== "generating") return;
+    setStage(0);
+    const id = setInterval(() => {
+      setStage((s) => Math.min(s + 1, GENERATION_STAGES.length - 1));
+    }, 650);
+    return () => clearInterval(id);
+  }, [phase]);
 
   const remaining = useMemo(() => {
     if (usage.plan === "pro") return Infinity;
     return Math.max(0, (usage.daily_limit ?? 8) - (usage.daily_generation_count ?? 0));
   }, [usage]);
 
+  const parsedMessages = useMemo(
+    () => (manual.trim() ? parseChatText(manual) : []),
+    [manual],
+  );
+
   const pickImage = async () => {
     try {
-      // Check permission first
       const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
       let granted = status === "granted";
       if (!granted) {
@@ -141,15 +141,14 @@ export default function ReplyScreen() {
         }
         if (!granted) return;
       }
-      const result = await ImagePicker.launchImageLibraryAsync({
+      const res = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         allowsMultipleSelection: false,
         quality: 0.85,
         exif: false,
       });
-      if (result.canceled) return;
-      const asset = result.assets[0];
-      // 8MB safety check
+      if (res.canceled) return;
+      const asset = res.assets[0];
       if (asset.fileSize && asset.fileSize > 8 * 1024 * 1024) {
         toast.error("This image is too large.");
         return;
@@ -160,37 +159,44 @@ export default function ReplyScreen() {
     }
   };
 
-  const removeImage = () => setImage(null);
-
-  const onGenerate = async () => {
+  const goToIntent = () => {
     if (!image && !manual.trim()) {
-      toast.error("Upload a screenshot or paste the chat first.");
+      toast.error("Show me the conversation first — screenshot or paste.");
       return;
     }
     if (usage.plan !== "pro" && remaining <= 0) {
       toast.error("You've used today's free generations.");
       return;
     }
+    setPhase("intent");
+  };
+
+  const startGeneration = async () => {
+    setPhase("generating");
+    setResult(null);
+    // Keep the staged loader readable even on fast responses.
+    const minWait = new Promise((r) => setTimeout(r, 2200));
     try {
-      setGenerating(true);
-      const data = await generateReplies({
-        platform: platformLabelToValue(platform),
-        vibe,
-        language,
-        manual_text: manual,
-        memory_card_id: memoryId,
-        // PR-INT: ask for the situation read + labeled replies. Server is
-        // backward compatible — if rich isn't honored or the LLM produces
-        // a malformed rich payload, the renderer falls back to the plain view.
-        rich: true,
-        image: image
-          ? {
-              uri: image.uri,
-              name: image.fileName || `chat.${(image.mimeType || "image/jpeg").split("/").pop()}`,
-              type: image.mimeType || "image/jpeg",
-            }
-          : null,
-      });
+      const [data] = await Promise.all([
+        generateReplies({
+          platform: platformLabelToValue(platform),
+          vibe,
+          language,
+          manual_text: manual,
+          memory_card_id: null,
+          rich: true,
+          image: image
+            ? {
+                uri: image.uri,
+                name:
+                  image.fileName ||
+                  `chat.${(image.mimeType || "image/jpeg").split("/").pop()}`,
+                type: image.mimeType || "image/jpeg",
+              }
+            : null,
+        }),
+        minWait,
+      ]);
       setResult(data);
       setUsage({
         daily_generation_count: data.daily_generation_count,
@@ -205,22 +211,17 @@ export default function ReplyScreen() {
           plan: data.plan,
         });
       }
+      setPhase("results");
     } catch (err) {
       toast.error(extractErrorMessage(err, "Something went wrong. Try again."));
-    } finally {
-      setGenerating(false);
+      setPhase("intent");
     }
-  };
-
-  const onRegenerate = async () => {
-    setResult(null);
-    await onGenerate();
   };
 
   const onCopy = async (text: string, index: number) => {
     try {
       await Clipboard.setStringAsync(text);
-      toast.success("Copied. Go send it.");
+      toast.success("Copied — go get 'em.");
       if (result?.generation_id) {
         postFeedback(result.generation_id, index).catch(() => {});
       }
@@ -230,251 +231,214 @@ export default function ReplyScreen() {
   };
 
   return (
-    <Screen testID="reply-page" bottomTabSpacing>
-      <AppHeader />
-
-      <View style={{ marginTop: space.l }}>
-        <Text style={styles.h1} testID="reply-heading">
-          {HERO_HEADLINE}
-        </Text>
-        <Text style={styles.sub}>{HERO_SUB}</Text>
-      </View>
-
-      {/* PR-FIX: compact upload — single-row dashed card (no outer GlassCard). */}
-      {image ? (
-        <View style={styles.preview} testID="upload-preview">
-          <Image source={{ uri: image.uri }} style={styles.previewImg} resizeMode="cover" />
-          <Pressable
-            onPress={removeImage}
-            testID="upload-remove-button"
-            style={({ pressed }) => [styles.removeBtn, pressed && { opacity: 0.8 }]}
-            hitSlop={10}
-          >
-            <Ionicons name="close" size={16} color={colors.text} />
-          </Pressable>
-        </View>
-      ) : (
-        <Pressable
-          onPress={pickImage}
-          testID="upload-area"
-          style={({ pressed }) => [styles.upload, pressed && styles.uploadPressed]}
-        >
-          <View style={styles.uploadIcon}>
-            <Ionicons name="cloud-upload-outline" size={22} color={colors.violet} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.uploadTitle}>Upload a screenshot</Text>
-            <Text style={styles.uploadHint}>From any chat app — PNG or JPG</Text>
-          </View>
-        </Pressable>
-      )}
-
-      {/* Manual paste — compact one-row start, expands as needed */}
-      <Input
-        placeholder="Or paste the chat here…"
-        multiline
-        numberOfLines={2}
-        value={manual}
-        onChangeText={setManual}
-        inputTestID="manual-text-input"
-        style={{ minHeight: 52 }}
-      />
-
-      {/* Reply language */}
-      <View>
-        <View style={styles.sectionRow}>
-          <Ionicons name="globe-outline" size={14} color={colors.textSecondary} />
-          <Text style={styles.section}>Reply language</Text>
-        </View>
-        <View style={styles.chipsRow}>
-          {LANGUAGES.map((l) => (
-            <Chip
-              key={l}
-              label={l}
-              selected={language === l}
-              onPress={() => setLanguage(l)}
-              testID={`language-${l}`}
-            />
-          ))}
-        </View>
-      </View>
-
-      {/* Customize reply */}
-      <GlassCard padded variant="solid" testID="customize-card">
-        <Pressable
-          onPress={() => setCustomizeOpen((v) => !v)}
-          testID="customize-toggle"
-          style={styles.customHeader}
-        >
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>Customize reply</Text>
-            <Text style={styles.cardSub} numberOfLines={1}>
-              {summary}
-            </Text>
-          </View>
-          <Ionicons
-            name={customizeOpen ? "chevron-up" : "chevron-down"}
-            size={20}
-            color={colors.textMuted}
-          />
-        </Pressable>
-
-        {customizeOpen ? (
-          <View style={{ marginTop: space.l, gap: space.l }}>
-            <View>
-              <View style={styles.sectionRow}>
-                <Ionicons name="phone-portrait-outline" size={13} color={colors.textSecondary} />
-                <Text style={styles.subSection}>Platform</Text>
-              </View>
-              <View style={styles.chipsRow}>
-                {PLATFORMS.map((p) => (
-                  <Chip
-                    key={p}
-                    label={p}
-                    selected={platform === p}
-                    onPress={() => setPlatform(p)}
-                    testID={`platform-${p}`}
-                  />
-                ))}
-              </View>
-            </View>
-            <View>
-              <View style={styles.sectionRow}>
-                <Ionicons name="sparkles-outline" size={13} color={colors.textSecondary} />
-                <Text style={styles.subSection}>Vibe</Text>
-              </View>
-              <View style={styles.chipsRow}>
-                {VIBES.map((v) => (
-                  <Chip
-                    key={v}
-                    label={v}
-                    selected={vibe === v}
-                    onPress={() => setVibe(v)}
-                    testID={`vibe-${v}`}
-                  />
-                ))}
-              </View>
-            </View>
-            <View>
-              <View style={styles.sectionRow}>
-                <Ionicons name="bookmark-outline" size={13} color={colors.textSecondary} />
-                <Text style={styles.subSection}>Personalize with memory</Text>
-              </View>
-              <Pressable
-                onPress={() => setMemoryPickerOpen(true)}
-                testID="memory-picker-open"
-                style={({ pressed }) => [styles.memorySelect, pressed && { opacity: 0.85 }]}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.memorySelectText}>
-                    {selectedMemoryName || "None"}
-                  </Text>
-                  <Text style={styles.memorySelectHint}>
-                    Memory is optional — tap to choose.
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-              </Pressable>
-            </View>
-          </View>
-        ) : null}
-      </GlassCard>
-
-      {/* Usage / privacy row */}
-      <View style={styles.usageRow} testID="usage-privacy-row">
-        <View style={styles.usagePill} testID="reply-usage-counter">
-          {usage.plan === "pro" ? (
-            <>
-              <View style={[styles.usageDot, { backgroundColor: colors.lavender }]} />
-              <Text style={styles.usageText}>Pro — unlimited</Text>
-            </>
-          ) : (
-            <>
-              <View style={styles.usageDot} />
-              <Text style={styles.usageText}>
-                {usage.daily_generation_count} of {usage.daily_limit} used today
-              </Text>
-            </>
-          )}
-        </View>
-        <View style={styles.privatePill}>
-          <Ionicons name="lock-closed" size={11} color={colors.violet} />
-          <Text style={styles.usageText}>Private</Text>
-        </View>
-      </View>
-
-      {/* PR-DA1: airier layout — Using chip removed, Customize card already
-          summarizes the selections. Generate button gets generous space above. */}
-
-      {/* Generate button */}
-      <PrimaryButton
-        label={generating ? "Reading the vibe…" : "Get replies"}
-        onPress={onGenerate}
-        loading={generating}
-        testID="generate-replies-button"
-      />
-
-      {/* Results */}
-      {generating && !result ? (
-        <View style={styles.loadingBlock}>
-          <ActivityIndicator color={colors.lavender} />
-          <Text style={styles.loadingText}>Reading the vibe…</Text>
-        </View>
+    <Screen
+      testID="reply-page"
+      bottomTabSpacing
+      scroll={phase !== "generating"}
+    >
+      {phase === "home" ? (
+        <HomePhase
+          image={image}
+          manual={manual}
+          feeling={feeling}
+          onChangeManual={setManual}
+          onToggleFeeling={(f) => setFeeling((cur) => (cur === f ? null : f))}
+          onSkipFeeling={() => setFeeling(null)}
+          onPickImage={pickImage}
+          onRemoveImage={() => setImage(null)}
+          onContinue={goToIntent}
+        />
       ) : null}
 
-      {result ? (
-        <View testID="reply-results-block" style={{ gap: space.l }}>
-          {/* PR-INT: situation read card (rich-mode). Guarded — if read shape
-              is malformed/missing, we silently fall back to the plain view. */}
-          {(() => {
-            const read = safeRead(result.read);
-            return read ? <ReadCard read={read} /> : null;
-          })()}
+      {phase === "intent" ? (
+        <>
+          <BackHeader title="Got it. I read the chat." onBack={() => setPhase("home")} />
+          <ChatPreview messages={parsedMessages} imageUri={image?.uri} />
 
           <View>
-            <Text style={styles.h2}>Choose a reply</Text>
-            <Text style={styles.sub}>Edit it if you want. Make it yours.</Text>
+            <Text style={styles.sectionLabel}>WHAT DO YOU WANT?</Text>
+            <View style={styles.chipsRow}>
+              {INTENTS.map((it) => (
+                <Chip
+                  key={it}
+                  label={it}
+                  selected={intent === it}
+                  onPress={() => setIntent(it)}
+                  testID={`intent-${it}`}
+                />
+              ))}
+            </View>
           </View>
-          {result.replies.map((reply, i) => {
-            // PR-INT: prefer the model's truthful label; fall back to vibe tone.
-            const richLabel = Array.isArray(result.reply_labels)
-              ? (result.reply_labels[i] || "").trim()
-              : "";
-            const label = richLabel || TONE_LABEL[vibe] || "Warm";
-            return (
-              <ReplyResultCard
-                key={`${result.generation_id}-${i}`}
-                text={reply}
-                toneLabel={label}
-                index={i}
-                onCopy={() => onCopy(reply, i)}
-                onRegenerate={onRegenerate}
-                regenerating={generating}
-              />
-            );
-          })}
-        </View>
+
+          <View>
+            <Text style={styles.sectionLabel}>HOW SHOULD IT LAND?</Text>
+            <View style={styles.chipsRow}>
+              {OUTCOMES.map((o) => (
+                <Chip
+                  key={o}
+                  label={o}
+                  selected={outcome === o}
+                  onPress={() => setOutcome((cur) => (cur === o ? null : o))}
+                  testID={`outcome-${o}`}
+                />
+              ))}
+            </View>
+          </View>
+
+          <View style={{ marginTop: space.s }}>
+            <PrimaryButton
+              label="Write it for me"
+              onPress={startGeneration}
+              testID="write-it-button"
+            />
+          </View>
+        </>
       ) : null}
 
-      {/* Memory picker modal */}
-      <MemoryPickerModal
-        open={memoryPickerOpen}
-        onClose={() => setMemoryPickerOpen(false)}
-        cards={memoryCards}
-        selectedId={memoryId}
-        onPick={(id) => {
-          setMemoryId(id);
-          setMemoryPickerOpen(false);
-        }}
-      />
+      {phase === "generating" ? <StagedLoader activeIndex={stage} /> : null}
+
+      {phase === "results" && result ? (
+        <>
+          <BackHeader title="Your reply" onBack={() => setPhase("home")} />
+          <View testID="reply-results-block" style={{ gap: space.l }}>
+            {(() => {
+              const read = safeRead(result.read);
+              return read ? <ReadCard read={read} /> : null;
+            })()}
+            {result.replies.map((reply, i) => {
+              const richLabel = Array.isArray(result.reply_labels)
+                ? (result.reply_labels[i] || "").trim()
+                : "";
+              return (
+                <ReplyResultCard
+                  key={`${result.generation_id}-${i}`}
+                  text={reply}
+                  toneLabel={richLabel || "Warm"}
+                  index={i}
+                  onCopy={() => onCopy(reply, i)}
+                  onRegenerate={startGeneration}
+                />
+              );
+            })}
+          </View>
+        </>
+      ) : null}
     </Screen>
   );
 }
 
-// --- PR-INT: Read card (situation read + temperature chip + signals/outcome ticks) ---
+// --- Home phase ---
+const HomePhase: React.FC<{
+  image: Pick | null;
+  manual: string;
+  feeling: string | null;
+  onChangeManual: (v: string) => void;
+  onToggleFeeling: (f: string) => void;
+  onSkipFeeling: () => void;
+  onPickImage: () => void;
+  onRemoveImage: () => void;
+  onContinue: () => void;
+}> = ({
+  image,
+  manual,
+  feeling,
+  onChangeManual,
+  onToggleFeeling,
+  onSkipFeeling,
+  onPickImage,
+  onRemoveImage,
+  onContinue,
+}) => (
+  <>
+    <AppHeader />
 
-// Defensive parser: only returns a ReplyRead if the shape is well-formed.
-// Any malformed/missing field → returns null → caller falls back to plain view.
+    <View style={{ marginTop: space.s }}>
+      <Text style={styles.h1} testID="reply-heading">
+        What's happening?
+      </Text>
+      <Text style={styles.sub}>
+        Tell me what happened — or just show me the conversation.
+      </Text>
+    </View>
+
+    {/* Emotional check-in — optional, single-select toggle */}
+    <View testID="feeling-section">
+      <View style={styles.feelingHeader}>
+        <Text style={styles.sectionLabel}>HOW ARE YOU FEELING?</Text>
+        <Pressable onPress={onSkipFeeling} hitSlop={10} testID="feeling-skip">
+          <Text style={styles.skipText}>Skip</Text>
+        </Pressable>
+      </View>
+      <View style={styles.chipsRow}>
+        {FEELINGS.map((f) => (
+          <Chip
+            key={f}
+            label={f}
+            selected={feeling === f}
+            onPress={() => onToggleFeeling(f)}
+            testID={`feeling-${f.split(" ").slice(1).join(" ")}`}
+          />
+        ))}
+      </View>
+    </View>
+
+    {/* Upload row */}
+    {image ? (
+      <View style={styles.preview} testID="upload-preview">
+        <Image source={{ uri: image.uri }} style={styles.previewImg} resizeMode="cover" />
+        <Pressable
+          onPress={onRemoveImage}
+          testID="upload-remove-button"
+          style={({ pressed }) => [styles.removeBtn, pressed && { opacity: 0.8 }]}
+          hitSlop={10}
+        >
+          <Ionicons name="close" size={16} color={colors.text} />
+        </Pressable>
+      </View>
+    ) : (
+      <Pressable
+        onPress={onPickImage}
+        testID="upload-area"
+        style={({ pressed }) => [styles.upload, pressed && styles.uploadPressed]}
+      >
+        <View style={styles.uploadIcon}>
+          <Ionicons name="arrow-up" size={20} color={colors.lavender} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.uploadTitle}>Show me the conversation</Text>
+          <Text style={styles.uploadHint}>Screenshot from any chat app</Text>
+        </View>
+      </Pressable>
+    )}
+
+    {/* Paste field */}
+    <Input
+      placeholder="Or paste the chat here…"
+      multiline
+      numberOfLines={2}
+      value={manual}
+      onChangeText={onChangeManual}
+      inputTestID="manual-text-input"
+      style={{ minHeight: 52 }}
+    />
+
+    <View style={{ marginTop: space.s }}>
+      <PrimaryButton label="Get replies" onPress={onContinue} testID="generate-replies-button" />
+    </View>
+  </>
+);
+
+// --- Back header (recurring sub-screen pattern) ---
+const BackHeader: React.FC<{ title: string; onBack: () => void }> = ({ title, onBack }) => (
+  <View style={styles.backHeader}>
+    <Pressable onPress={onBack} hitSlop={12} testID="reply-back-button">
+      <Ionicons name="chevron-back" size={22} color={colors.text} />
+    </Pressable>
+    <Text style={styles.backTitle}>{title}</Text>
+  </View>
+);
+
+// --- PR-INT: defensive read parser (unchanged) ---
 function safeRead(value: ReplyRead | null | undefined): ReplyRead | null {
   if (!value || typeof value !== "object") return null;
   const v = value as ReplyRead;
@@ -497,10 +461,7 @@ function safeRead(value: ReplyRead | null | undefined): ReplyRead | null {
   };
 }
 
-const TEMPERATURE_META: Record<
-  ReplyRead["temperature"],
-  { emoji: string; label: string }
-> = {
+const TEMPERATURE_META: Record<ReplyRead["temperature"], { emoji: string; label: string }> = {
   interested: { emoji: "🔥", label: "Interested" },
   neutral: { emoji: "🙂", label: "Neutral" },
   cold: { emoji: "❄", label: "Cold" },
@@ -512,7 +473,7 @@ const ReadCard: React.FC<{ read: ReplyRead }> = ({ read }) => {
     <GlassCard padded variant="elevated" testID="read-card">
       <View style={styles.readHeader}>
         <View style={styles.readTitleRow}>
-          <Ionicons name="eye-outline" size={14} color={colors.violetDeep} />
+          <Ionicons name="eye-outline" size={14} color={colors.lavender} />
           <Text style={styles.readEyebrow}>What's going on</Text>
         </View>
         <View style={styles.tempChip} testID="read-temperature-chip">
@@ -552,33 +513,22 @@ const ReadCard: React.FC<{ read: ReplyRead }> = ({ read }) => {
   );
 };
 
-// --- Reply result card ---
+// --- Reply result card (restyle lands in PR-V2-3) ---
 const ReplyResultCard: React.FC<{
   text: string;
   toneLabel: string;
   index: number;
   onCopy: () => void;
   onRegenerate: () => void;
-  regenerating?: boolean;
-}> = ({ text, toneLabel, index, onCopy, onRegenerate, regenerating }) => {
+}> = ({ text, toneLabel, index, onCopy, onRegenerate }) => {
   const [copied, setCopied] = useState(false);
-  const fade = React.useRef(new Animated.Value(0)).current;
-  const slide = React.useRef(new Animated.Value(10)).current;
+  const fade = useRef(new Animated.Value(0)).current;
+  const slide = useRef(new Animated.Value(10)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fade, {
-        toValue: 1,
-        duration: 320,
-        delay: index * 80,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slide, {
-        toValue: 0,
-        duration: 360,
-        delay: index * 80,
-        useNativeDriver: true,
-      }),
+      Animated.timing(fade, { toValue: 1, duration: 320, delay: index * 80, useNativeDriver: true }),
+      Animated.timing(slide, { toValue: 0, duration: 360, delay: index * 80, useNativeDriver: true }),
     ]).start();
   }, [fade, slide, index]);
 
@@ -617,7 +567,6 @@ const ReplyResultCard: React.FC<{
         </Pressable>
         <Pressable
           onPress={onRegenerate}
-          disabled={regenerating}
           style={({ pressed }) => [styles.regenBtn, pressed && { opacity: 0.8 }]}
           testID="reply-regenerate-button"
         >
@@ -629,134 +578,84 @@ const ReplyResultCard: React.FC<{
   );
 };
 
-// --- Memory picker modal ---
-const MemoryPickerModal: React.FC<{
-  open: boolean;
-  onClose: () => void;
-  cards: MemoryCard[];
-  selectedId: string | null;
-  onPick: (id: string | null) => void;
-}> = ({ open, onClose, cards, selectedId, onPick }) => {
-  return (
-    <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable style={styles.modalBackdrop} onPress={onClose} />
-      <View style={styles.modalSheet} testID="memory-picker-modal">
-        <View style={styles.sheetHandle} />
-        <Text style={styles.modalTitle}>Personalize with memory</Text>
-        <Text style={styles.modalSub}>Optional — leaves your replies more thoughtful.</Text>
-
-        <Pressable
-          onPress={() => onPick(null)}
-          style={({ pressed }) => [
-            styles.memoryOption,
-            !selectedId && styles.memoryOptionActive,
-            pressed && { opacity: 0.85 },
-          ]}
-          testID="memory-option-none"
-        >
-          <Text style={styles.memoryOptionText}>None</Text>
-          {!selectedId ? <Ionicons name="checkmark" size={16} color={colors.lavender} /> : null}
-        </Pressable>
-
-        {cards.length === 0 ? (
-          <Text style={styles.memoryEmpty}>
-            No memories yet. You can add one on the Memory tab.
-          </Text>
-        ) : (
-          cards.map((c) => (
-            <Pressable
-              key={c.id}
-              onPress={() => onPick(c.id)}
-              style={({ pressed }) => [
-                styles.memoryOption,
-                selectedId === c.id && styles.memoryOptionActive,
-                pressed && { opacity: 0.85 },
-              ]}
-              testID={`memory-option-${c.id}`}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={styles.memoryOptionText}>{c.nickname}</Text>
-                {c.relationship_stage ? (
-                  <Text style={styles.memoryOptionHint}>{c.relationship_stage}</Text>
-                ) : null}
-              </View>
-              {selectedId === c.id ? (
-                <Ionicons name="checkmark" size={16} color={colors.lavender} />
-              ) : null}
-            </Pressable>
-          ))
-        )}
-
-        <SecondaryButton
-          label="Close"
-          onPress={onClose}
-          style={{ marginTop: space.l }}
-          testID="memory-picker-close"
-        />
-      </View>
-    </Modal>
-  );
-};
-
 const styles = StyleSheet.create({
   h1: {
-    ...typography.display.h1,
-    color: colors.text,
-  },
-  h2: {
-    ...typography.display.h2,
+    fontFamily: typography.fonts.displaySemibold,
+    fontSize: 34,
+    lineHeight: 38,
+    letterSpacing: -0.7,
     color: colors.text,
   },
   sub: {
     ...typography.body.base,
+    fontSize: 15,
     color: colors.textMuted,
-    marginTop: 6,
+    marginTop: 8,
+    maxWidth: 290,
   },
-  cardTitle: {
-    ...typography.display.h3,
-    color: colors.text,
+  // Recurring V2 section label: 12px 700 .1em uppercase #71717A
+  sectionLabel: {
+    fontFamily: typography.fonts.bodyBold,
+    fontSize: 12,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    color: colors.textFaint,
+    marginBottom: 10,
   },
-  cardSub: {
-    ...typography.body.caption,
-    color: colors.textMuted,
-    marginTop: 4,
+  feelingHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  uploadHeader: { marginBottom: space.m },
-  // PR-FIX: compact single-row dashed card (icon left + text right).
+  skipText: {
+    fontFamily: typography.fonts.bodySemibold,
+    fontSize: 12.5,
+    color: colors.textDim,
+  },
+  chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  // Compact dashed upload row
   upload: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-start",
     gap: space.m,
     borderWidth: 1.5,
-    borderColor: colors.borderStrong,
+    borderColor: "rgba(167,139,250,0.4)",
     borderStyle: "dashed",
-    borderRadius: radii.card,
-    paddingHorizontal: space.l,
-    paddingVertical: 14,
+    borderRadius: 18,
+    paddingHorizontal: 18,
+    paddingVertical: 15,
     backgroundColor: colors.surface,
   },
   uploadPressed: {
-    borderColor: colors.violet,
+    borderColor: colors.lavender,
     backgroundColor: colors.violetTint,
   },
   uploadIcon: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     borderRadius: 12,
     backgroundColor: colors.violetTint,
     alignItems: "center",
     justifyContent: "center",
   },
-  uploadTitle: { ...typography.body.bodySemibold, color: colors.text },
-  uploadHint: { ...typography.body.caption, color: colors.textMuted, marginTop: 4 },
+  uploadTitle: {
+    ...typography.body.bodySemibold,
+    fontSize: 14.5,
+    color: colors.text,
+  },
+  uploadHint: {
+    ...typography.body.caption,
+    fontSize: 12.5,
+    color: colors.textFaint,
+    marginTop: 3,
+  },
   preview: {
     position: "relative",
     borderRadius: radii.lg,
     overflow: "hidden",
     backgroundColor: colors.bg,
   },
-  previewImg: { width: "100%", height: 220 },
+  previewImg: { width: "100%", height: 200 },
   removeBtn: {
     position: "absolute",
     top: 10,
@@ -770,120 +669,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  privacyLine: {
+  backHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginTop: space.m,
+    gap: 14,
+    marginTop: space.s,
   },
-  privacyText: { ...typography.body.caption, color: colors.textMuted },
-  section: {
-    ...typography.body.bodySemibold,
-    color: colors.textSoft,
-    marginBottom: 10,
+  backTitle: {
+    fontFamily: typography.fonts.displaySemibold,
+    fontSize: 20,
+    letterSpacing: -0.3,
+    color: colors.text,
   },
-  // PR3: row that holds a section label + a small contextual icon
-  sectionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 10,
-  },
-  subSection: {
-    ...typography.body.bodySemibold,
-    color: colors.textSoft,
-    fontSize: fontSize.sm,
-  },
-  chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  customHeader: { flexDirection: "row", alignItems: "center" },
-  memorySelect: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: radii.md,
-    paddingHorizontal: space.l,
-    paddingVertical: space.m,
-  },
-  memorySelectText: { ...typography.body.bodyMedium, color: colors.text },
-  memorySelectHint: { ...typography.body.caption, color: colors.textMuted, marginTop: 3 },
-  usageRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  usagePill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: radii.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  privatePill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: radii.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  usageDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 999,
-    backgroundColor: colors.textMuted,
-  },
-  usageText: { ...typography.body.caption, color: colors.textSoft },
-  // PR3: "Using" context chip — live read of selections shown right above the CTA.
-  usingChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
-    backgroundColor: colors.violetTint,
-    borderRadius: radii.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    gap: 6,
-    maxWidth: "100%",
-  },
-  usingPrefix: {
-    ...typography.body.bodySemibold,
-    color: colors.violetDeep,
-    fontSize: 11,
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-  },
-  usingText: {
-    ...typography.body.caption,
-    color: colors.textMuted,
-    flexShrink: 1,
-  },
-  loadingBlock: {
-    alignItems: "center",
-    padding: space.xl,
-  },
-  loadingText: { ...typography.body.caption, color: colors.textMuted, marginTop: 10 },
+  // --- results (interim until PR-V2-3) ---
   replyCard: {
     backgroundColor: colors.surface,
     borderColor: colors.hairline,
     borderWidth: 1,
-    borderRadius: radii.xl,
+    borderRadius: radii.card,
     padding: space.l + 2,
-    shadowColor: "#14121C",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 18,
-    elevation: 2,
   },
   toneRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   toneDot: {
@@ -905,7 +709,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   replyText: {
-    ...typography.body.large,
+    fontFamily: typography.fonts.displayMedium,
     color: colors.text,
     fontSize: 17,
     lineHeight: 26,
@@ -922,7 +726,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: colors.ctaBase,
+    backgroundColor: colors.ctaBg,
     borderRadius: radii.pill,
     paddingHorizontal: 18,
     paddingVertical: 10,
@@ -940,59 +744,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   regenText: { ...typography.body.bodySemibold, color: colors.textSoft, fontSize: fontSize.sm },
-  modalBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.scrim,
-  },
-  modalSheet: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.midnight,
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    borderTopColor: colors.border,
-    borderTopWidth: 1,
-    paddingHorizontal: space.l,
-    paddingTop: 10,
-    paddingBottom: space.xl + space.l,
-    gap: 8,
-    maxHeight: "80%",
-  },
-  sheetHandle: {
-    alignSelf: "center",
-    width: 36,
-    height: 4,
-    borderRadius: 999,
-    backgroundColor: colors.border,
-    marginBottom: space.m,
-  },
-  modalTitle: {
-    ...typography.display.h3,
-    color: colors.text,
-  },
-  modalSub: { ...typography.body.caption, color: colors.textMuted, marginBottom: space.m },
-  memoryOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: radii.md,
-    paddingHorizontal: space.l,
-    paddingVertical: space.m + 2,
-    marginTop: 8,
-  },
-  memoryOptionActive: {
-    borderColor: colors.lavender,
-    backgroundColor: "rgba(167, 139, 250, 0.08)",
-  },
-  memoryOptionText: { ...typography.body.bodyMedium, color: colors.text },
-  memoryOptionHint: { ...typography.body.caption, color: colors.textMuted, marginTop: 3 },
-  memoryEmpty: { ...typography.body.caption, color: colors.textMuted, paddingVertical: 10 },
-
-  // --- PR-INT: ReadCard styles ---
+  // --- ReadCard ---
   readHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -1003,7 +755,7 @@ const styles = StyleSheet.create({
   readTitleRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   readEyebrow: {
     ...typography.body.bodySemibold,
-    color: colors.violetDeep,
+    color: colors.lavenderText,
     fontSize: 11,
     letterSpacing: 0.8,
     textTransform: "uppercase",
@@ -1020,11 +772,11 @@ const styles = StyleSheet.create({
   tempEmoji: { fontSize: 13 },
   tempLabel: {
     ...typography.body.bodySemibold,
-    color: colors.violetDeep,
+    color: colors.lavenderText,
     fontSize: 12,
   },
   readSituation: {
-    ...typography.body.large,
+    fontFamily: typography.fonts.displayMedium,
     color: colors.text,
     fontSize: 16,
     lineHeight: 24,
@@ -1047,7 +799,7 @@ const styles = StyleSheet.create({
   },
   bulletText: {
     ...typography.body.base,
-    color: colors.textPrimary,
+    color: colors.textSoft,
     flex: 1,
     fontSize: 14,
     lineHeight: 20,
