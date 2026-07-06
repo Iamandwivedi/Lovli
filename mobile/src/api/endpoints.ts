@@ -70,6 +70,7 @@ export type MemoryCard = {
   city?: string | null;
   timeline?: TimelineEntry[] | null;
   facts?: MemoryFact[] | null;
+  created_at?: string;
 };
 
 export type TimelineEntry = {

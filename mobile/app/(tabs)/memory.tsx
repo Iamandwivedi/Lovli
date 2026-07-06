@@ -25,7 +25,10 @@ export default function MemoryScreen() {
 
   const load = useCallback(async () => {
     try {
-      setCards((await listMemoryCards()) || []);
+      const cards = (await listMemoryCards()) || [];
+      // Oldest person stays the primary (elevated) card — new adds go below.
+      cards.sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""));
+      setCards(cards);
     } catch {
       // silent
     }
@@ -88,7 +91,7 @@ const PersonCard: React.FC<{ card: MemoryCard; primary: boolean; onPress: () => 
   onPress,
 }) => {
   const meta = personMeta(card);
-  const chips = (card.facts || []).slice(0, 3);
+  const chips = (card.facts || []).filter((f) => f.kind !== "avoid").slice(0, 3);
   return (
     <Pressable
       onPress={onPress}
