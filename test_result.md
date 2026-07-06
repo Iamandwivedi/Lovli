@@ -206,3 +206,12 @@ frontend:
 agent_communication:
   - agent: "main"
     message: "Non-decode More tiles intentionally show 'coming soon' toast — do NOT report as bug (PR4 scope). Save to Memory appends a note to card.notes via PATCH /api/memory-cards/{id}. Tester has card 'Ananya'."
+
+## PR-V2-6 (Memory List + Timeline, additive fields) — implemented
+backend: MemoryCard += stage/stage_duration/platform/city/timeline[]/facts[] (all optional, old cards untouched); PATCH already existed; _extra_memory_context() now feeds new fields into generate/ask-lovli/decode context. Main agent verified: PATCH with full V2 payload returns all fields (Ananya seeded: Talking·3 weeks, Hinge, Mumbai, 3 timeline entries incl 1 upcoming, 4 facts incl 1 avoid + 1 date).
+frontend:
+  - memory.tsx: V2 list (serif Memory H1 + intro, ✦ Add a memory, YOUR PEOPLE — first card elevated w/ 44px gradient avatar + meta 'Hinge · talking 3 weeks' + fact chips; others flat w/ tint avatar). Card tap → /memory/[id] detail. Empty state = hero copy + CTA only.
+  - memory/[id].tsx: person detail (back + Edit→/memory/edit/[id], 56px avatar w/ glow, stage pill + meta, YOUR STORY SO FAR timeline w/ glowing dots + outlined upcoming dots sorted last, ＋ Add a moment bottom sheet → PATCH, THE LITTLE THINGS fact chips lavender/pink).
+  - memory/edit/[id].tsx: existing MemoryForm edit flow (unchanged).
+  - decode.tsx Save to Memory now appends a timeline entry (title 'Decode saved') instead of a note.
+NOTE for tester: facts add/remove UI is NOT in this PR (edit via API/Edit-form scope note) — don't report as bug. Delete-person action moved out of the list (list is tap-to-detail); deletion via edit flow scope.

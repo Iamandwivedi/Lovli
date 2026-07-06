@@ -491,6 +491,46 @@ async def usage(
 # =============================================================================
 # Generate replies
 # =============================================================================
+
+def _extra_memory_context(mc: dict) -> str:
+    """PR-V2-6: serialize the additive MemoryCard fields (stage, platform, city,
+    timeline, facts) into LLM context. Empty string when none are set."""
+    bits: list[str] = []
+    if mc.get("stage"):
+        dur = f" ({mc['stage_duration']})" if mc.get("stage_duration") else ""
+        bits.append(f"Stage: {mc['stage']}{dur}.")
+    if mc.get("platform"):
+        bits.append(f"Platform: {mc['platform']}.")
+    if mc.get("city"):
+        bits.append(f"City: {mc['city']}.")
+    timeline = mc.get("timeline") or []
+    if isinstance(timeline, list) and timeline:
+        lines = []
+        for t in timeline[:12]:
+            if not isinstance(t, dict) or not t.get("title"):
+                continue
+            piece = t["title"]
+            if t.get("date_label"):
+                piece += f" ({t['date_label']})"
+            if t.get("detail"):
+                piece += f": {t['detail']}"
+            if t.get("upcoming"):
+                piece += " [upcoming]"
+            lines.append(piece)
+        if lines:
+            bits.append("Story so far: " + "; ".join(lines) + ".")
+    facts = mc.get("facts") or []
+    if isinstance(facts, list) and facts:
+        likes = [f["text"] for f in facts if isinstance(f, dict) and f.get("text") and f.get("kind") != "avoid"]
+        avoids = [f["text"] for f in facts if isinstance(f, dict) and f.get("text") and f.get("kind") == "avoid"]
+        if likes:
+            bits.append("Little things to remember: " + "; ".join(likes) + ".")
+        if avoids:
+            bits.append("Avoid: " + "; ".join(avoids) + ".")
+    return " ".join(bits)
+
+
+
 @api.post(
     "/generate-replies",
     response_model=GenerateRepliesResponse,
@@ -596,6 +636,9 @@ async def generate_replies_endpoint(
                 parts.append(f"Best approach: {mc['best_approach']}.")
             if mc.get("notes"):
                 parts.append(f"Notes: {mc['notes']}.")
+            extra = _extra_memory_context(mc)
+            if extra:
+                parts.append(extra)
             memory_context = " ".join(parts)
 
     try:
@@ -743,6 +786,9 @@ async def ask_lovli_endpoint(
                 parts.append(f"Best approach: {mc['best_approach']}.")
             if mc.get("notes"):
                 parts.append(f"Notes: {mc['notes']}.")
+            extra = _extra_memory_context(mc)
+            if extra:
+                parts.append(extra)
             memory_context = " ".join(parts)
 
     try:
@@ -839,6 +885,9 @@ async def decode_endpoint(
             ):
                 if mc.get(key):
                     parts.append(f"{label}: {mc[key]}.")
+            extra = _extra_memory_context(mc)
+            if extra:
+                parts.append(extra)
             memory_context = " ".join(parts)
 
     try:

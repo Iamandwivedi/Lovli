@@ -63,7 +63,23 @@ export type MemoryCard = {
   best_approach?: string;
   notes?: string;
   boundaries?: string;
+  // PR-V2-6 additive fields
+  stage?: string | null;
+  stage_duration?: string | null;
+  platform?: string | null;
+  city?: string | null;
+  timeline?: TimelineEntry[] | null;
+  facts?: MemoryFact[] | null;
 };
+
+export type TimelineEntry = {
+  title: string;
+  date_label?: string | null;
+  detail?: string | null;
+  upcoming?: boolean;
+};
+
+export type MemoryFact = { text: string; kind: "like" | "avoid" | "date" };
 
 export type MemoryCardInput = Omit<MemoryCard, "id">;
 

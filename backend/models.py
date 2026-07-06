@@ -143,6 +143,20 @@ class FeedbackRequest(BaseModel):
 
 
 # -------- Memory cards --------------------------------------------------------
+class TimelineEntry(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    title: str
+    date_label: Optional[str] = None
+    detail: Optional[str] = None
+    upcoming: bool = False
+
+
+class FactEntry(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    text: str
+    kind: Literal["like", "avoid", "date"] = "like"
+
+
 class MemoryCard(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
@@ -163,6 +177,13 @@ class MemoryCard(BaseModel):
     current_situation: Optional[str] = None  # not connected yet | texting | talking | dating | complicated
     best_approach: Optional[str] = None  # free text guidance
     ai_summary: Optional[str] = None  # filled by future AI feature
+    # PR-V2-6 additive fields (all optional — old cards unaffected)
+    stage: Optional[str] = None            # e.g. "Talking"
+    stage_duration: Optional[str] = None   # e.g. "3 weeks"
+    platform: Optional[str] = None         # e.g. "Hinge"
+    city: Optional[str] = None             # e.g. "Mumbai"
+    timeline: Optional[List[TimelineEntry]] = None
+    facts: Optional[List[FactEntry]] = None
     created_at: datetime = Field(default_factory=_now)
     updated_at: datetime = Field(default_factory=_now)
 
@@ -181,6 +202,12 @@ class MemoryCardCreate(BaseModel):
     goal: Optional[str] = None
     current_situation: Optional[str] = None
     best_approach: Optional[str] = None
+    stage: Optional[str] = None
+    stage_duration: Optional[str] = None
+    platform: Optional[str] = None
+    city: Optional[str] = None
+    timeline: Optional[List[TimelineEntry]] = None
+    facts: Optional[List[FactEntry]] = None
 
 
 class MemoryCardUpdate(BaseModel):
@@ -197,6 +224,12 @@ class MemoryCardUpdate(BaseModel):
     goal: Optional[str] = None
     current_situation: Optional[str] = None
     best_approach: Optional[str] = None
+    stage: Optional[str] = None
+    stage_duration: Optional[str] = None
+    platform: Optional[str] = None
+    city: Optional[str] = None
+    timeline: Optional[List[TimelineEntry]] = None
+    facts: Optional[List[FactEntry]] = None
 
 
 # -------- Waitlist ------------------------------------------------------------

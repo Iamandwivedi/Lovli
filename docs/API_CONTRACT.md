@@ -116,3 +116,18 @@ The 3 `vibe_label` values are the ONLY scale values — clamped server-side.
 Qualitative only: no numbers, no percentages, no scores.
 
 Errors: `400` no input / bad image · `401` · `413` image too large · `429` daily limit · `503` LLM unavailable.
+
+## MemoryCard additive fields + PATCH  (PR-V2-6)
+
+`MemoryCard` gains OPTIONAL fields (old cards unaffected; absent unless set):
+- `stage` (string, e.g. "Talking"), `stage_duration` (string, e.g. "3 weeks"),
+  `platform` (string, e.g. "Hinge"), `city` (string, e.g. "Mumbai")
+- `timeline`: `[{ "title": str, "date_label": str|null, "detail": str|null, "upcoming": bool }]`
+- `facts`: `[{ "text": str, "kind": "like" | "avoid" | "date" }]`
+
+`PATCH /api/memory-cards/{id}` (already present) accepts partial updates incl. the
+new fields. GET/POST shapes unchanged — new fields simply appear when set.
+
+Context: when a card is attached (`memory_card_id` / `person_id`), stage/platform/
+city/timeline/facts are serialized into the LLM context for generate-replies,
+ask-lovli, and decode.

@@ -112,9 +112,14 @@ export default function DecodeScreen() {
     if (!result) return;
     try {
       const card = cards.find((c) => c.id === cardId);
-      const note = `Decode: ${result.vibe_headline} ${result.whats_really_going_on}`;
-      const notes = card?.notes ? `${card.notes}\n${note}` : note;
-      await patchMemoryCard(cardId, { notes } as Partial<MemoryCard>);
+      // PR-V2-6: decode saves land as timeline entries now.
+      const entry = {
+        title: "Decode saved",
+        date_label: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric" }),
+        detail: `${result.vibe_headline} ${result.whats_really_going_on}`,
+        upcoming: false,
+      };
+      await patchMemoryCard(cardId, { timeline: [...(card?.timeline || []), entry] });
       setSaved(true);
       setPickerOpen(false);
       toast.success("Saved to their card.");
