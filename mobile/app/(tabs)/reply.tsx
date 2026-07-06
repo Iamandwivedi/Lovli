@@ -12,11 +12,13 @@ import {
   Animated,
   Image,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
 import { useFocusEffect } from "expo-router";
@@ -33,6 +35,7 @@ import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
 import {
   Language,
+  MemoryCard,
   PlatformLabel,
   Replies,
   ReplyRead,
@@ -40,6 +43,7 @@ import {
   generateReplies,
   getUsage,
   getClientLocalDate,
+  listMemoryCards,
   platformLabelToValue,
   platformValueToLabel,
   postFeedback,
@@ -68,6 +72,7 @@ const OUTCOMES = [
   "Stay casual",
   "Be mature",
 ];
+const LANGUAGES: Language[] = ["English", "Hinglish", "Hindi + English mixed"];
 
 export default function ReplyScreen() {
   const { user, updateUser } = useAuth();
@@ -81,30 +86,42 @@ export default function ReplyScreen() {
   const [outcome, setOutcome] = useState<string | null>(null);
   const [stage, setStage] = useState(0);
   const [result, setResult] = useState<Replies | null>(null);
+  // PR-V2-3.1: per-generation overrides — reset to defaults on each new flow.
+  const [language, setLanguage] = useState<Language>(
+    (user?.language_preference as Language) || "Hinglish",
+  );
+  const [memoryId, setMemoryId] = useState<string | null>(null);
+  const [memoryCards, setMemoryCards] = useState<MemoryCard[]>([]);
   const [usage, setUsage] = useState({
     daily_generation_count: user?.daily_generation_count ?? 0,
     daily_limit: user?.daily_limit ?? 8,
     plan: user?.plan ?? "free",
   });
 
-  // Defaults now live in Settings — sent unchanged with every generation.
-  const language: Language = (user?.language_preference as Language) || "Hinglish";
+  // Settings defaults — sent unchanged unless overridden on the Intent screen.
+  const defaultLanguage: Language = (user?.language_preference as Language) || "Hinglish";
   const platform: PlatformLabel = platformValueToLabel(user?.preferred_platform || "instagram");
   const vibe: Vibe = "Playful";
 
-  const refreshUsage = useCallback(async () => {
+  const refreshContext = useCallback(async () => {
     try {
       const u = await getUsage(getClientLocalDate());
       setUsage(u);
     } catch {
       // silent
     }
+    try {
+      const cards = await listMemoryCards();
+      setMemoryCards(cards || []);
+    } catch {
+      setMemoryCards([]);
+    }
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      refreshUsage();
-    }, [refreshUsage]),
+      refreshContext();
+    }, [refreshContext]),
   );
 
   // Staged loader: advance sequentially (~650ms per stage), hold on the last
@@ -168,6 +185,9 @@ export default function ReplyScreen() {
       toast.error("You've used today's free generations.");
       return;
     }
+    // Per-generation overrides start from defaults each time.
+    setLanguage(defaultLanguage);
+    setMemoryId(null);
     setPhase("intent");
   };
 
@@ -183,7 +203,7 @@ export default function ReplyScreen() {
           vibe,
           language,
           manual_text: manual,
-          memory_card_id: null,
+          memory_card_id: memoryId,
           rich: true,
           image: image
             ? {
@@ -234,7 +254,7 @@ export default function ReplyScreen() {
     <Screen
       testID="reply-page"
       bottomTabSpacing
-      scroll={phase !== "generating"}
+      scroll={phase === "home" || phase === "results"}
     >
       {phase === "home" ? (
         <HomePhase
@@ -253,45 +273,89 @@ export default function ReplyScreen() {
       {phase === "intent" ? (
         <>
           <BackHeader title="Got it. I read the chat." onBack={() => setPhase("home")} />
-          <ChatPreview messages={parsedMessages} imageUri={image?.uri} />
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ gap: space.l, paddingBottom: space.l }}
+            showsVerticalScrollIndicator={false}
+          >
+            <ChatPreview messages={parsedMessages} imageUri={image?.uri} />
 
-          <View>
-            <Text style={styles.sectionLabel}>WHAT DO YOU WANT?</Text>
-            <View style={styles.chipsRow}>
-              {INTENTS.map((it) => (
-                <Chip
-                  key={it}
-                  label={it}
-                  selected={intent === it}
-                  onPress={() => setIntent(it)}
-                  testID={`intent-${it}`}
-                />
-              ))}
+            <View>
+              <Text style={styles.sectionLabel}>WHAT DO YOU WANT?</Text>
+              <View style={styles.chipsRow}>
+                {INTENTS.map((it) => (
+                  <Chip
+                    key={it}
+                    label={it}
+                    selected={intent === it}
+                    onPress={() => setIntent(it)}
+                    testID={`intent-${it}`}
+                  />
+                ))}
+              </View>
             </View>
-          </View>
 
-          <View>
-            <Text style={styles.sectionLabel}>HOW SHOULD IT LAND?</Text>
-            <View style={styles.chipsRow}>
-              {OUTCOMES.map((o) => (
-                <Chip
-                  key={o}
-                  label={o}
-                  selected={outcome === o}
-                  onPress={() => setOutcome((cur) => (cur === o ? null : o))}
-                  testID={`outcome-${o}`}
-                />
-              ))}
+            <View>
+              <Text style={styles.sectionLabel}>HOW SHOULD IT LAND?</Text>
+              <View style={styles.chipsRow}>
+                {OUTCOMES.map((o) => (
+                  <Chip
+                    key={o}
+                    label={o}
+                    selected={outcome === o}
+                    onPress={() => setOutcome((cur) => (cur === o ? null : o))}
+                    testID={`outcome-${o}`}
+                  />
+                ))}
+              </View>
             </View>
-          </View>
 
-          <View style={{ marginTop: space.s }}>
-            <PrimaryButton
-              label="Write it for me"
-              onPress={startGeneration}
-              testID="write-it-button"
-            />
-          </View>
+            {/* PR-V2-3.1: per-generation language override (doesn't change the saved default) */}
+            <View>
+              <Text style={styles.sectionLabel}>REPLY LANGUAGE</Text>
+              <View style={styles.chipsRow}>
+                {LANGUAGES.map((l) => (
+                  <Chip
+                    key={l}
+                    label={l}
+                    selected={language === l}
+                    onPress={() => setLanguage(l)}
+                    testID={`language-${l}`}
+                  />
+                ))}
+              </View>
+            </View>
+
+            {/* PR-V2-3.1: optional person picker — hidden entirely when no memory cards */}
+            {memoryCards.length > 0 ? (
+              <View testID="person-section">
+                <Text style={styles.sectionLabel}>{"WHO'S THIS ABOUT?"}</Text>
+                <View style={styles.chipsRow}>
+                  <Chip
+                    label="No one"
+                    selected={memoryId === null}
+                    onPress={() => setMemoryId(null)}
+                    testID="person-none"
+                  />
+                  {memoryCards.map((c) => (
+                    <PersonChip
+                      key={c.id}
+                      name={c.nickname}
+                      selected={memoryId === c.id}
+                      onPress={() => setMemoryId((cur) => (cur === c.id ? null : c.id))}
+                      testID={`person-${c.id}`}
+                    />
+                  ))}
+                </View>
+              </View>
+            ) : null}
+          </ScrollView>
+
+          <PrimaryButton
+            label="Write it for me"
+            onPress={startGeneration}
+            testID="write-it-button"
+          />
         </>
       ) : null}
 
@@ -354,7 +418,7 @@ const HomePhase: React.FC<{
 
     <View style={{ marginTop: space.s }}>
       <Text style={styles.h1} testID="reply-heading">
-        What's happening?
+        {"What's happening?"}
       </Text>
       <Text style={styles.sub}>
         Tell me what happened — or just show me the conversation.
@@ -438,6 +502,38 @@ const BackHeader: React.FC<{ title: string; onBack: () => void }> = ({ title, on
   </View>
 );
 
+// --- PR-V2-3.1: person chip with mini gradient avatar ---
+const PersonChip: React.FC<{
+  name: string;
+  selected: boolean;
+  onPress: () => void;
+  testID?: string;
+}> = ({ name, selected, onPress, testID }) => (
+  <Pressable
+    onPress={onPress}
+    testID={testID}
+    style={({ pressed }) => [
+      styles.personChip,
+      selected ? styles.personChipSelected : styles.personChipUnselected,
+      pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+    ]}
+  >
+    <LinearGradient
+      colors={[colors.gradientStart, colors.gradientEnd]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.personAvatar}
+    >
+      <Text style={styles.personAvatarText} allowFontScaling={false}>
+        {name.charAt(0).toUpperCase()}
+      </Text>
+    </LinearGradient>
+    <Text style={[styles.personName, selected && styles.personNameSelected]} numberOfLines={1}>
+      {name}
+    </Text>
+  </Pressable>
+);
+
 // --- PR-INT: defensive read parser (unchanged) ---
 function safeRead(value: ReplyRead | null | undefined): ReplyRead | null {
   if (!value || typeof value !== "object") return null;
@@ -474,7 +570,7 @@ const ReadCard: React.FC<{ read: ReplyRead }> = ({ read }) => {
       <View style={styles.readHeader}>
         <View style={styles.readTitleRow}>
           <Ionicons name="eye-outline" size={14} color={colors.lavender} />
-          <Text style={styles.readEyebrow}>What's going on</Text>
+          <Text style={styles.readEyebrow}>{"What's going on"}</Text>
         </View>
         <View style={styles.tempChip} testID="read-temperature-chip">
           <Text style={styles.tempEmoji}>{temp.emoji}</Text>
@@ -613,6 +709,54 @@ const styles = StyleSheet.create({
     color: colors.textDim,
   },
   chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  // PR-V2-3.1: person chip — same chip tokens + 18px mini gradient avatar
+  personChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    minHeight: 38,
+    paddingHorizontal: space.l - 2,
+    paddingVertical: space.s - 2,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    maxWidth: 220,
+  },
+  personChipUnselected: {
+    backgroundColor: colors.surface,
+    borderColor: colors.hairline,
+  },
+  personChipSelected: {
+    backgroundColor: colors.lavender,
+    borderColor: colors.lavender,
+    shadowColor: "#A78BFA",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 14,
+    elevation: 4,
+  },
+  personAvatar: {
+    width: 18,
+    height: 18,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  personAvatarText: {
+    fontFamily: typography.fonts.bodyBold,
+    fontSize: 10,
+    color: "#050509",
+  },
+  personName: {
+    ...typography.body.bodySemibold,
+    color: colors.textSecondary,
+    fontSize: 13,
+    flexShrink: 1,
+  },
+  personNameSelected: {
+    ...typography.body.bodyBold,
+    color: "#050509",
+    fontSize: 13,
+  },
   // Compact dashed upload row
   upload: {
     flexDirection: "row",

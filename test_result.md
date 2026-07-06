@@ -158,3 +158,9 @@ frontend:
 agent_communication:
   - agent: "main"
     message: "PR-V2-2: Reply tab is now a phase machine home→intent→generating→results (tab bar stays visible). feeling/intent/outcome stored client-side ONLY (sent in PR-V2-3). NO backend changes this PR; EMERGENT_LLM_KEY restored in backend/.env (was lost in fork) so real generation works. Main agent smoke-tested full happy path OK. NOTE: Metro runs in CI mode — code changes need `sudo supervisorctl restart expo`."
+
+## PR-V2-3.1 (Intent screen: per-generation language + person pickers) — implemented & self-tested
+- REPLY LANGUAGE chips (English/Hinglish/Hindi + English mixed), preselect Settings default, override is per-generation (reset on each new flow via goToIntent).
+- WHO'S THIS ABOUT? person chips from GET /api/memory-cards with 18px gradient avatar + "No one" default; tap-toggle deselect; row hidden when 0 cards; sends memory_card_id.
+- Intent phase restructured: BackHeader + inner ScrollView (chips scroll) + pinned "✦ Write it for me" CTA.
+- Self-tested via screenshots: rows render, toggle select/deselect verified via computed bg (rgb(167,139,250) ↔ rgb(17,18,28)), language override works. Test memory card "Ananya" seeded for tester@lovli.app.
