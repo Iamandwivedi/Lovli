@@ -164,3 +164,8 @@ agent_communication:
 - WHO'S THIS ABOUT? person chips from GET /api/memory-cards with 18px gradient avatar + "No one" default; tap-toggle deselect; row hidden when 0 cards; sends memory_card_id.
 - Intent phase restructured: BackHeader + inner ScrollView (chips scroll) + pinned "✦ Write it for me" CTA.
 - Self-tested via screenshots: rows render, toggle select/deselect verified via computed bg (rgb(167,139,250) ↔ rgb(17,18,28)), language override works. Test memory card "Ananya" seeded for tester@lovli.app.
+
+## PR-V2-3.1 fix+move (person picker → Reply Home) — VERIFIED by testing agent (iteration_11, 6/6 pass)
+- Root cause of hidden row: cold-boot fetch raced token restore (401 → empty). Fix: refetch on user?.id.
+- Person picker on Home between paste + CTA; removed from Intent; language row stays on Intent.
+- memory_card_id carry-through verified at network level; resets to "No one" on results→home.
