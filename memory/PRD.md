@@ -1,0 +1,37 @@
+# Lovli — PRD & Build Log
+
+## Product
+Lovli: AI dating coach for Indian chats. Users upload/paste a chat screenshot, pick a language (English / Hinglish / Hindi + English mixed), and get natural replies. **V2 pivot (current)**: from "AI reply tool" → "relationship coach" — dark theme, 4-tab nav (Reply · Ask Lovli · Memory · More), emotion-first entry, explain-the-why replies, Ask Lovli chat, Decode surface.
+
+## Source of truth
+- Design spec: user's "EMERGENT PROMPT — Lovli V2 · Coach-first DARK redesign (13 final screens)" message + attached `Lovli V2.html` artifact. The 13 "V2 · Coach —" frames are final.
+- Tokens: `/app/mobile/docs/DESIGN_SYSTEM_V2_DARK.md` (supersedes the light doc).
+- Voice: first-person warm Hinglish-aware wingman. HONESTY RULE: qualitative only — never numeric confidence/%/scores.
+- `PAYMENTS_ENABLED=false` stays. Premium CTA → existing `POST /api/waitlist {type:'pro'}`.
+- Backend changes allowed ONLY: PR-V2-3 (rich reply payload), PR-V2-4 (/api/ask-lovli), PR-V2-5 (/api/decode), PR-V2-6 (additive Memory fields). Old clients stay byte-compatible.
+
+## PR plan (one at a time, stop for user review after each)
+- [x] **PR-V2-1** — Dark tokens, 4-tab bar (Ask Lovli = static shell), Welcome, 3-step Onboarding (Goal/Platform/Language; goal → AsyncStorage `lovli_goal`). ✅ tested (iteration_9), user review pending
+- [ ] **PR-V2-2** — Reply Home (emotion check-in chips, compact upload/paste, remove visible language/customize rows), NEW Intent screen (chat preview bubbles + WHAT DO YOU WANT? + HOW SHOULD IT LAND? chips), staged Generating loader (5 stages)
+- [ ] **PR-V2-3** — Reply · Generated "explain the why" UI + backend optional `feeling`/`intent`/`outcome` params + optional `insight` response object; "OR MAKE IT…" tone chips; copied toast
+- [ ] **PR-V2-4** — Ask Lovli live: `POST /api/ask-lovli` (auth, history ≤20 turns, person_id context, daily-limit plumbing) + chat UI (typing indicator, local thread persistence)
+- [ ] **PR-V2-5** — `POST /api/decode` + Decode result surface (3-segment qualitative meter) + More · Tools 9-tile grid (Ask Lovli removed from grid)
+- [ ] **PR-V2-6** — Memory List + Timeline (additive MemoryCard fields: stage, stage_duration, platform, city, timeline[], facts[]; PATCH endpoint if missing)
+- [ ] **PR-V2-7** — Premium (waitlist CTA, no IAP) + Settings (preferences = default language/vibe/dating; notifications toggles; privacy; footer)
+- [ ] Final QA pass: visual diff vs V2 frames, old-client byte-compat, honesty grep, dark-theme audit
+
+## Session log
+### 2026-07-06 (this fork)
+- Fixed fork env: supervisor expo program pointed at `/app/frontend` (old web app) → now `/app/mobile`. `/app/mobile/.env` pointed at `https://api.lovli.in` (CORS-blocked from preview) → preview proxy URL active, prod URL kept commented for release builds.
+- Backend `.env`: `DB_NAME=lovli_db`, `ALLOW_TEST_LOGIN=true` → tester@lovli.app seeded, `POST /api/auth/test-login` works.
+- **PR-V2-1 shipped**: V2 dark tokens in `colors.ts` (all legacy alias names preserved), white-pill `PrimaryButton` (✦ #8B5CF6, lavender halo, haptics), dark `Chip`/`Input`/`GlassCard`/`Screen` (gradient bg), gradient avatar `AppHeader`, 4-tab `_layout` (blur bg iOS, solid fallback), `welcome.tsx` hero, `AmbientGlow` component, 3-step `onboarding.tsx`, `ask-lovli.tsx` static shell, `DESIGN_SYSTEM_V2_DARK.md`.
+- Testing agent full pass: all 8 acceptance checks PASS (iteration_9.json).
+
+## Known/deferred
+- Legacy screens (reply, memory, more, settings, paywall) inherit dark tokens but await their dedicated V2 restyle PRs.
+- RN-web console deprecation warnings (`shadow*` → boxShadow) — web-only, cosmetic, deferred.
+- Pre-existing TS strict warnings in `_layout.tsx` (tab button children cast) — deferred by user.
+- Package version drift flagged by tester (expo-linear-gradient/react-native-svg vs SDK pins) — app builds & renders fine; not touched per "don't downgrade on cutoff alone".
+
+## Test credentials
+See `/app/memory/test_credentials.md` (tester@lovli.app / LovliTest@123; token key `lovli_access_token`).

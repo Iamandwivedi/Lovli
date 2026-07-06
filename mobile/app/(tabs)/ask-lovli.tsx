@@ -55,7 +55,6 @@ export default function AskLovliScreen() {
           placeholder="Message Lovli…"
           placeholderTextColor={colors.textFaint}
           style={styles.inputField}
-          pointerEvents="none"
           testID="ask-lovli-input"
         />
         <View style={styles.sendButton} testID="ask-lovli-send">

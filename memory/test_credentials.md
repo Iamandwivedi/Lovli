@@ -16,7 +16,7 @@
   ```json
   { "access_token": "<jwt>", "token_type": "bearer", "user": { ... } }
   ```
-- Persist `access_token` to `localStorage.lovli_jwt`. Frontend axios interceptor attaches it automatically.
+- Persist `access_token` under key `lovli_access_token` (SecureStore on native, AsyncStorage/IndexedDB on web — see `src/api/client.ts`). Frontend axios interceptor attaches it automatically.
 
 ## Bypass / automation helpers
 
