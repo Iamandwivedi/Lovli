@@ -2,6 +2,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { authLogin, authMe, authSignup, User } from "@/src/api/endpoints";
 import { loadAuthToken, setAuthToken, setUnauthorizedHandler } from "@/src/api/client";
+import { storage } from "@/src/utils/storage";
+import { ASK_PENDING_KEY, ASK_THREAD_KEY } from "@/src/config/storage-keys";
 
 type Status = "checking" | "authed" | "unauthed";
 
@@ -72,6 +74,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = useCallback(async () => {
     await setAuthToken(null);
+    // Personal local data must not leak across accounts (PR-V2-4 carry-in fix).
+    await storage.removeItem(ASK_THREAD_KEY);
+    await storage.removeItem(ASK_PENDING_KEY);
     setUser(null);
     setStatus("unauthed");
   }, []);

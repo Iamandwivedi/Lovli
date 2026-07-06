@@ -89,3 +89,30 @@ Errors: `400` empty message · `401` bad/missing token · `429` daily limit ·
 Persona: warm first-person wingman, Hinglish-aware, short conversational answers,
 one good follow-up when useful. HONESTY RULE enforced in the system prompt:
 qualitative only — no percentages, no scores, no invented facts.
+
+## POST /api/decode  (PR-V2-5)
+
+Auth: Bearer JWT required. Multipart form (same input contract as /generate-replies).
+
+Fields: `manual_text` (string, optional) · `image` (file, optional — JPG/PNG/WEBP ≤6MB) ·
+`feeling` (string, optional) · `memory_card_id` (string, optional) ·
+`language` (string, default "Hinglish") · `client_local_date` (optional).
+At least one of `manual_text` / `image` is required.
+
+Counts against the same daily usage limit as generations (429 same shape).
+
+Response `200`:
+```json
+{
+  "vibe_label": "Not into it" | "Mixed signals" | "Leaning interested",
+  "vibe_headline": "string",
+  "positive_signs": ["string"],
+  "watch_outs": ["string"],
+  "whats_really_going_on": "string",
+  "next_move": { "wingman": "string", "likely_outcome": "string" }
+}
+```
+The 3 `vibe_label` values are the ONLY scale values — clamped server-side.
+Qualitative only: no numbers, no percentages, no scores.
+
+Errors: `400` no input / bad image · `401` · `413` image too large · `429` daily limit · `503` LLM unavailable.

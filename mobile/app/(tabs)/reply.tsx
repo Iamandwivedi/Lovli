@@ -18,7 +18,6 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
 import { useFocusEffect } from "expo-router";
@@ -28,6 +27,7 @@ import { GlassCard } from "@/src/components/GlassCard";
 import { Chip } from "@/src/components/Chip";
 import { Input } from "@/src/components/Input";
 import { PrimaryButton } from "@/src/components/PrimaryButton";
+import { PersonChip } from "@/src/components/PersonChip";
 import { ChatPreview } from "@/src/components/reply/ChatPreview";
 import { StagedLoader, GENERATION_STAGES } from "@/src/components/reply/StagedLoader";
 import { parseChatText } from "@/src/utils/chatParse";
@@ -527,38 +527,6 @@ const BackHeader: React.FC<{ title: string; onBack: () => void }> = ({ title, on
   </View>
 );
 
-// --- PR-V2-3.1: person chip with mini gradient avatar ---
-const PersonChip: React.FC<{
-  name: string;
-  selected: boolean;
-  onPress: () => void;
-  testID?: string;
-}> = ({ name, selected, onPress, testID }) => (
-  <Pressable
-    onPress={onPress}
-    testID={testID}
-    style={({ pressed }) => [
-      styles.personChip,
-      selected ? styles.personChipSelected : styles.personChipUnselected,
-      pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
-    ]}
-  >
-    <LinearGradient
-      colors={[colors.gradientStart, colors.gradientEnd]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.personAvatar}
-    >
-      <Text style={styles.personAvatarText} allowFontScaling={false}>
-        {name.charAt(0).toUpperCase()}
-      </Text>
-    </LinearGradient>
-    <Text style={[styles.personName, selected && styles.personNameSelected]} numberOfLines={1}>
-      {name}
-    </Text>
-  </Pressable>
-);
-
 // --- PR-INT: defensive read parser (unchanged) ---
 function safeRead(value: ReplyRead | null | undefined): ReplyRead | null {
   if (!value || typeof value !== "object") return null;
@@ -734,54 +702,6 @@ const styles = StyleSheet.create({
     color: colors.textDim,
   },
   chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  // PR-V2-3.1: person chip — same chip tokens + 18px mini gradient avatar
-  personChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    minHeight: 38,
-    paddingHorizontal: space.l - 2,
-    paddingVertical: space.s - 2,
-    borderRadius: radii.pill,
-    borderWidth: 1,
-    maxWidth: 220,
-  },
-  personChipUnselected: {
-    backgroundColor: colors.surface,
-    borderColor: colors.hairline,
-  },
-  personChipSelected: {
-    backgroundColor: colors.lavender,
-    borderColor: colors.lavender,
-    shadowColor: "#A78BFA",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 14,
-    elevation: 4,
-  },
-  personAvatar: {
-    width: 18,
-    height: 18,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  personAvatarText: {
-    fontFamily: typography.fonts.bodyBold,
-    fontSize: 10,
-    color: "#050509",
-  },
-  personName: {
-    ...typography.body.bodySemibold,
-    color: colors.textSecondary,
-    fontSize: 13,
-    flexShrink: 1,
-  },
-  personNameSelected: {
-    ...typography.body.bodyBold,
-    color: "#050509",
-    fontSize: 13,
-  },
   // Compact dashed upload row
   upload: {
     flexDirection: "row",

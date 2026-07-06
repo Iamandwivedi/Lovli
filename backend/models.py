@@ -266,3 +266,18 @@ class AskLovliRequest(BaseModel):
 
 class AskLovliResponse(BaseModel):
     reply: str
+
+
+# ---- Decode (PR-V2-5) --------------------------------------------------------
+class DecodeNextMove(BaseModel):
+    wingman: str
+    likely_outcome: str
+
+
+class DecodeResponse(BaseModel):
+    vibe_label: Literal["Not into it", "Mixed signals", "Leaning interested"]
+    vibe_headline: str
+    positive_signs: List[str]
+    watch_outs: List[str]
+    whats_really_going_on: str
+    next_move: DecodeNextMove

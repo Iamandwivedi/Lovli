@@ -14,12 +14,14 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "expo-router";
 import { Screen } from "@/src/components/Screen";
 import { Sparkle } from "@/src/components/Sparkle";
 import { useToast } from "@/src/context/ToastContext";
 import { askLovli, AskLovliTurn } from "@/src/api/endpoints";
 import { extractErrorMessage } from "@/src/api/client";
 import { storage } from "@/src/utils/storage";
+import { ASK_PENDING_KEY, ASK_THREAD_KEY } from "@/src/config/storage-keys";
 import { colors, radii, typography } from "@/src/theme";
 
 const GREETING =
@@ -31,7 +33,7 @@ const STARTERS = [
   "How do I restart a dead convo?",
 ];
 
-const THREAD_KEY = "lovli_ask_thread";
+const THREAD_KEY = ASK_THREAD_KEY;
 
 type Msg = {
   id: string;
@@ -81,10 +83,15 @@ export default function AskLovliScreen() {
   }, [messages.length, typing, scrollToEnd]);
 
   const deliver = useCallback(
-    async (userMsgId: string, text: string, priorHistory: AskLovliTurn[]) => {
+    async (
+      userMsgId: string,
+      text: string,
+      priorHistory: AskLovliTurn[],
+      personId: string | null = null,
+    ) => {
       setTyping(true);
       try {
-        const { reply } = await askLovli(text, priorHistory, null);
+        const { reply } = await askLovli(text, priorHistory, personId);
         setMessages((cur) => [
           ...cur,
           { id: makeId(), role: "lovli", text: reply },
@@ -102,7 +109,7 @@ export default function AskLovliScreen() {
   );
 
   const send = useCallback(
-    (raw: string) => {
+    (raw: string, personId: string | null = null) => {
       const text = raw.trim();
       if (!text || typing) return;
       const id = makeId();
@@ -112,9 +119,27 @@ export default function AskLovliScreen() {
         .map((m) => ({ role: m.role, text: m.text }));
       setMessages((cur) => [...cur, { id, role: "user", text }]);
       setInput("");
-      deliver(id, text, priorHistory);
+      deliver(id, text, priorHistory, personId);
     },
     [messages, typing, deliver],
+  );
+
+  // PR-V2-5: consume pending context handed off from Decode ("Ask Lovli about this").
+  useFocusEffect(
+    useCallback(() => {
+      if (!loaded) return;
+      (async () => {
+        try {
+          const raw = await storage.getItem(ASK_PENDING_KEY);
+          if (!raw) return;
+          await storage.removeItem(ASK_PENDING_KEY);
+          const pending = JSON.parse(raw);
+          if (pending?.text) send(String(pending.text), pending.personId ?? null);
+        } catch {
+          // drop malformed pending payloads
+        }
+      })();
+    }, [loaded, send]),
   );
 
   const retry = useCallback(

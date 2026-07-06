@@ -55,6 +55,8 @@ from llm_service import (  # noqa: E402
     LovliRequest,
     _normalize_platform as _normalize_platform_value,
     ask_lovli,
+    DecodeRequest,
+    decode_situation,
     generate_replies,
 )
 from models import (
@@ -63,6 +65,7 @@ from models import (
     AskLovliRequest,
     AskLovliResponse,
     AuthResponse,
+    DecodeResponse,
     FeedbackRequest,
     GenerateRepliesResponse,
     Generation,
@@ -768,6 +771,107 @@ async def ask_lovli_endpoint(
     )
 
     return AskLovliResponse(reply=reply)
+
+
+@api.post("/decode", response_model=DecodeResponse)
+async def decode_endpoint(
+    manual_text: Optional[str] = Form(None),
+    feeling: Optional[str] = Form(None),
+    memory_card_id: Optional[str] = Form(None),
+    language: str = Form("Hinglish"),
+    client_local_date: Optional[str] = Form(None),
+    image: Optional[UploadFile] = File(None),
+    user_id: str = Depends(get_current_user_id),
+):
+    """PR-V2-5: qualitative decode of a chat. Same multipart input contract as
+    /generate-replies (image or manual_text + optional feeling, memory_card_id).
+    Counts against the same daily usage limit. vibe_label is clamped server-side
+    to the 3 allowed values — never numbers/percentages."""
+    if not (manual_text and manual_text.strip()) and image is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Provide a screenshot or paste the chat text.",
+        )
+
+    user = await _get_user(user_id)
+    local_date = _normalize_local_date(client_local_date)
+    user = await _maybe_reset_daily(user, local_date)
+
+    limit = _daily_limit(user["plan"])
+    if user["plan"] == "free" and user["daily_generation_count"] >= limit:
+        raise HTTPException(status_code=429, detail="Daily generation limit reached.")
+
+    image_b64: Optional[str] = None
+    image_mime = "image/png"
+    if image is not None:
+        mime = (image.content_type or "").lower()
+        if mime not in ALLOWED_IMAGE_MIME:
+            raise HTTPException(
+                status_code=400, detail="Use a clear JPG, PNG, or WEBP image."
+            )
+        raw = await image.read()
+        if len(raw) > MAX_IMAGE_BYTES:
+            raise HTTPException(status_code=413, detail="Image too large (max 6MB).")
+        if len(raw) < 200:
+            raise HTTPException(status_code=400, detail="Please upload a clear image.")
+        image_b64 = base64.b64encode(raw).decode("utf-8")
+        image_mime = "image/jpeg" if mime in ("image/jpeg", "image/jpg") else mime
+
+    memory_context: Optional[str] = None
+    if memory_card_id:
+        mc = await db.memory_cards.find_one(
+            {"id": memory_card_id, "user_id": user_id}, {"_id": 0}
+        )
+        if mc:
+            parts: list[str] = [f"Nickname: {mc.get('nickname','')}."]
+            for key, label in (
+                ("goal", "What user wants with this person"),
+                ("current_situation", "Current situation"),
+                ("relationship_stage", "Stage"),
+                ("where_met", "Where they met"),
+                ("likes", "Likes"),
+                ("dislikes", "Avoid"),
+                ("communication_style", "Communication style"),
+                ("inside_jokes", "Inside jokes"),
+                ("important_dates", "Important context"),
+                ("best_approach", "Best approach"),
+                ("notes", "Notes"),
+            ):
+                if mc.get(key):
+                    parts.append(f"{label}: {mc[key]}.")
+            memory_context = " ".join(parts)
+
+    try:
+        result = await decode_situation(
+            DecodeRequest(
+                manual_text=manual_text,
+                image_base64=image_b64,
+                image_mime=image_mime,
+                feeling=feeling,
+                memory_context=memory_context,
+                language=language,
+                session_id=f"decode-{user_id}",
+            )
+        )
+    except LovliLlmError as e:
+        logger.warning("Decode failed for user %s: %s", user_id, e)
+        raise HTTPException(
+            status_code=503,
+            detail="Lovli couldn't decode this right now. Try again.",
+        )
+
+    await db.users.update_one(
+        {"id": user_id},
+        {
+            "$inc": {"daily_generation_count": 1},
+            "$set": {
+                "last_generation_reset_date": local_date,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            },
+        },
+    )
+
+    return DecodeResponse(**result)
 
 
 @api.post("/feedback")

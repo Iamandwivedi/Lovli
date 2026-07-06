@@ -221,6 +221,41 @@ export const generateReplies = async (input: GenerateInput) => {
   return data;
 };
 
+// ---- Decode (PR-V2-5) --------------------------------------------------------
+export type DecodeResult = {
+  vibe_label: "Not into it" | "Mixed signals" | "Leaning interested";
+  vibe_headline: string;
+  positive_signs: string[];
+  watch_outs: string[];
+  whats_really_going_on: string;
+  next_move: { wingman: string; likely_outcome: string };
+};
+
+export const decodeSituation = async (input: {
+  manual_text?: string;
+  feeling?: string | null;
+  memory_card_id?: string | null;
+  language?: Language;
+  image?: { uri: string; name: string; type: string } | null;
+}) => {
+  const form = new FormData();
+  form.append("client_local_date", getClientLocalDate());
+  if (input.manual_text && input.manual_text.trim()) form.append("manual_text", input.manual_text.trim());
+  if (input.feeling) form.append("feeling", input.feeling);
+  if (input.memory_card_id) form.append("memory_card_id", input.memory_card_id);
+  if (input.language) form.append("language", input.language);
+  if (input.image) form.append("image", input.image as unknown as Blob);
+  const { data } = await api.post<DecodeResult>("/decode", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+};
+
+export const patchMemoryCard = async (id: string, body: Partial<MemoryCardInput>) => {
+  const { data } = await api.patch<MemoryCard>(`/memory-cards/${id}`, body);
+  return data;
+};
+
 export const postFeedback = async (generation_id: string, copied_reply_index: number) => {
   await api.post("/feedback", { generation_id, copied_reply_index });
 };

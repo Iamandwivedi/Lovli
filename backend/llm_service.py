@@ -787,3 +787,206 @@ async def ask_lovli(
         if not any(m in msg for m in transient_markers):
             raise
         return await _attempt(fallback)
+
+# ---- Decode (PR-V2-5) -------------------------------------------------------
+# "The decode": qualitative situation read. 3-value scale ONLY, no numbers.
+
+VIBE_LABELS = ("Not into it", "Mixed signals", "Leaning interested")
+
+DECODE_SYSTEM_PROMPT = """You are Lovli — a warm, brutally honest wingman who decodes chats for Indian daters. First person always.
+
+You read a conversation (screenshot or pasted text) and call it straight — warm but never sugar-coated, never clinical.
+
+HONESTY RULE (hard): qualitative reads ONLY. NEVER numbers, percentages, scores, or invented facts. The ONLY allowed overall verdict values are exactly: "Not into it", "Mixed signals", "Leaning interested".
+
+Output ONLY a JSON object — no prose, no code fences — with this exact shape:
+{
+  "vibe_label": "Not into it" | "Mixed signals" | "Leaning interested",
+  "vibe_headline": "short serif-worthy one-liner verdict, e.g. \\"Leaning interested.\\"",
+  "positive_signs": ["2-4 short qualitative observations grounded in the actual chat"],
+  "watch_outs": ["1-3 short honest cautions grounded in the actual chat"],
+  "whats_really_going_on": "one warm, honest paragraph (2-3 sentences)",
+  "next_move": {
+    "wingman": "first-person advice, e.g. \\"If I were you, I'd...\\" (1-2 sentences)",
+    "likely_outcome": "one qualitative sentence on how that move likely lands"
+  }
+}
+Language: mirror the chat's language (Hinglish stays Hinglish). Quote tiny fragments of their actual messages inside observations when it helps."""
+
+
+@dataclass
+class DecodeRequest:
+    manual_text: Optional[str] = None
+    image_base64: Optional[str] = None
+    image_mime: str = "image/png"
+    feeling: Optional[str] = None
+    memory_context: Optional[str] = None
+    language: str = "Hinglish"
+    session_id: str = "decode"
+
+
+def _clamp_vibe_label(value: object) -> str:
+    v = str(value or "").strip().lower()
+    if "interested" in v or "leaning" in v:
+        return "Leaning interested"
+    if "not into" in v or v.startswith("no"):
+        return "Not into it"
+    return "Mixed signals"
+
+
+def _str_list(value: object, cap: int) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(s).strip() for s in value if str(s).strip()][:cap]
+
+
+def validate_decode_payload(p: dict) -> dict:
+    """Coerce/clamp the decode payload. Raises LovliValidationError when the
+    essentials are missing so the caller retries once with a stricter prompt."""
+    if not isinstance(p, dict):
+        raise LovliValidationError("decode payload is not an object")
+    headline = str(p.get("vibe_headline") or "").strip()
+    going_on = str(p.get("whats_really_going_on") or "").strip()
+    if not headline or not going_on:
+        raise LovliValidationError("decode payload missing headline / whats_really_going_on")
+    nm = p.get("next_move") if isinstance(p.get("next_move"), dict) else {}
+    wingman = str(nm.get("wingman") or "").strip()
+    likely = str(nm.get("likely_outcome") or "").strip()
+    if not wingman:
+        raise LovliValidationError("decode payload missing next_move.wingman")
+    return {
+        "vibe_label": _clamp_vibe_label(p.get("vibe_label")),
+        "vibe_headline": headline,
+        "positive_signs": _str_list(p.get("positive_signs"), 4),
+        "watch_outs": _str_list(p.get("watch_outs"), 3),
+        "whats_really_going_on": going_on,
+        "next_move": {"wingman": wingman, "likely_outcome": likely},
+    }
+
+
+def _build_decode_prompt(req: DecodeRequest, retry: bool) -> str:
+    parts: list[str] = []
+    if retry:
+        parts.append(
+            "Your previous response was not valid JSON. Output ONLY the JSON "
+            "object in the exact shape from the system prompt. No prose."
+        )
+    if req.memory_context:
+        parts.append(f"PERSON CONTEXT: {req.memory_context}")
+    if req.feeling:
+        parts.append(f"How the user is feeling right now: {req.feeling}.")
+    parts.append(f"User's reply language preference: {req.language}.")
+    if req.image_base64:
+        parts.append("The chat is in the attached screenshot — read every message carefully.")
+    if req.manual_text and req.manual_text.strip():
+        parts.append(f"The chat (pasted):\n{req.manual_text.strip()}")
+    parts.append("Decode this situation now. JSON only.")
+    return "\n\n".join(parts)
+
+
+async def _decode_anthropic(req: DecodeRequest, retry: bool) -> dict:
+    from anthropic import AsyncAnthropic
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise LovliLlmError("ANTHROPIC_API_KEY not configured")
+    model = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-5-20250929")
+
+    content_blocks: list[dict] = []
+    if req.image_base64:
+        content_blocks.append({
+            "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": req.image_mime or "image/png",
+                "data": req.image_base64,
+            },
+        })
+    content_blocks.append({"type": "text", "text": _build_decode_prompt(req, retry)})
+
+    client = AsyncAnthropic(api_key=api_key)
+    try:
+        msg = await client.messages.create(
+            model=model,
+            max_tokens=1024,
+            system=DECODE_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": content_blocks}],
+        )
+    except Exception as e:
+        raise LovliLlmError(f"anthropic call failed: {e}") from e
+    raw = "".join(
+        b.text for b in msg.content if getattr(b, "type", None) == "text"
+    ).strip()
+    return validate_decode_payload(parse_lovli_json(raw))
+
+
+async def _decode_emergent(req: DecodeRequest, retry: bool) -> dict:
+    try:
+        from emergentintegrations.llm.chat import ImageContent, LlmChat, UserMessage
+    except ImportError as e:
+        raise LovliLlmError(
+            "Emergent LLM fallback not available in this deployment "
+            "(emergentintegrations package not installed)."
+        ) from e
+
+    api_key = os.environ.get("EMERGENT_LLM_KEY")
+    if not api_key:
+        raise LovliLlmError("EMERGENT_LLM_KEY not configured")
+
+    chat = LlmChat(
+        api_key=api_key,
+        session_id=req.session_id + ("-retry" if retry else ""),
+        system_message=DECODE_SYSTEM_PROMPT,
+    ).with_model("anthropic", os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-5-20250929"))
+
+    file_contents = None
+    if req.image_base64:
+        file_contents = [ImageContent(image_base64=req.image_base64)]
+    try:
+        raw = await chat.send_message(
+            UserMessage(text=_build_decode_prompt(req, retry), file_contents=file_contents)
+        )
+    except Exception as e:
+        raise LovliLlmError(f"emergent call failed: {e}") from e
+    return validate_decode_payload(parse_lovli_json(str(raw)))
+
+
+async def decode_situation(req: DecodeRequest) -> dict:
+    """Decode a chat qualitatively. Same routing/retry pattern as generate_replies."""
+    explicit = (os.environ.get("LLM_PROVIDER") or "auto").lower().strip()
+    has_anthropic_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
+    has_emergent_key = bool(os.environ.get("EMERGENT_LLM_KEY"))
+
+    if explicit == "auto":
+        primary = "anthropic" if has_anthropic_key else "emergent"
+        fallback = "emergent" if primary == "anthropic" and has_emergent_key else None
+    else:
+        primary = explicit
+        fallback = None
+
+    async def _try(provider: str, retry: bool) -> dict:
+        if provider == "anthropic":
+            return await _decode_anthropic(req, retry)
+        if provider == "emergent":
+            return await _decode_emergent(req, retry)
+        raise LovliLlmError(f"unknown provider {provider!r}")
+
+    async def _attempt(provider: str) -> dict:
+        try:
+            return await _try(provider, retry=False)
+        except (LovliValidationError, json.JSONDecodeError):
+            return await _try(provider, retry=True)
+
+    try:
+        return await _attempt(primary)
+    except LovliLlmError as primary_err:
+        if fallback is None:
+            raise
+        msg = str(primary_err).lower()
+        transient_markers = (
+            "overload", "529", "rate limit", "ratelimit", "rate_limit",
+            "503", "502", "504", "timeout", "timed out", "connection",
+        )
+        if not any(m in msg for m in transient_markers):
+            raise
+        return await _attempt(fallback)

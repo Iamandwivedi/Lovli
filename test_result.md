@@ -184,3 +184,25 @@ frontend:
 agent_communication:
   - agent: "main"
     message: "PR-V2-4: backend fully smoke-tested via curl. Tester daily count reset to 0 (full 8 quota). Greeting bubble is display-only (not sent in history). Each ask message consumes 1 daily generation."
+
+## PR-V2-5 (Decode + More·Tools grid) + carry-in fix — implemented
+backend:
+  - task: "POST /api/decode (auth, multipart like generate-replies: manual_text/image + optional feeling/memory_card_id/language). Qualitative-only; vibe_label clamped server-side to 3 values. Counts vs daily limit. Contract in /app/docs/API_CONTRACT.md."
+    implemented: true
+    working: true  # main agent curl: 200 happy (rich JSON), 401, 400 no-input, clamp unit test all pass
+frontend:
+  - task: "Carry-in: logout clears lovli_ask_thread + lovli_ask_pending (AuthContext)"
+    implemented: true
+    working: "NA"
+  - task: "app/decode.tsx: input (dashed upload + paste + optional person chips) → decode-flavored staged loader → result ('The decode' header, OVERALL VIBE glass card w/ 3-segment meter, POSITIVE SIGNS ✦ lavender, WATCH-OUTS ✦ pink, WHAT'S REALLY GOING ON, YOUR NEXT MOVE card, footer: Save to Memory + ✦ Ask Lovli about this)"
+    implemented: true
+    working: "NA"
+  - task: "More·Tools grid: 3 sections, 9 tools (Ask Lovli NOT in grid); Decode the situation + Read the signals → /decode; other 7 keep 'coming soon' placeholder (real flows are PR4); Red flag check has rose icon tile; Premium upsell row kept at bottom"
+    implemented: true
+    working: "NA"
+  - task: "Ask Lovli: consumes lovli_ask_pending on focus (sends decode summary as user message with person_id); PersonChip extracted to shared component (reply.tsx + decode.tsx)"
+    implemented: true
+    working: "NA"
+agent_communication:
+  - agent: "main"
+    message: "Non-decode More tiles intentionally show 'coming soon' toast — do NOT report as bug (PR4 scope). Save to Memory appends a note to card.notes via PATCH /api/memory-cards/{id}. Tester has card 'Ananya'."
