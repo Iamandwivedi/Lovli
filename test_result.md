@@ -101,3 +101,37 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+## PR-V2-1 (Dark foundation, 4-tab nav, Welcome + Onboarding) — implemented $(date +%F)
+
+user_problem_statement: V2 dark "Coach" redesign. PR-V2-1 = dark token foundation, 4-tab bar (Reply · Ask Lovli · Memory · More), Welcome hero screen, 3-step onboarding (Goal/Platform/Language). Ask Lovli tab is a STATIC SHELL (greeting + starter chips, input disabled) until PR-V2-4.
+
+frontend:
+  - task: "V2 dark theme foundation (colors.ts swap, PrimaryButton white pill, Chip/Input/GlassCard/Screen dark)"
+    implemented: true
+    working: "NA"
+    files: ["/app/mobile/src/theme/colors.ts", "/app/mobile/src/components/PrimaryButton.tsx", "/app/mobile/src/components/Chip.tsx", "/app/mobile/src/components/GlassCard.tsx", "/app/mobile/src/components/Screen.tsx", "/app/mobile/src/components/Input.tsx", "/app/mobile/src/components/AppHeader.tsx"]
+    needs_retesting: true
+  - task: "4-tab bar: Reply · Ask Lovli (✦ glyph, glows active) · Memory · More, dark blur bg"
+    implemented: true
+    working: "NA"
+    files: ["/app/mobile/app/(tabs)/_layout.tsx"]
+    needs_retesting: true
+  - task: "Welcome screen (hero gradient + ambient glow + ✦ + serif headline + white '✦ Get started' CTA)"
+    implemented: true
+    working: "NA"
+    files: ["/app/mobile/app/welcome.tsx", "/app/mobile/src/components/AmbientGlow.tsx", "/app/mobile/app/index.tsx"]
+    needs_retesting: true
+  - task: "Onboarding 3-step wizard (Goal → Platform → Language), progress track, option list, Continue CTA, skip preserved; goal stored to AsyncStorage key lovli_goal"
+    implemented: true
+    working: "NA"
+    files: ["/app/mobile/app/onboarding.tsx"]
+    needs_retesting: true
+  - task: "Ask Lovli static shell (greeting bubble, 3 starter chips, disabled input, dimmed send)"
+    implemented: true
+    working: "NA"
+    files: ["/app/mobile/app/(tabs)/ask-lovli.tsx"]
+    needs_retesting: true
+
+agent_communication:
+  - agent: "main"
+    message: "PR-V2-1 done. NOTE: supervisor expo program pointed at /app/frontend after fork — fixed to /app/mobile. Backend untouched. Legacy screens (reply/memory/more/settings/paywall/login/signup) inherit dark tokens automatically; their dedicated restyles come in PR-V2-2..7, so don't fail them on pixel-perfection — only on broken/unreadable UI. No numeric confidence/scores anywhere (honesty rule)."

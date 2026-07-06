@@ -55,20 +55,25 @@ const styles = StyleSheet.create({
     borderColor: colors.hairline,
   },
   selected: {
-    // PR3: filled lavender state — no visible outline, deeper fill
-    backgroundColor: "#E4DCFF",
-    borderColor: "#E4DCFF",
+    // V2 dark: solid lavender fill, dark label, soft lavender shadow, no border
+    backgroundColor: colors.lavender,
+    borderColor: colors.lavender,
+    shadowColor: "#A78BFA",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 14,
+    elevation: 4,
   },
   pressed: { opacity: 0.85, transform: [{ scale: 0.97 }] },
   label: {
-    ...typography.body.bodyMedium,
+    ...typography.body.bodySemibold,
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: 13,
   },
   labelSmall: { fontSize: 13 },
   labelSelected: {
-    ...typography.body.bodySemibold,
-    color: colors.violetDeep,
-    fontSize: 14,
+    ...typography.body.bodyBold,
+    color: "#050509",
+    fontSize: 13,
   },
 });

@@ -4,6 +4,7 @@
 import React from "react";
 import { Pressable, StyleSheet, View, Text } from "react-native";
 import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import { LovliLogo } from "@/src/components/LovliLogo";
 import { useAuth } from "@/src/context/AuthContext";
 import { colors, radii, space, typography } from "@/src/theme";
@@ -52,12 +53,19 @@ export const AppHeader: React.FC<Props> = ({ showSettings = true, rightElement, 
             onPress={() => router.push("/settings")}
             testID="open-settings-button"
             accessibilityLabel="Open settings"
-            style={({ pressed }) => [styles.avatar, pressed && { opacity: 0.75 }]}
+            style={({ pressed }) => [pressed && { opacity: 0.75 }]}
             hitSlop={10}
           >
-            <Text style={styles.avatarText} allowFontScaling={false}>
-              {initial}
-            </Text>
+            <LinearGradient
+              colors={[colors.gradientStart, colors.gradientEnd]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.avatar}
+            >
+              <Text style={styles.avatarText} allowFontScaling={false}>
+                {initial}
+              </Text>
+            </LinearGradient>
           </Pressable>
         ) : null}
       </View>
@@ -74,17 +82,16 @@ const styles = StyleSheet.create({
   },
   right: { flexDirection: "row", alignItems: "center", gap: 8 },
   avatar: {
-    width: 40,
-    height: 40,
+    width: 34,
+    height: 34,
     borderRadius: 999,
-    backgroundColor: colors.violetTint,
     alignItems: "center",
     justifyContent: "center",
   },
   avatarText: {
     ...typography.body.bodySemibold,
-    color: colors.violetDeep,
-    fontSize: 15,
+    color: "#050509",
+    fontSize: 14,
   },
   creditsChip: {
     paddingHorizontal: 12,

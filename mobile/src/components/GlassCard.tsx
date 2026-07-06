@@ -46,12 +46,12 @@ const styles = StyleSheet.create({
     borderColor: colors.hairline,
     borderWidth: 1,
     borderRadius: radii.card,
-    // PR2.2: stronger lift so white cards pop off the deeper bg
-    shadowColor: "#14121C",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.10,
-    shadowRadius: 22,
-    elevation: 3,
+    // V2 dark: deep soft lift
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.45,
+    shadowRadius: 20,
+    elevation: 4,
   },
   solid: {
     backgroundColor: colors.surface,
@@ -59,13 +59,16 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   elevated: {
-    backgroundColor: colors.surface,
-    borderWidth: 0,
-    shadowColor: "#14121C",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.14,
-    shadowRadius: 30,
-    elevation: 5,
+    // V2 "insight" surface: #171827 + lavender-tint border + heavy lift
+    backgroundColor: colors.surfaceRaised,
+    borderColor: colors.borderStrong,
+    borderWidth: 1,
+    borderRadius: 22,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.55,
+    shadowRadius: 28,
+    elevation: 8,
   },
   padded: { padding: space.l },
 });

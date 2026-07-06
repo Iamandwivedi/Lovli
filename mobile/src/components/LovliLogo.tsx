@@ -17,7 +17,7 @@ export const LovliLogo: React.FC<Props> = ({ size = 36, showName = true, style }
     <View style={[styles.row, style]} testID="lovli-mark">
       <Sparkle size={sparkleSize} glow />
       {showName ? (
-        <Text style={[styles.name, { fontSize: wordSize }]}>lovli</Text>
+        <Text style={[styles.name, { fontSize: wordSize }]}>Lovli</Text>
       ) : null}
     </View>
   );

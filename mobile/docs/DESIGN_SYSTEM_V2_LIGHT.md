@@ -1,3 +1,6 @@
+> **Superseded by [DESIGN_SYSTEM_V2_DARK.md](./DESIGN_SYSTEM_V2_DARK.md)** — the V2 dark "Coach" redesign is the current design system.
+
+
 # Lovli — Design System v2 (LIGHT) — supersedes PR1's dark palette
 
 > **Direction change.** Flip from the dark base to a **light, near-white layout with dark text,

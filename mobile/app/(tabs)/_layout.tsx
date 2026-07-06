@@ -1,8 +1,8 @@
-// Bottom tab layout — 3 tabs: Reply · More · Memory.
-// PR2.1 light redesign: light tab bar, top hairline #ECEAF3, active violet, inactive textMuted.
-// Pro is NOT a tab — lives behind /paywall reached from Settings + More-tab upsell row.
+// Bottom tab layout — V2 dark, 4 tabs: Reply · Ask Lovli · Memory · More.
+// bg rgba(9,10,20,.9) + blur(20) (iOS), solid rgba(9,10,20,.96) elsewhere.
+// Top hairline #2A2B3A. Active #A78BFA (✦ glows), inactive #71717A.
 import React from "react";
-import { Platform, Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
@@ -12,7 +12,7 @@ import { colors, typography } from "@/src/theme";
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
 const TAB_ICON: Record<string, { active: IoniconName; inactive: IoniconName }> = {
-  reply: { active: "chatbubbles", inactive: "chatbubbles-outline" },
+  reply: { active: "chatbubble", inactive: "chatbubble-outline" },
   memory: { active: "heart", inactive: "heart-outline" },
   more: { active: "grid", inactive: "grid-outline" },
 };
@@ -20,15 +20,35 @@ const TAB_ICON: Record<string, { active: IoniconName; inactive: IoniconName }> =
 function TabBarBackground() {
   if (Platform.OS === "ios") {
     return (
-      <BlurView tint="light" intensity={32} style={StyleSheet.absoluteFill}>
+      <BlurView tint="dark" intensity={20} style={StyleSheet.absoluteFill}>
         <View
-          style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(255,255,255,0.85)" }]}
+          style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(9,10,20,0.9)" }]}
         />
       </BlurView>
     );
   }
+  // Android/web fallback: solid per spec
   return (
-    <View style={[StyleSheet.absoluteFill, { backgroundColor: "#FFFFFF" }]} />
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(9,10,20,0.96)" }]} />
+  );
+}
+
+// Ask Lovli tab icon — ✦ text glyph, glows when active.
+function AskLovliIcon({ color, focused }: { color: string; focused: boolean }) {
+  return (
+    <Text
+      allowFontScaling={false}
+      style={{
+        fontSize: 20,
+        lineHeight: 25,
+        color,
+        textShadowColor: focused ? "rgba(167,139,250,0.7)" : "transparent",
+        textShadowOffset: { width: 0, height: 0 },
+        textShadowRadius: focused ? 12 : 0,
+      }}
+    >
+      ✦
+    </Text>
   );
 }
 
@@ -55,14 +75,14 @@ export default function TabsLayout() {
         tabBarStyle: [
           styles.tabBar,
           {
-            height: 64 + Math.max(insets.bottom, 8),
-            paddingBottom: Math.max(insets.bottom, 8),
+            height: 62 + Math.max(insets.bottom, 10),
+            paddingBottom: Math.max(insets.bottom, 10),
           },
         ],
         tabBarBackground: () => <TabBarBackground />,
-        tabBarActiveTintColor: colors.violet,
+        tabBarActiveTintColor: colors.lavender,
         tabBarInactiveTintColor: colors.textFaint,
-        tabBarLabelStyle: { fontFamily: typography.fonts.bodyMedium, fontSize: 11 },
+        tabBarLabelStyle: { fontFamily: typography.fonts.bodySemibold, fontSize: 11 },
         tabBarButton: TabButton,
       }}
     >
@@ -75,9 +95,20 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? TAB_ICON.reply.active : TAB_ICON.reply.inactive}
-              size={22}
+              size={23}
               color={color}
             />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="ask-lovli"
+        options={{
+          title: "Ask Lovli",
+          tabBarButtonTestID: "bottom-nav-ask-lovli",
+          tabBarAccessibilityLabel: "Ask Lovli tab",
+          tabBarIcon: ({ color, focused }) => (
+            <AskLovliIcon color={color} focused={focused} />
           ),
         }}
       />
@@ -90,7 +121,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? TAB_ICON.memory.active : TAB_ICON.memory.inactive}
-              size={22}
+              size={23}
               color={color}
             />
           ),
@@ -105,7 +136,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? TAB_ICON.more.active : TAB_ICON.more.inactive}
-              size={22}
+              size={23}
               color={color}
             />
           ),

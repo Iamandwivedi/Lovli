@@ -68,8 +68,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: colors.surface,
-    // PR2.2: stronger resting border so the field is defined inside white cards
-    borderColor: "#DAD6E8",
+    borderColor: colors.hairline,
     borderWidth: 1,
     borderRadius: radii.input,
     paddingHorizontal: space.l,

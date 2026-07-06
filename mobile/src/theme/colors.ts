@@ -1,72 +1,83 @@
-// Lovli design tokens — LIGHT (PR2.2 polish on top of PR2.1).
-// Deeper bg/card split, glossier black CTA, stronger card lift.
-// All PR1 token names preserved as aliases pointing at the new light values.
+// Lovli design tokens — V2 DARK ("Coach" redesign, PR-V2-1).
+// Supersedes the PR2.x light theme. Source of truth: docs/DESIGN_SYSTEM_V2_DARK.md.
+// All prior token names are preserved as aliases pointing at V2 dark values.
 
 export const colors = {
-  // -- Base surfaces (light) --
-  bg: "#ECEBF3",            // PR2.2: deeper cool-gray so white cards pop (was #F7F6FB)
-  surface: "#FFFFFF",       // Card / sheet background
-  surfaceRaised: "#FFFFFF", // Raised card — lifted by shadow, not color
-  hairline: "#E2DFEC",      // PR2.2: more visible card outline (was #ECEAF3)
-  border: "#E2DFEC",        // alias
+  // -- Base surfaces (V2 dark) --
+  bg: "#050509",              // Screen gradient top
+  bgBottom: "#090A14",        // Screen gradient bottom
+  heroBgBottom: "#0B0918",    // Hero/emotional screens gradient bottom
+  surface: "#11121C",         // Card
+  surfaceRaised: "#171827",   // Elevated/glass "insight" card
+  hairline: "#2A2B3A",        // 1px card border
+  border: "#2A2B3A",          // alias
+  divider: "#1B1C29",         // inner row divider
 
-  // -- Glossy BLACK primary CTA (PR2.2 — shinier, deeper) --
-  ctaBase: "#050507",                    // Deeper base = more contrast/depth
-  ctaGlossMid: "#16141C",                // NEW — mid stop in the 3-stop gradient
-  ctaGlossTop: "#3D3A47",                // Brighter top = visible sheen
-  ctaText: "#FFFFFF",                    // Label color
-  ctaHighlight: "rgba(255,255,255,0.22)", // 1px inner top hairline (stronger)
-  ctaSheen: "rgba(255,255,255,0.16)",    // NEW — specular sheen overlay (top → transparent)
+  // -- Primary CTA (white pill) --
+  ctaBg: "#FFFFFF",
+  ctaBorder: "#E5E7EB",
+  ctaText: "#050509",
+  ctaShadow: "rgba(167,139,250,0.35)",
+  // Legacy glossy-black CTA tokens → white CTA equivalents (no gloss on V2)
+  ctaBase: "#FFFFFF",
+  ctaGlossMid: "#FFFFFF",
+  ctaGlossTop: "#FFFFFF",
+  ctaHighlight: "rgba(255,255,255,0)",
+  ctaSheen: "rgba(255,255,255,0)",
 
-  // -- Retired rose→coral gradient → aliased to glossy black so stragglers don't show rose --
-  gradientStart: "#3D3A47", // was rose — now black-gloss top
-  gradientEnd:   "#050507", // was coral — now black-gloss base
+  // -- Avatar / accent gradient (135deg lavender → deep violet) --
+  gradientStart: "#A78BFA",
+  gradientEnd: "#8B5CF6",
 
-  // -- Accents (violet is THE primary accent) --
-  sparkle: "#7C5CFF",       // Violet — Lovli's AI signature ✦ (logo/header only)
-  violet: "#7C5CFF",        // alias
-  violetDeep: "#6A4BEE",    // Violet TEXT / links (small-text contrast)
-  lavender: "#B9A8FF",      // Soft secondary accent
-  lavenderSoft: "#6A4BEE",  // On light — point at violetDeep for text contrast
-  violetTint: "#EDE9FF",    // Selected-chip fill, icon-tile background
+  // -- Accents --
+  sparkle: "#A78BFA",         // Lovli's ✦ signature
+  violet: "#A78BFA",          // accent lavender (alias)
+  violetDeep: "#8B5CF6",      // deep violet — gradients, ✦ inside white CTA
+  lavender: "#A78BFA",
+  lavenderSoft: "#C4B5FD",    // lavender TEXT
+  lavenderText: "#C4B5FD",    // alias, explicit
+  violetTint: "rgba(167,139,250,0.14)",       // lavender tint fill
+  violetTintBorder: "rgba(167,139,250,0.3)",  // lavender tint border
 
   // -- Text --
-  text: "#14121C",          // Near-black headings & body
-  textPrimary: "#14121C",   // alias
-  textSoft: "#14121C",
-  textMuted: "#6A6577",     // Sub-copy / helper
-  textSecondary: "#6A6577", // alias
-  textFaint: "#9A95A8",     // Placeholders, captions, disabled
+  text: "#F8FAFC",            // primary
+  textPrimary: "#F8FAFC",     // alias
+  textSoft: "#E5E7EB",        // body
+  textMuted: "#A1A1AA",       // secondary / sub-copy
+  textSecondary: "#A1A1AA",   // alias
+  textFaint: "#71717A",       // muted — placeholders, captions
+  textDim: "#52525B",         // faint
+  textDisabled: "#3F3F46",
 
-  // -- Semantic flags (darkened for contrast on white) --
-  greenFlag: "#15A34A",
-  amber: "#D97706",
-  redFlag: "#DC2626",
+  // -- Semantic --
+  greenFlag: "#4ADE80",
+  amber: "#FFB259",           // warm temperature
+  pink: "#F0A5B2",            // watch-outs, destructive text
+  redFlag: "#E0667A",         // rose — red-flag icon
+  roseTint: "rgba(224,102,122,0.12)",
 
   // -- Shadows --
-  shadowCard: "rgba(20,18,28,0.10)",   // PR2.2: stronger card lift (was 0.06)
-  shadowCta:  "rgba(5,5,8,0.34)",      // PR2.2: tighter, darker = more "raised" (was rgba(11,11,16,0.28))
+  shadowCard: "rgba(0,0,0,0.55)",
+  shadowCta: "rgba(167,139,250,0.35)",
 
-  // -- Retired rose/coral — alias to ctaBase so leftover usage renders black, not rose --
-  rose: "#050507",
-  coral: "#050507",
-
-  // -- Legacy aliases (kept so PR1 doesn't break v1 callers) --
-  card: "#FFFFFF",
-  cardGlass: "#FFFFFF",
-  cardElevated: "#FFFFFF",
-  borderStrong: "#D8D3E6",
+  // -- Legacy aliases (kept so earlier callers don't break) --
+  rose: "#E0667A",
+  coral: "#E0667A",
+  card: "#11121C",
+  cardGlass: "#171827",
+  cardElevated: "#171827",
+  borderStrong: "rgba(167,139,250,0.3)",
   sky: "#38BDF8",
   blue: "#60A5FA",
-  danger: "#DC2626",
-  dangerSoft: "#DC2626",
-  success: "#15A34A",
-  lavenderGlow: "rgba(124, 92, 255, 0.16)",
-  lavenderGlowSoft: "rgba(124, 92, 255, 0.08)",
-  overlayDark: "rgba(20, 18, 28, 0.55)",
-  scrim: "rgba(20, 18, 28, 0.45)",
-  midnight: "#FFFFFF",
-  ctaGlow: "rgba(5, 5, 8, 0.18)",
+  danger: "#F0A5B2",
+  dangerSoft: "#F0A5B2",
+  success: "#4ADE80",
+  lavenderGlow: "rgba(167,139,250,0.16)",
+  lavenderGlowSoft: "rgba(167,139,250,0.08)",
+  overlayDark: "rgba(5,5,9,0.65)",
+  scrim: "rgba(5,5,9,0.55)",
+  midnight: "#050509",
+  ctaGlow: "rgba(167,139,250,0.35)",
 } as const;
 
 export const space = {
@@ -84,7 +95,7 @@ export const radii = {
   md: 14,
   input: 16,
   lg: 18,
-  card: 22,
+  card: 20,
   xl: 22,
   pill: 999,
 } as const;
@@ -100,9 +111,16 @@ export const fontSize = {
   xxxl: 30,
 } as const;
 
-// 3-stop vertical glossy gradient (PR2.2). Locations applied in PrimaryButton.
+// V2 gradient stacks.
 export const gradients = {
-  primary: ["#3D3A47", "#16141C", "#050507"] as const, // ctaGlossTop → ctaGlossMid → ctaBase
-  primaryAngled: { start: { x: 0, y: 0 }, end: { x: 0, y: 1 } }, // vertical gloss
-  glow: ["rgba(5,5,8,0.18)", "rgba(5,5,8,0.04)"] as const,
+  // Avatar / accent gradient (135deg)
+  primary: ["#A78BFA", "#8B5CF6"] as const,
+  primaryAngled: { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
+  // Default screen background (vertical)
+  screen: ["#050509", "#090A14"] as const,
+  // Hero/emotional screens (Welcome, Generating, Premium)
+  hero: ["#050509", "#0B0918"] as const,
+  // Progress track fill
+  progress: ["#A78BFA", "#8B5CF6"] as const,
+  glow: ["rgba(167,139,250,0.24)", "rgba(56,189,248,0.05)"] as const,
 } as const;

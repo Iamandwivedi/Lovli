@@ -13,7 +13,7 @@ export default function Splash() {
   useEffect(() => {
     if (isChecking) return;
     if (!isAuthed) {
-      router.replace("/login");
+      router.replace("/welcome");
       return;
     }
     // Authed — decide onboarding vs main

@@ -1,19 +1,17 @@
-// Primary CTA — glossy BLACK pill (PR2.2 polish).
-// 3-stop vertical gloss + specular sheen overlay + 1px top highlight + drop shadow.
-// Press → scale 0.96 spring + Haptics.Medium + shadow drops in ("presses into" the surface).
-// NO sparkle on the button itself (PR2.2 — sparkle lives in LovliLogo only).
+// Primary CTA — V2 white pill (dark "Coach" redesign).
+// White fill, 1px #E5E7EB border, dark label, lavender halo shadow.
+// Leading ✦ glyph in deep violet #8B5CF6 (withSparkle, default true).
+// Press → scale 0.96 spring + Haptics.Medium + shadow tightens.
 import React, { useRef } from "react";
 import {
   ActivityIndicator,
   Animated,
-  Easing,
   Pressable,
   StyleSheet,
   Text,
   View,
   ViewStyle,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { colors, radii, typography } from "@/src/theme";
 import { Sparkle } from "./Sparkle";
@@ -25,10 +23,7 @@ type Props = {
   disabled?: boolean;
   style?: ViewStyle;
   testID?: string;
-  /**
-   * PR-DA1: ✦ restored on primary CTAs. Default true. Pass `withSparkle={false}`
-   * for CTAs that shouldn't have one (e.g. destructive confirms).
-   */
+  /** ✦ leads primary CTAs by convention. Pass false for e.g. onboarding "Continue". */
   withSparkle?: boolean;
 };
 
@@ -42,13 +37,12 @@ export const PrimaryButton: React.FC<Props> = ({
   withSparkle = true,
 }) => {
   const isDisabled = disabled || loading;
-  // Animated values for the "press into surface" effect.
-  const pressed = useRef(new Animated.Value(0)).current;
   // 0 = resting, 1 = pressed.
+  const pressed = useRef(new Animated.Value(0)).current;
   const scale = pressed.interpolate({ inputRange: [0, 1], outputRange: [1, 0.96] });
-  const shadowOpacity = pressed.interpolate({ inputRange: [0, 1], outputRange: [0.34, 0.18] });
-  const shadowOffsetY = pressed.interpolate({ inputRange: [0, 1], outputRange: [10, 4] });
-  const shadowRadius = pressed.interpolate({ inputRange: [0, 1], outputRange: [22, 14] });
+  const shadowOpacity = pressed.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0.18] });
+  const shadowOffsetY = pressed.interpolate({ inputRange: [0, 1], outputRange: [8, 3] });
+  const shadowRadius = pressed.interpolate({ inputRange: [0, 1], outputRange: [28, 14] });
 
   const animateTo = (toValue: number) =>
     Animated.spring(pressed, {
@@ -61,7 +55,6 @@ export const PrimaryButton: React.FC<Props> = ({
   const handlePressIn = () => {
     if (isDisabled) return;
     animateTo(1);
-    // Tactile haptic on press-in — single biggest "clicky" win on device.
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
   };
   const handlePressOut = () => {
@@ -93,34 +86,14 @@ export const PrimaryButton: React.FC<Props> = ({
         accessibilityRole="button"
         accessibilityState={{ disabled: !!isDisabled, busy: !!loading }}
       >
-        {/* Body: 3-stop vertical gloss gradient */}
-        <LinearGradient
-          colors={[colors.ctaGlossTop, colors.ctaGlossMid, colors.ctaBase] as unknown as readonly [string, string, ...string[]]}
-          locations={[0, 0.5, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.fill}
-        >
-          {/* Specular sheen overlay (top → transparent), ~55% height */}
-          <LinearGradient
-            pointerEvents="none"
-            colors={[colors.ctaSheen, "rgba(255,255,255,0)"] as unknown as readonly [string, string]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.sheen}
-          />
-          {/* 1px inner top hairline highlight */}
-          <View pointerEvents="none" style={styles.innerHighlight} />
-
-          {loading ? (
-            <ActivityIndicator color={colors.ctaText} size="small" />
-          ) : (
-            <View style={styles.row}>
-              {withSparkle ? <Sparkle size={14} color={colors.ctaText} /> : null}
-              <Text style={styles.label} numberOfLines={1}>{label}</Text>
-            </View>
-          )}
-        </LinearGradient>
+        {loading ? (
+          <ActivityIndicator color={colors.ctaText} size="small" />
+        ) : (
+          <View style={styles.row}>
+            {withSparkle ? <Sparkle size={15} color={colors.violetDeep} /> : null}
+            <Text style={styles.label} numberOfLines={1}>{label}</Text>
+          </View>
+        )}
       </Pressable>
     </Animated.View>
   );
@@ -128,51 +101,28 @@ export const PrimaryButton: React.FC<Props> = ({
 
 const styles = StyleSheet.create({
   wrap: {
-    height: 54,
+    height: 56,
     borderRadius: radii.pill,
-    // Animated shadow values flow through the inline style on <Animated.View>.
-    shadowColor: "#050508",
+    backgroundColor: colors.ctaBg,
+    borderWidth: 1,
+    borderColor: colors.ctaBorder,
+    // Lavender halo per V2 spec: 0 8px 28px rgba(167,139,250,.35)
+    shadowColor: "#A78BFA",
     elevation: 8,
   },
   pressable: {
     flex: 1,
     borderRadius: radii.pill,
-    overflow: "hidden",
-  },
-  fill: {
-    flex: 1,
-    borderRadius: radii.pill,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 22,
-    overflow: "hidden",
-  },
-  sheen: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: "55%",
-    borderTopLeftRadius: radii.pill,
-    borderTopRightRadius: radii.pill,
-  },
-  innerHighlight: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.22)",
   },
   row: { flexDirection: "row", alignItems: "center", gap: 8 },
   label: {
-    ...typography.body.bodySemibold,
+    ...typography.body.bodyBold,
     color: colors.ctaText,
     fontSize: 16,
     letterSpacing: 0.1,
   },
   disabled: { opacity: 0.45 },
 });
-
-// Hint to TS for Easing import (kept so future motion tweaks don't need a re-import).
-void Easing;
