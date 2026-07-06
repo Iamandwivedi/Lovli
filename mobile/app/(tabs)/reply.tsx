@@ -124,6 +124,14 @@ export default function ReplyScreen() {
     }, [refreshContext]),
   );
 
+  // Bug fix (PR-V2-3.1): on cold boot the focus effect can fire before the auth
+  // token is restored → memory-cards fetch 401s and the person row stayed hidden.
+  // Refetch once the user is actually loaded.
+  useEffect(() => {
+    if (user?.id) refreshContext();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
   // Staged loader: advance sequentially (~650ms per stage), hold on the last
   // until the real request resolves.
   useEffect(() => {
@@ -185,9 +193,9 @@ export default function ReplyScreen() {
       toast.error("You've used today's free generations.");
       return;
     }
-    // Per-generation overrides start from defaults each time.
+    // Per-generation language override starts from the default each time.
+    // (Person selection is made on Home and carries through — reset on results→home.)
     setLanguage(defaultLanguage);
-    setMemoryId(null);
     setPhase("intent");
   };
 
@@ -261,6 +269,9 @@ export default function ReplyScreen() {
           image={image}
           manual={manual}
           feeling={feeling}
+          memoryCards={memoryCards}
+          memoryId={memoryId}
+          onToggleMemory={(id) => setMemoryId((cur) => (cur === id ? null : id))}
           onChangeManual={setManual}
           onToggleFeeling={(f) => setFeeling((cur) => (cur === f ? null : f))}
           onSkipFeeling={() => setFeeling(null)}
@@ -325,30 +336,6 @@ export default function ReplyScreen() {
                 ))}
               </View>
             </View>
-
-            {/* PR-V2-3.1: optional person picker — hidden entirely when no memory cards */}
-            {memoryCards.length > 0 ? (
-              <View testID="person-section">
-                <Text style={styles.sectionLabel}>{"WHO'S THIS ABOUT?"}</Text>
-                <View style={styles.chipsRow}>
-                  <Chip
-                    label="No one"
-                    selected={memoryId === null}
-                    onPress={() => setMemoryId(null)}
-                    testID="person-none"
-                  />
-                  {memoryCards.map((c) => (
-                    <PersonChip
-                      key={c.id}
-                      name={c.nickname}
-                      selected={memoryId === c.id}
-                      onPress={() => setMemoryId((cur) => (cur === c.id ? null : c.id))}
-                      testID={`person-${c.id}`}
-                    />
-                  ))}
-                </View>
-              </View>
-            ) : null}
           </ScrollView>
 
           <PrimaryButton
@@ -363,7 +350,14 @@ export default function ReplyScreen() {
 
       {phase === "results" && result ? (
         <>
-          <BackHeader title="Your reply" onBack={() => setPhase("home")} />
+          <BackHeader
+            title="Your reply"
+            onBack={() => {
+              // New flow starts fresh: person selection resets to "No one".
+              setMemoryId(null);
+              setPhase("home");
+            }}
+          />
           <View testID="reply-results-block" style={{ gap: space.l }}>
             {(() => {
               const read = safeRead(result.read);
@@ -396,6 +390,9 @@ const HomePhase: React.FC<{
   image: Pick | null;
   manual: string;
   feeling: string | null;
+  memoryCards: MemoryCard[];
+  memoryId: string | null;
+  onToggleMemory: (id: string) => void;
   onChangeManual: (v: string) => void;
   onToggleFeeling: (f: string) => void;
   onSkipFeeling: () => void;
@@ -406,6 +403,9 @@ const HomePhase: React.FC<{
   image,
   manual,
   feeling,
+  memoryCards,
+  memoryId,
+  onToggleMemory,
   onChangeManual,
   onToggleFeeling,
   onSkipFeeling,
@@ -485,6 +485,31 @@ const HomePhase: React.FC<{
       inputTestID="manual-text-input"
       style={{ minHeight: 52 }}
     />
+
+    {/* PR-V2-3.1: optional person picker — hidden entirely when no memory cards.
+        Never blocks Get replies; "No one" sends no memory_card_id. */}
+    {memoryCards.length > 0 ? (
+      <View testID="person-section">
+        <Text style={styles.sectionLabel}>{"WHO'S THIS ABOUT?"}</Text>
+        <View style={styles.chipsRow}>
+          <Chip
+            label="No one"
+            selected={memoryId === null}
+            onPress={() => memoryId !== null && onToggleMemory(memoryId)}
+            testID="person-none"
+          />
+          {memoryCards.map((c) => (
+            <PersonChip
+              key={c.id}
+              name={c.nickname}
+              selected={memoryId === c.id}
+              onPress={() => onToggleMemory(c.id)}
+              testID={`person-${c.id}`}
+            />
+          ))}
+        </View>
+      </View>
+    ) : null}
 
     <View style={{ marginTop: space.s }}>
       <PrimaryButton label="Get replies" onPress={onContinue} testID="generate-replies-button" />
