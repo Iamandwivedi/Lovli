@@ -12,7 +12,7 @@ Lovli: AI dating coach for Indian chats. Users upload/paste a chat screenshot, p
 
 ## PR plan (one at a time, stop for user review after each)
 - [x] **PR-V2-1** — Dark tokens, 4-tab bar (Ask Lovli = static shell), Welcome, 3-step Onboarding (Goal/Platform/Language; goal → AsyncStorage `lovli_goal`). ✅ tested (iteration_9), user review pending
-- [ ] **PR-V2-2** — Reply Home (emotion check-in chips, compact upload/paste, remove visible language/customize rows), NEW Intent screen (chat preview bubbles + WHAT DO YOU WANT? + HOW SHOULD IT LAND? chips), staged Generating loader (5 stages)
+- [x] **PR-V2-2** — Reply Home (emotion check-in chips, compact upload/paste, remove visible language/customize rows), Intent phase (chat preview bubbles + WHAT DO YOU WANT? + HOW SHOULD IT LAND? chips), staged Generating loader (5 stages). Phase machine inside the Reply tab (home→intent→generating→results). ✅ tested 9/9 (iteration_10), user review pending
 - [ ] **PR-V2-3** — Reply · Generated "explain the why" UI + backend optional `feeling`/`intent`/`outcome` params + optional `insight` response object; "OR MAKE IT…" tone chips; copied toast
 - [ ] **PR-V2-4** — Ask Lovli live: `POST /api/ask-lovli` (auth, history ≤20 turns, person_id context, daily-limit plumbing) + chat UI (typing indicator, local thread persistence)
 - [ ] **PR-V2-5** — `POST /api/decode` + Decode result surface (3-segment qualitative meter) + More · Tools 9-tile grid (Ask Lovli removed from grid)
@@ -22,6 +22,7 @@ Lovli: AI dating coach for Indian chats. Users upload/paste a chat screenshot, p
 
 ## Session log
 ### 2026-07-06 (this fork)
+- **PR-V2-2 shipped**: reply.tsx rewritten as phase machine; new `src/components/reply/StagedLoader.tsx`, `ChatPreview.tsx`, `src/utils/chatParse.ts`. feeling/intent/outcome held in state, NOT sent yet. `EMERGENT_LLM_KEY` restored in backend/.env (lost in fork). Metro is CI mode — restart expo after code changes.
 - Fixed fork env: supervisor expo program pointed at `/app/frontend` (old web app) → now `/app/mobile`. `/app/mobile/.env` pointed at `https://api.lovli.in` (CORS-blocked from preview) → preview proxy URL active, prod URL kept commented for release builds.
 - Backend `.env`: `DB_NAME=lovli_db`, `ALLOW_TEST_LOGIN=true` → tester@lovli.app seeded, `POST /api/auth/test-login` works.
 - **PR-V2-1 shipped**: V2 dark tokens in `colors.ts` (all legacy alias names preserved), white-pill `PrimaryButton` (✦ #8B5CF6, lavender halo, haptics), dark `Chip`/`Input`/`GlassCard`/`Screen` (gradient bg), gradient avatar `AppHeader`, 4-tab `_layout` (blur bg iOS, solid fallback), `welcome.tsx` hero, `AmbientGlow` component, 3-step `onboarding.tsx`, `ask-lovli.tsx` static shell, `DESIGN_SYSTEM_V2_DARK.md`.
