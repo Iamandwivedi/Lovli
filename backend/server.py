@@ -57,6 +57,9 @@ from llm_service import (  # noqa: E402
     ask_lovli,
     DecodeRequest,
     decode_situation,
+    FeatureRequest,
+    FEATURE_SUFFIXES,
+    generate_feature,
     generate_replies,
 )
 from models import (
@@ -66,6 +69,7 @@ from models import (
     AskLovliResponse,
     AuthResponse,
     DecodeResponse,
+    FeatureResponse,
     FeedbackRequest,
     GenerateRepliesResponse,
     Generation,
@@ -103,7 +107,7 @@ db = client[os.environ.get("DB_NAME", "lovli_db")]
 app = FastAPI(title="Lovli API", version="1.0")
 api = APIRouter(prefix="/api")
 
-DAILY_LIMIT_FREE = 8
+DAILY_LIMIT_FREE = 10  # PR4: bumped 8 → 10 — feature tools share the counter
 DAILY_LIMIT_PRO = 10_000
 ALLOWED_IMAGE_MIME = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
 MAX_IMAGE_BYTES = 6 * 1024 * 1024  # 6MB
@@ -921,6 +925,141 @@ async def decode_endpoint(
     )
 
     return DecodeResponse(**result)
+
+
+@api.post("/feature", response_model=FeatureResponse)
+async def feature_endpoint(
+    feature_id: str = Form(...),
+    manual_text: Optional[str] = Form(None),
+    text_secondary: Optional[str] = Form(None),
+    draft_text: Optional[str] = Form(None),
+    feeling: Optional[str] = Form(None),
+    memory_card_id: Optional[str] = Form(None),
+    language: str = Form("Hinglish"),
+    client_local_date: Optional[str] = Form(None),
+    image: Optional[UploadFile] = File(None),
+    user_id: str = Depends(get_current_user_id),
+):
+    """PR4: ONE additive route for the More-grid tools. Same multipart contract
+    as /decode plus feature_id, optional text_secondary (fair_verdict: their
+    side; what_should_i_do: your goal) and draft_text (glow_up_reply only).
+    Shares the daily counter. Contract: /app/docs/FEATURE_API_AND_PROMPTS.md"""
+    if feature_id not in FEATURE_SUFFIXES:
+        raise HTTPException(status_code=400, detail="Unknown feature.")
+    if feature_id == "glow_up_reply":
+        if not (draft_text and draft_text.strip()):
+            raise HTTPException(
+                status_code=400, detail="Paste the reply you want to glow up."
+            )
+    elif not (manual_text and manual_text.strip()) and image is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Tell me what happened first — screenshot or paste.",
+        )
+
+    user = await _get_user(user_id)
+    local_date = _normalize_local_date(client_local_date)
+    user = await _maybe_reset_daily(user, local_date)
+
+    limit = _daily_limit(user["plan"])
+    if user["plan"] == "free" and user["daily_generation_count"] >= limit:
+        raise HTTPException(status_code=429, detail="Daily generation limit reached.")
+
+    image_b64: Optional[str] = None
+    image_mime = "image/png"
+    if image is not None:
+        mime = (image.content_type or "").lower()
+        if mime not in ALLOWED_IMAGE_MIME:
+            raise HTTPException(
+                status_code=400, detail="Use a clear JPG, PNG, or WEBP image."
+            )
+        raw = await image.read()
+        if len(raw) > MAX_IMAGE_BYTES:
+            raise HTTPException(status_code=413, detail="Image too large (max 6MB).")
+        if len(raw) < 200:
+            raise HTTPException(status_code=400, detail="Please upload a clear image.")
+        image_b64 = base64.b64encode(raw).decode("utf-8")
+        image_mime = "image/jpeg" if mime in ("image/jpeg", "image/jpg") else mime
+
+    memory_context: Optional[str] = None
+    if memory_card_id:
+        mc = await db.memory_cards.find_one(
+            {"id": memory_card_id, "user_id": user_id}, {"_id": 0}
+        )
+        if mc:
+            parts: list[str] = [f"Nickname: {mc.get('nickname','')}."]
+            for key, label in (
+                ("goal", "What user wants with this person"),
+                ("current_situation", "Current situation"),
+                ("relationship_stage", "Stage"),
+                ("where_met", "Where they met"),
+                ("likes", "Likes"),
+                ("dislikes", "Avoid"),
+                ("communication_style", "Communication style"),
+                ("inside_jokes", "Inside jokes"),
+                ("important_dates", "Important context"),
+                ("best_approach", "Best approach"),
+                ("notes", "Notes"),
+            ):
+                if mc.get(key):
+                    parts.append(f"{label}: {mc[key]}.")
+            extra = _extra_memory_context(mc)
+            if extra:
+                parts.append(extra)
+            memory_context = " ".join(parts)
+
+    try:
+        result = await generate_feature(
+            FeatureRequest(
+                feature_id=feature_id,
+                manual_text=manual_text,
+                text_secondary=text_secondary,
+                draft_text=draft_text,
+                image_base64=image_b64,
+                image_mime=image_mime,
+                feeling=feeling,
+                memory_context=memory_context,
+                language=language,
+                session_id=f"feature-{feature_id}-{user_id}",
+            )
+        )
+    except LovliLlmError as e:
+        logger.warning("Feature %s failed for user %s: %s", feature_id, user_id, e)
+        raise HTTPException(
+            status_code=503,
+            detail="Lovli couldn't work through this right now. Try again.",
+        )
+
+    has_text = bool((manual_text and manual_text.strip()) or (draft_text and draft_text.strip()))
+    gen = Generation(
+        user_id=user_id,
+        input_type=(
+            "both" if image_b64 and has_text else ("screenshot" if image_b64 else "text")
+        ),
+        platform="feature",
+        vibe=feeling or "",
+        manual_text=manual_text,
+        memory_card_id=memory_card_id,
+        generated_replies=list(result["replies"]),
+        feature_id=feature_id,
+        result=result,
+    )
+    gdoc = gen.model_dump()
+    gdoc["created_at"] = gdoc["created_at"].isoformat()
+    await db.generations.insert_one(gdoc)
+
+    await db.users.update_one(
+        {"id": user_id},
+        {
+            "$inc": {"daily_generation_count": 1},
+            "$set": {
+                "last_generation_reset_date": local_date,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            },
+        },
+    )
+
+    return FeatureResponse(generation_id=gen.id, feature_id=feature_id, **result)
 
 
 @api.post("/feedback")

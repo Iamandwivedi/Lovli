@@ -230,3 +230,18 @@ frontend:
 agent_communication:
   - agent: "main"
     message: "V2 milestone COMPLETE. Added accessibilityState.disabled to delete-confirm-button (testing agent LOW finding). Ananya reseeded with full V2 fields (stage/platform/city/3 timeline/4 facts). Release blockers tracked as checkboxes in /app/docs/RELEASE_CHECKLIST.md — env stays on preview proxy until a release build is cut (PR4 is next)."
+
+## PR4a (/api/feature skeleton + Red flag check e2e) — implemented, main-agent smoke-tested
+backend:
+  - task: "POST /api/feature (auth, multipart like /decode + feature_id, text_secondary, draft_text): 7 feature suffixes in llm_service (FEATURE_SUFFIXES); shared {verdict, points[{text,tone}], actions[], replies[]} schema; red_flag_check verdict clamped to 4 severity tiers server-side; replies forced [] for non-reply-capable features (only glow_up/settle_the_fight/what_should_i_do can return replies, breakup_clarity never); persists to generations with feature_id+result; shared daily counter, DAILY_LIMIT_FREE bumped 8→10"
+    implemented: true
+    working: true  # main agent: 401/400 unknown/400 no-input/400 glow-up-no-draft all pass; happy path with memory context returns clamped verdict + warning tones + replies stripped; generation row + counter verified in mongo; clamp+validator unit tests pass
+    files: ["/app/backend/server.py", "/app/backend/llm_service.py", "/app/backend/models.py", "/app/docs/FEATURE_API_AND_PROMPTS.md"]
+frontend:
+  - task: "app/feature/[id].tsx: config-driven phase machine (input → staged loader → result) using src/constants/feature-config.ts; verdict glass card (rose border for red flag), tone-coloured ✦ points, numbered YOUR NEXT MOVE, I'D SEND THIS reply cards with copy, Decode footer (Save to Memory timeline entry + ✦ Ask Lovli handoff); More grid: red_flag tile → /feature/red_flag_check (other 6 still 'coming soon' until PR4b)"
+    implemented: true
+    working: "NA"  # main agent screenshot e2e: More → tile → input → result verified incl. 4th severity tier + support-first actions
+    files: ["/app/mobile/app/feature/[id].tsx", "/app/mobile/src/constants/feature-config.ts", "/app/mobile/app/(tabs)/more.tsx", "/app/mobile/src/api/endpoints.ts"]
+agent_communication:
+  - agent: "main"
+    message: "PR4a: only red_flag_check is wired in the More grid — other 6 tiles intentionally 'coming soon' (PR4b), do NOT report as bug. All 7 feature_ids already work via direct URL /feature/<id> and via API. Free limit is now 10/day. LLM budget: keep feature calls minimal."

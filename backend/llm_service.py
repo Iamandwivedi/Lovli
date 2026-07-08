@@ -990,3 +990,308 @@ async def decode_situation(req: DecodeRequest) -> dict:
         if not any(m in msg for m in transient_markers):
             raise
         return await _attempt(fallback)
+
+
+# ---- Feature engine (PR4) ---------------------------------------------------
+# ONE additive route powers the More-grid tools: a feature_id selects a prompt
+# suffix + the shared {verdict, points[], actions[], replies[]} output schema.
+# Contract: /app/docs/FEATURE_API_AND_PROMPTS.md
+
+RED_FLAG_VERDICTS = (
+    "All clear — no red flags.",
+    "Mild — but fixable.",
+    "Pattern worth taking seriously.",
+    "This is serious — please don't brush it off.",
+)
+
+POINT_TONES = ("positive", "warning", "neutral")
+
+# Features allowed to return replies[] (locked policy): glow_up always;
+# settle_the_fight + what_should_i_do conditionally. Everything else is
+# forced to [] server-side — breakup_clarity NEVER (closure, not re-engagement).
+REPLY_CAPABLE_FEATURES = {"glow_up_reply", "settle_the_fight", "what_should_i_do"}
+
+FEATURE_SYSTEM_PROMPT = """You are Lovli — a warm, witty wingman and relationship coach for Indian daters. First person always ("If I were you...", "Honestly? I'd..."). Hinglish-native, honest, never preachy, never clinical, never therapist-speak. You understand Instagram/WhatsApp/Hinge/Bumble/Tinder chat culture, situationships, and Indian family/social context.
+
+Be real, not corporate. Never manipulate, pressure, use pickup-artist tactics, or encourage creepy/abusive behavior. If something is genuinely concerning (abuse, coercion, control), say so honestly and kindly.
+
+HONESTY RULE (hard): qualitative reads ONLY. NEVER numeric confidence, percentages, scores out of 10, counts or ratings of red flags, or invented facts about anyone. If you can't know something, say so plainly.
+
+Output ONLY a JSON object — no prose, no code fences — with this exact shape:
+{
+  "verdict": "one short line — the bottom line",
+  "points": [{"text": "short scannable observation, under ~140 chars", "tone": "positive" | "warning" | "neutral"}],
+  "actions": ["1-3 concrete next moves the user can actually do"],
+  "replies": ["0-3 ready-to-send messages. [] when a message isn't the right move"]
+}
+points: 1-5 items. tone: "positive" for good signs, "warning" for cautions, "neutral" for context.
+Language: mirror the user's language preference (Hinglish stays Hinglish). Quote tiny fragments of the actual messages inside observations when it helps."""
+
+FEATURE_SUFFIXES: dict[str, str] = {
+    "red_flag_check": (
+        "TASK: Judge whether what the other person did is a red flag, normal, or "
+        "somewhere in between. Be honest — don't catastrophize normal behavior, don't "
+        "excuse genuinely bad behavior. `verdict` MUST be EXACTLY one of these four "
+        "phrases and nothing else: \"All clear — no red flags.\" / \"Mild — but "
+        "fixable.\" / \"Pattern worth taking seriously.\" / \"This is serious — please "
+        "don't brush it off.\" Use the last one for control, coercion, threats, "
+        "isolation, or abuse patterns — and when you do, `actions` must gently point "
+        "the user toward trusted people or professional support first, never just "
+        "texting tactics. `points` = 2-4 reasons grounded in what actually happened. "
+        "`replies` = []."
+    ),
+    "what_should_i_do": (
+        "TASK: Recommend the best move for the user's stated goal (use the \"Your "
+        "goal\" input, or their memory-card goal if present). Be decisive and "
+        "practical — one main recommendation, not a menu. `verdict` = the single best "
+        "move in one line. `points` = 2-4 reasons / things to weigh. `actions` = 1-3 "
+        "concrete steps in order. `replies` = one ready-to-send text ONLY if the best "
+        "move is sending something, else []."
+    ),
+    "settle_the_fight": (
+        "TASK: Explain why the fight really happened (the needs under the words) and "
+        "how to de-escalate and repair without losing self-respect. Be fair to both "
+        "sides; do not just take the user's side. `verdict` = the root of the conflict "
+        "in one line. `points` = 2-4 on what each side is feeling / what triggered it. "
+        "`actions` = concrete steps to cool it down and fix it. `replies` = 1-2 "
+        "de-escalating messages ONLY if a message is the right move, else []."
+    ),
+    "the_other_side": (
+        "TASK: Lay out the situation honestly from the OTHER person's point of view so "
+        "the user understands them. Steelman their side fairly — don't strawman it, "
+        "and never present mind-reading as fact (say \"likely\" / \"probably\"). "
+        "`verdict` = their likely core feeling or need in one line. `points` = 2-4 "
+        "reasons they may be acting this way. `actions` = how the user can respond "
+        "with that understanding. `replies` = []."
+    ),
+    "fair_verdict": (
+        "TASK: Act as a neutral, unbiased judge of who is more in the right, given "
+        "both sides (the user's account plus \"The other person's side\" input if "
+        "provided). Do NOT default to the user — call it honestly even if they're "
+        "wrong. `verdict` = the ruling in one qualitative line (e.g. \"Both dropped "
+        "the ball — you first.\"). Never percentages or splits. `points` = 2-4 on what "
+        "each side got right/wrong. `actions` = how to resolve it fairly. `replies` = []."
+    ),
+    "breakup_clarity": (
+        "TASK: Help the user think through whether to stay or go. Do NOT push either "
+        "way and NEVER command a breakup — surface the real considerations so THEY "
+        "decide. Be extra warm; this is emotionally heavy. `verdict` = an honest "
+        "framing of where things stand (a pattern you see, not a directive). `points` "
+        "= 2-5 things genuinely worth weighing — signs to stay AND signs to go, with "
+        "honest tones. `actions` = clarifying questions to ask themselves or gentle "
+        "steps toward clarity. `replies` MUST be [] — this feature is about closure "
+        "and clarity, never about crafting messages to re-engage."
+    ),
+    "glow_up_reply": (
+        "TASK: Take the user's draft reply and make it smoother — same intent, same "
+        "voice, better delivery, no cringe. Keep their language mix (Hinglish stays "
+        "Hinglish). PRIMARY output is `replies` = 2-3 improved versions of their "
+        "draft. `verdict` = one line on what was off with the original / what you "
+        "improved. `points` = 1-3 quick why-this-lands-better notes. `actions` = []."
+    ),
+}
+
+FEATURE_IDS = tuple(FEATURE_SUFFIXES.keys())
+
+# Per-feature label for the optional secondary text input.
+_SECONDARY_LABELS = {
+    "fair_verdict": "The other person's side (their account, as the user tells it)",
+    "what_should_i_do": "The user's goal",
+}
+
+
+@dataclass
+class FeatureRequest:
+    feature_id: str
+    manual_text: Optional[str] = None
+    text_secondary: Optional[str] = None
+    draft_text: Optional[str] = None
+    image_base64: Optional[str] = None
+    image_mime: str = "image/png"
+    feeling: Optional[str] = None
+    memory_context: Optional[str] = None
+    language: str = "Hinglish"
+    session_id: str = "feature"
+
+
+def _clamp_red_flag_verdict(value: object) -> str:
+    """Map free-ish model output onto the 4 allowed severity phrases.
+    Unrecognized output defaults to the 'pattern' tier — never downplay."""
+    v = str(value or "").strip().lower()
+    if "brush" in v or v.startswith("this is serious"):
+        return RED_FLAG_VERDICTS[3]
+    if "pattern" in v or "big" in v:
+        return RED_FLAG_VERDICTS[2]
+    if "mild" in v or "fixable" in v:
+        return RED_FLAG_VERDICTS[1]
+    if "all clear" in v or "no red" in v or "normal" in v:
+        return RED_FLAG_VERDICTS[0]
+    return RED_FLAG_VERDICTS[2]
+
+
+def validate_feature_payload(p: dict, feature_id: str) -> dict:
+    """Coerce/clamp the feature payload. Raises LovliValidationError when the
+    essentials are missing so the caller retries once with a stricter prompt."""
+    if not isinstance(p, dict):
+        raise LovliValidationError("feature payload is not an object")
+    verdict = str(p.get("verdict") or "").strip()
+    if not verdict:
+        raise LovliValidationError("feature payload missing verdict")
+    if feature_id == "red_flag_check":
+        verdict = _clamp_red_flag_verdict(verdict)
+
+    raw_points = p.get("points")
+    points: list[dict] = []
+    if isinstance(raw_points, list):
+        for item in raw_points[:5]:
+            if isinstance(item, dict):
+                text = str(item.get("text") or "").strip()
+                tone = str(item.get("tone") or "neutral").strip().lower()
+            else:
+                text = str(item or "").strip()
+                tone = "neutral"
+            if text:
+                points.append({"text": text, "tone": tone if tone in POINT_TONES else "neutral"})
+    if not points:
+        raise LovliValidationError("feature payload has no usable points")
+
+    actions = _str_list(p.get("actions"), 3)
+    replies = _str_list(p.get("replies"), 3)
+    if feature_id not in REPLY_CAPABLE_FEATURES:
+        replies = []
+    return {"verdict": verdict, "points": points, "actions": actions, "replies": replies}
+
+
+def _build_feature_prompt(req: FeatureRequest, retry: bool) -> str:
+    parts: list[str] = []
+    if retry:
+        parts.append(
+            "Your previous response was not valid JSON. Output ONLY the JSON "
+            "object in the exact shape from the system prompt. No prose."
+        )
+    parts.append(FEATURE_SUFFIXES[req.feature_id])
+    if req.memory_context:
+        parts.append(f"PERSON CONTEXT (about who we're discussing): {req.memory_context}")
+    if req.feeling:
+        parts.append(f"How the user is feeling right now: {req.feeling}.")
+    parts.append(f"User's reply language preference: {req.language}.")
+    if req.text_secondary and req.text_secondary.strip():
+        label = _SECONDARY_LABELS.get(req.feature_id, "Additional context from the user")
+        parts.append(f"{label}:\n{req.text_secondary.strip()}")
+    if req.draft_text and req.draft_text.strip():
+        parts.append(f"The user's draft reply (to glow up):\n{req.draft_text.strip()}")
+    if req.image_base64:
+        parts.append("The chat is in the attached screenshot — read every message carefully.")
+    if req.manual_text and req.manual_text.strip():
+        label = "Chat context (pasted)" if req.feature_id == "glow_up_reply" else "The situation / chat (pasted)"
+        parts.append(f"{label}:\n{req.manual_text.strip()}")
+    parts.append("Work it through now. JSON only.")
+    return "\n\n".join(parts)
+
+
+async def _feature_anthropic(req: FeatureRequest, retry: bool) -> dict:
+    from anthropic import AsyncAnthropic
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise LovliLlmError("ANTHROPIC_API_KEY not configured")
+    model = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-5-20250929")
+
+    content_blocks: list[dict] = []
+    if req.image_base64:
+        content_blocks.append({
+            "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": req.image_mime or "image/png",
+                "data": req.image_base64,
+            },
+        })
+    content_blocks.append({"type": "text", "text": _build_feature_prompt(req, retry)})
+
+    client = AsyncAnthropic(api_key=api_key)
+    try:
+        msg = await client.messages.create(
+            model=model,
+            max_tokens=1024,
+            system=FEATURE_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": content_blocks}],
+        )
+    except Exception as e:
+        raise LovliLlmError(f"anthropic call failed: {e}") from e
+    raw = "".join(
+        b.text for b in msg.content if getattr(b, "type", None) == "text"
+    ).strip()
+    return validate_feature_payload(parse_lovli_json(raw), req.feature_id)
+
+
+async def _feature_emergent(req: FeatureRequest, retry: bool) -> dict:
+    try:
+        from emergentintegrations.llm.chat import ImageContent, LlmChat, UserMessage
+    except ImportError as e:
+        raise LovliLlmError(
+            "Emergent LLM fallback not available in this deployment "
+            "(emergentintegrations package not installed)."
+        ) from e
+
+    api_key = os.environ.get("EMERGENT_LLM_KEY")
+    if not api_key:
+        raise LovliLlmError("EMERGENT_LLM_KEY not configured")
+
+    chat = LlmChat(
+        api_key=api_key,
+        session_id=req.session_id + ("-retry" if retry else ""),
+        system_message=FEATURE_SYSTEM_PROMPT,
+    ).with_model("anthropic", os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-5-20250929"))
+
+    file_contents = None
+    if req.image_base64:
+        file_contents = [ImageContent(image_base64=req.image_base64)]
+    try:
+        raw = await chat.send_message(
+            UserMessage(text=_build_feature_prompt(req, retry), file_contents=file_contents)
+        )
+    except Exception as e:
+        raise LovliLlmError(f"emergent call failed: {e}") from e
+    return validate_feature_payload(parse_lovli_json(str(raw)), req.feature_id)
+
+
+async def generate_feature(req: FeatureRequest) -> dict:
+    """Run one More-grid feature. Same routing/retry pattern as generate_replies."""
+    explicit = (os.environ.get("LLM_PROVIDER") or "auto").lower().strip()
+    has_anthropic_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
+    has_emergent_key = bool(os.environ.get("EMERGENT_LLM_KEY"))
+
+    if explicit == "auto":
+        primary = "anthropic" if has_anthropic_key else "emergent"
+        fallback = "emergent" if primary == "anthropic" and has_emergent_key else None
+    else:
+        primary = explicit
+        fallback = None
+
+    async def _try(provider: str, retry: bool) -> dict:
+        if provider == "anthropic":
+            return await _feature_anthropic(req, retry)
+        if provider == "emergent":
+            return await _feature_emergent(req, retry)
+        raise LovliLlmError(f"unknown provider {provider!r}")
+
+    async def _attempt(provider: str) -> dict:
+        try:
+            return await _try(provider, retry=False)
+        except (LovliValidationError, json.JSONDecodeError):
+            return await _try(provider, retry=True)
+
+    try:
+        return await _attempt(primary)
+    except LovliLlmError as primary_err:
+        if fallback is None:
+            raise
+        msg = str(primary_err).lower()
+        transient_markers = (
+            "overload", "529", "rate limit", "ratelimit", "rate_limit",
+            "503", "502", "504", "timeout", "timed out", "connection",
+        )
+        if not any(m in msg for m in transient_markers):
+            raise
+        return await _attempt(fallback)

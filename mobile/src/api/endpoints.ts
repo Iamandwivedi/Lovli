@@ -273,6 +273,44 @@ export const patchMemoryCard = async (id: string, body: Partial<MemoryCardInput>
   return data;
 };
 
+// ---- Feature engine (PR4) — ONE route for the More-grid tools ---------------
+export type FeaturePointTone = "positive" | "warning" | "neutral";
+
+export type FeatureResult = {
+  generation_id: string;
+  feature_id: string;
+  verdict: string;
+  points: { text: string; tone: FeaturePointTone }[];
+  actions: string[];
+  replies: string[];
+};
+
+export const runFeature = async (input: {
+  feature_id: string;
+  manual_text?: string;
+  text_secondary?: string;
+  draft_text?: string;
+  feeling?: string | null;
+  memory_card_id?: string | null;
+  language?: Language;
+  image?: { uri: string; name: string; type: string } | null;
+}) => {
+  const form = new FormData();
+  form.append("feature_id", input.feature_id);
+  form.append("client_local_date", getClientLocalDate());
+  if (input.manual_text && input.manual_text.trim()) form.append("manual_text", input.manual_text.trim());
+  if (input.text_secondary && input.text_secondary.trim()) form.append("text_secondary", input.text_secondary.trim());
+  if (input.draft_text && input.draft_text.trim()) form.append("draft_text", input.draft_text.trim());
+  if (input.feeling) form.append("feeling", input.feeling);
+  if (input.memory_card_id) form.append("memory_card_id", input.memory_card_id);
+  if (input.language) form.append("language", input.language);
+  if (input.image) form.append("image", input.image as unknown as Blob);
+  const { data } = await api.post<FeatureResult>("/feature", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+};
+
 export const postFeedback = async (generation_id: string, copied_reply_index: number) => {
   await api.post("/feedback", { generation_id, copied_reply_index });
 };

@@ -134,6 +134,9 @@ class Generation(BaseModel):
     tone_notes: Optional[str] = None
     copied_reply_index: Optional[int] = None
     feedback: Optional[str] = None
+    # PR4 (additive, nullable): set only for /api/feature generations.
+    feature_id: Optional[str] = None
+    result: Optional[dict] = None  # {verdict, points[], actions[], replies[]}
 
 
 class FeedbackRequest(BaseModel):
@@ -314,3 +317,18 @@ class DecodeResponse(BaseModel):
     watch_outs: List[str]
     whats_really_going_on: str
     next_move: DecodeNextMove
+
+
+# ---- Feature engine (PR4) ----------------------------------------------------
+class FeaturePoint(BaseModel):
+    text: str
+    tone: Literal["positive", "warning", "neutral"] = "neutral"
+
+
+class FeatureResponse(BaseModel):
+    generation_id: str
+    feature_id: str
+    verdict: str
+    points: List[FeaturePoint]
+    actions: List[str]
+    replies: List[str] = []

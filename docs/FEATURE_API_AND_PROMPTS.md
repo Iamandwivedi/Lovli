@@ -1,9 +1,9 @@
 # Lovli — `/api/feature` contract + per-feature prompts (PR4, reconciled for V2)
 
-> Reconstructed June 2026: the pre-V2 spec file was lost in a fork. The stable
-> `feature_id` values in `mobile/src/constants/more-features.ts` are the surviving
-> contract; everything else below is reconciled onto the V2 (Coach dark) surface.
-> STATUS: PROPOSED — awaiting user review before implementation.
+> June 2026: original pre-V2 spec recovered from the user's local repo and merged
+> with the V2 reconciliation. The stable `feature_id` values in
+> `mobile/src/constants/more-features.ts` are the contract keys.
+> STATUS: APPROVED (user review) — implemented in PR4a.
 
 ## 1. Route — ONE additive endpoint
 
@@ -12,8 +12,9 @@
 
 | field              | type   | notes                                                              |
 |--------------------|--------|--------------------------------------------------------------------|
-| `feature_id`       | str ✱  | one of the 7 below — 422 otherwise                                 |
+| `feature_id`       | str ✱  | one of the 7 below — 400 otherwise                                 |
 | `manual_text`      | str    | pasted chat / situation ("chat context" for glow_up)               |
+| `text_secondary`   | str    | optional 2nd field — fair_verdict: "Their side"; what_should_i_do: "Your goal" |
 | `draft_text`       | str    | **glow_up_reply only** — the user's draft. Ignored by others.      |
 | `image`            | file   | screenshot, JPG/PNG/WEBP ≤ 6MB (same validation as decode)         |
 | `feeling`          | str    | optional emotion chip                                              |
@@ -47,15 +48,28 @@ Feature ids served: `red_flag_check`, `what_should_i_do`, `settle_the_fight`,
 ```
 
 - `verdict` — one sentence, serif headline inside the glass card (Decode-style).
-  **`red_flag_check` is clamped server-side** (like decode's `vibe_label`) to exactly:
-  `"All clear — no red flags."` / `"Mild — but fixable."` / `"Pattern worth taking seriously."`
+  **`red_flag_check` is clamped server-side** (like decode's `vibe_label`) to exactly
+  FOUR severity tiers:
+  `"All clear — no red flags."` / `"Mild — but fixable."` /
+  `"Pattern worth taking seriously."` / `"This is serious — please don't brush it off."`
+  The 4th tier exists for control/coercion/abuse patterns — when it fires, `actions`
+  gently point toward trusted people / professional support, never texting tactics.
+  Unrecognized model output clamps to the "pattern" tier (never downplay).
   Other features: free-text single sentence (honesty rule enforced by prompt).
-- `points[]` — 3–5 bullets. `tone` drives the ✦ colour: `positive` → lavender,
-  `warning` → pink, `neutral` → soft gray. Rendered as the ✦ bullet list.
-- `actions[]` — 1–3 items → **YOUR NEXT MOVE** card (numbered if >1).
-- `replies[]` — 0–2 send-ready lines → **"I'd send this"** card with copy button;
-  section hidden when empty. Populated by: `glow_up_reply` (always, the glow-up itself),
-  `settle_the_fight` + `what_should_i_do` (when a message is the right move), others `[]`.
+- `points[]` — 1–5 bullets `{text, tone}`. `tone` drives the ✦ colour: `positive` →
+  lavender, `warning` → pink, `neutral` → soft gray. Plain-string points are coerced
+  to `neutral`. Rendered as the ✦ bullet list.
+- `actions[]` — 0–3 items → **YOUR NEXT MOVE** card (numbered if >1; hidden if empty).
+- `replies[]` — 0–3 send-ready lines → **"I'd send this"** card with copy button;
+  section hidden when empty. LOCKED POLICY (enforced server-side, not just prompts):
+  `glow_up_reply` always (2–3 improved drafts, PRIMARY output); `settle_the_fight` +
+  `what_should_i_do` conditional (only when a message is the right move);
+  **`breakup_clarity` NEVER** (closure, not re-engagement — explicit in its suffix);
+  all other features forced to `[]`.
+
+Validator (`validate_feature_payload`, mirrors `validate_decode_payload`): strip code
+fences + regex-extract the first `{...}` (via `parse_lovli_json`), verdict + ≥1 point
+required (else one stricter retry on the same provider), tones clamped, lists capped.
 
 ## 3. Locked decisions (still stand)
 
@@ -81,7 +95,7 @@ plus a `FEATURE_PROMPTS[feature_id]` suffix per feature:
 
 | feature            | suffix focus                                                                                            | verdict guidance                                   |
 |--------------------|---------------------------------------------------------------------------------------------------------|----------------------------------------------------|
-| `red_flag_check`   | Scan for control, disrespect, manipulation, love-bombing vs normal friction. Warm but don't sugar-coat.  | EXACTLY one of the 3 clamped severity phrases      |
+| `red_flag_check`   | Scan for control, disrespect, manipulation, love-bombing vs normal friction. Warm but don't sugar-coat.  | EXACTLY one of the 4 clamped severity tiers        |
 | `what_should_i_do` | Best next move for the user's goal (use memory goal if present). Decisive, one main recommendation.      | the move in one sentence ("Give it two days, then…")|
 | `settle_the_fight` | Why the fight really happened (needs under the words), how to de-escalate without losing self-respect.   | the real cause in one line                          |
 | `the_other_side`   | Steelman the other person's POV — what they likely felt/meant. No mind-reading presented as fact.        | their side in one line ("They likely felt dismissed…")|

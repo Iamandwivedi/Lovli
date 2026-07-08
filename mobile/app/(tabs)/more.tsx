@@ -20,6 +20,8 @@ type Tool = {
   icon: IoniconName | "sparkle";
   rose?: boolean;
   decode?: boolean;
+  /** PR4: routes to /feature/[featureId] when set */
+  featureId?: string;
 };
 
 const SECTIONS: { label: string; tools: Tool[] }[] = [
@@ -42,7 +44,7 @@ const SECTIONS: { label: string; tools: Tool[] }[] = [
     label: "WORK IT OUT",
     tools: [
       { id: "settle_fight", title: "Settle the fight", sub: "Say it without the sting.", icon: "pencil-outline" },
-      { id: "red_flag", title: "Red flag check", sub: "Spot it early.", icon: "flag-outline", rose: true },
+      { id: "red_flag", title: "Red flag check", sub: "Spot it early.", icon: "flag-outline", rose: true, featureId: "red_flag_check" },
       { id: "fair_verdict", title: "Fair verdict", sub: "Who's right? Honestly.", icon: "scale-outline" },
       { id: "breakup", title: "Breakup clarity", sub: "Closure, not spiralling.", icon: "heart-dislike-outline" },
     ],
@@ -57,6 +59,10 @@ export default function MoreScreen() {
   const onTool = (t: Tool) => {
     if (t.decode) {
       router.push("/decode");
+      return;
+    }
+    if (t.featureId) {
+      router.push(`/feature/${t.featureId}`);
       return;
     }
     toast.success(`${t.title} — coming soon ✦`);
