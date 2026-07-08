@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Screen } from "@/src/components/Screen";
 import { Input } from "@/src/components/Input";
@@ -18,6 +18,7 @@ import {
   DecodeResult,
   MemoryCard,
   decodeSituation,
+  getGeneration,
   listMemoryCards,
   patchMemoryCard,
 } from "@/src/api/endpoints";
@@ -41,6 +42,9 @@ type Phase = "input" | "generating" | "result";
 export default function DecodeScreen() {
   const router = useRouter();
   const toast = useToast();
+  // `gen` param: re-open a stored decode read-only (RECENT strip, PR4c).
+  const params = useLocalSearchParams<{ gen?: string }>();
+  const restored = typeof params.gen === "string" && !!params.gen;
   const [phase, setPhase] = useState<Phase>("input");
   const [image, setImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [manual, setManual] = useState("");
@@ -54,6 +58,21 @@ export default function DecodeScreen() {
   useEffect(() => {
     listMemoryCards().then((c) => setCards(c || [])).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!restored) return;
+    getGeneration(String(params.gen))
+      .then((row) => {
+        setResult(row.result as unknown as DecodeResult);
+        setMemoryId(row.memory_card_id ?? null);
+        setPhase("result");
+      })
+      .catch(() => {
+        toast.error("Could not load that result.");
+        router.back();
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restored]);
 
   useEffect(() => {
     if (phase !== "generating") return;
@@ -145,7 +164,7 @@ export default function DecodeScreen() {
         <>
           <View style={styles.backHeader}>
             <Pressable
-              onPress={() => (phase === "result" ? setPhase("input") : router.back())}
+              onPress={() => (phase === "result" && !restored ? setPhase("input") : router.back())}
               hitSlop={12}
               testID="decode-back-button"
             >

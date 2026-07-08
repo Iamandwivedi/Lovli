@@ -14,6 +14,9 @@ export type FeatureUiConfig = {
   pastePlaceholder: string;
   /** user-voice suffix for the "✦ Ask Lovli about this" handoff message */
   askSuffix: string;
+  /** tier-aware override: used instead of askSuffix when the verdict is the
+   * safety tier (red_flag_check) — never invites the user to minimize */
+  askSuffixSevere?: string;
   /** offer the chained "✦ Glow up this reply" action on reply cards */
   chainGlowUp?: boolean;
   /** glow_up: required draft field; paste/upload become optional context */
@@ -41,6 +44,7 @@ export const FEATURE_CONFIG: Record<string, FeatureUiConfig> = {
     ],
     pastePlaceholder: "What did they do? Paste the chat or describe it…",
     askSuffix: "Is this actually a big deal, or am I overthinking it?",
+    askSuffixSevere: "Help me think through what to do next — I want to handle this safely.",
     rose: true,
   },
   what_should_i_do: {
@@ -103,7 +107,7 @@ export const FEATURE_CONFIG: Record<string, FeatureUiConfig> = {
     resultTitle: "The ruling",
     intro: "Both sides, one honest call. I don't take sides — not even yours.",
     kicker: "THE RULING",
-    pointsLabel: "WHAT EACH SIDE GOT RIGHT & WRONG",
+    pointsLabel: "BOTH SIDES, HONESTLY",
     cta: "Give the verdict",
     stages: [
       "Hearing your side…",

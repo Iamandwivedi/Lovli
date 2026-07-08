@@ -2,14 +2,16 @@
 // Ask Lovli is NOT in the grid (it's a tab). Decode + Read the signals use
 // /decode; everything else routes to the shared /feature/[id] screen (PR4b —
 // zero placeholders remain).
-import React from "react";
+import React, { useCallback, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Screen } from "@/src/components/Screen";
 import { AppHeader } from "@/src/components/AppHeader";
 import { Sparkle } from "@/src/components/Sparkle";
 import { useAuth } from "@/src/context/AuthContext";
+import { RecentResult, listRecentResults } from "@/src/api/endpoints";
+import { FEATURE_CONFIG } from "@/src/constants/feature-config";
 import { colors, radii, space, typography } from "@/src/theme";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -51,9 +53,29 @@ const SECTIONS: { label: string; tools: Tool[] }[] = [
   },
 ];
 
+// Tool display name + relative time for the RECENT strip.
+const toolTitle = (featureId: string) =>
+  featureId === "decode" ? "Decode the situation" : FEATURE_CONFIG[featureId]?.title || "Lovli tool";
+
+const relTime = (iso: string) => {
+  const s = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (s < 60) return "just now";
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return `${Math.floor(s / 86400)}d ago`;
+};
+
 export default function MoreScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const [recent, setRecent] = useState<RecentResult[]>([]);
+
+  // Refetch on focus so deletions ("Delete my memories") reflect immediately.
+  useFocusEffect(
+    useCallback(() => {
+      listRecentResults(5).then(setRecent).catch(() => {});
+    }, []),
+  );
 
   const onTool = (t: Tool) => {
     if (t.decode) {
@@ -62,6 +84,15 @@ export default function MoreScreen() {
     }
     if (t.featureId) {
       router.push(`/feature/${t.featureId}`);
+    }
+  };
+
+  // Re-open a stored result read-only — zero generation cost.
+  const openRecent = (r: RecentResult) => {
+    if (r.feature_id === "decode") {
+      router.push({ pathname: "/decode", params: { gen: r.generation_id } });
+    } else {
+      router.push({ pathname: "/feature/[id]", params: { id: r.feature_id, gen: r.generation_id } });
     }
   };
 
@@ -106,6 +137,30 @@ export default function MoreScreen() {
             </View>
           </View>
         ))}
+
+        {recent.length > 0 ? (
+          <View style={{ marginTop: space.l }}>
+            <Text style={styles.sectionLabel}>RECENT</Text>
+            <View style={styles.recentCard}>
+              {recent.map((r, i) => (
+                <React.Fragment key={r.generation_id}>
+                  {i > 0 ? <View style={styles.recentDivider} /> : null}
+                  <Pressable
+                    onPress={() => openRecent(r)}
+                    style={({ pressed }) => [styles.recentRow, pressed && { opacity: 0.8 }]}
+                    testID={`recent-result-${r.generation_id}`}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.recentTool} numberOfLines={1}>{toolTitle(r.feature_id)}</Text>
+                      <Text style={styles.recentVerdict} numberOfLines={1}>{r.verdict}</Text>
+                    </View>
+                    <Text style={styles.recentTime}>{relTime(r.created_at)}</Text>
+                  </Pressable>
+                </React.Fragment>
+              ))}
+            </View>
+          </View>
+        ) : null}
 
         {user?.plan !== "pro" ? (
           <Pressable
@@ -179,4 +234,21 @@ const styles = StyleSheet.create({
   upsellTitle: { ...typography.body.bodySemibold, color: colors.text, fontSize: 15 },
   upsellSub: { ...typography.body.caption, color: colors.textMuted, marginTop: 4 },
   upsellChevron: { color: colors.lavenderSoft, fontSize: 22, paddingHorizontal: 6 },
+  recentCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    borderRadius: 18,
+    paddingHorizontal: 15,
+  },
+  recentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 12,
+  },
+  recentDivider: { height: 1, backgroundColor: colors.divider },
+  recentTool: { ...typography.body.bodySemibold, fontSize: 13, color: colors.text },
+  recentVerdict: { ...typography.body.caption, fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  recentTime: { ...typography.body.caption, fontSize: 11.5, color: colors.textFaint },
 });

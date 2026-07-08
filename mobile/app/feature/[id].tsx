@@ -21,6 +21,7 @@ import {
   FeatureResult,
   Language,
   MemoryCard,
+  getGeneration,
   listMemoryCards,
   patchMemoryCard,
   runFeature,
@@ -42,7 +43,8 @@ const TONE_COLOR: Record<FeaturePointTone, string> = {
 export default function FeatureScreen() {
   // `draft` + `person` params: prefilled by the chained "✦ Glow up this reply"
   // hand-off from settle_the_fight / what_should_i_do. Never auto-runs.
-  const params = useLocalSearchParams<{ id: string; draft?: string; person?: string }>();
+  // `gen` param: re-open a stored result read-only (RECENT strip, PR4c).
+  const params = useLocalSearchParams<{ id: string; draft?: string; person?: string; gen?: string }>();
   const { id } = params;
   const router = useRouter();
   const toast = useToast();
@@ -63,10 +65,27 @@ export default function FeatureScreen() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [saved, setSaved] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  // Read-only restore from the RECENT strip — back always leaves the screen.
+  const restored = typeof params.gen === "string" && !!params.gen;
 
   useEffect(() => {
     listMemoryCards().then((c) => setCards(c || [])).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!restored) return;
+    getGeneration(String(params.gen))
+      .then((row) => {
+        setResult(row.result as unknown as FeatureResult);
+        setMemoryId(row.memory_card_id ?? null);
+        setPhase("result");
+      })
+      .catch(() => {
+        toast.error("Could not load that result.");
+        router.back();
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restored]);
 
   useEffect(() => {
     if (phase !== "generating" || !cfg) return;
@@ -165,9 +184,14 @@ export default function FeatureScreen() {
   const askLovliAboutThis = async () => {
     if (!result) return;
     const topPoints = result.points.slice(0, 2).map((p) => p.text).join(" ");
+    // Tier-aware (red flag safety tier): never invite the user to minimize.
+    const severe =
+      cfg.askSuffixSevere &&
+      result.verdict === "This is serious — please don't brush it off.";
+    const suffix = severe ? cfg.askSuffixSevere! : cfg.askSuffix;
     const text =
       `I just used "${cfg.title}". Your take was: "${result.verdict}" ${topPoints} ` +
-      cfg.askSuffix;
+      suffix;
     await storage.setItem(ASK_PENDING_KEY, JSON.stringify({ text, personId: memoryId }));
     router.push("/(tabs)/ask-lovli");
   };
@@ -188,7 +212,7 @@ export default function FeatureScreen() {
         <>
           <View style={styles.backHeader}>
             <Pressable
-              onPress={() => (phase === "result" ? setPhase("input") : router.back())}
+              onPress={() => (phase === "result" && !restored ? setPhase("input") : router.back())}
               hitSlop={12}
               testID="feature-back-button"
             >

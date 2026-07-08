@@ -12,7 +12,7 @@ import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
 import { extractErrorMessage } from "@/src/api/client";
 import {
-  Language, Vibe, getTimezone, listMemoryCards, deleteMemoryCard, patchSettings,
+  Language, Vibe, getTimezone, listMemoryCards, deleteMemoryCard, deleteAllGenerations, patchSettings,
 } from "@/src/api/endpoints";
 import { storage } from "@/src/utils/storage";
 import { ASK_PENDING_KEY, ASK_THREAD_KEY, PREFS_KEY } from "@/src/config/storage-keys";
@@ -73,6 +73,7 @@ export default function SettingsScreen() {
     try {
       const cards = await listMemoryCards();
       for (const c of cards) await deleteMemoryCard(c.id);
+      await deleteAllGenerations(); // wipes stored results (RECENT strip)
       await storage.removeItem(ASK_THREAD_KEY);
       await storage.removeItem(ASK_PENDING_KEY);
       setConfirmOpen(false);
@@ -191,7 +192,7 @@ export default function SettingsScreen() {
         <View style={styles.sheet} testID="delete-confirm-sheet">
           <Text style={styles.sheetTitle}>Delete every memory?</Text>
           <Text style={styles.sheetSub}>
-            {"Every person, timeline, and our chat thread — gone for good. Type DELETE to confirm."}
+            {"Every person, timeline, saved result, and our chat thread — gone for good. Type DELETE to confirm."}
           </Text>
           <TextInput
             value={confirmText} onChangeText={setConfirmText} placeholder="DELETE"

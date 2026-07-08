@@ -913,6 +913,26 @@ async def decode_endpoint(
             detail="Lovli couldn't decode this right now. Try again.",
         )
 
+    # PR4c: persist decode results so they appear in the More-tab RECENT strip.
+    gen = Generation(
+        user_id=user_id,
+        input_type=(
+            "both"
+            if image_b64 and (manual_text and manual_text.strip())
+            else ("screenshot" if image_b64 else "text")
+        ),
+        platform="decode",
+        vibe=feeling or "",
+        manual_text=manual_text,
+        memory_card_id=memory_card_id,
+        generated_replies=[],
+        feature_id="decode",
+        result=result,
+    )
+    gdoc = gen.model_dump()
+    gdoc["created_at"] = gdoc["created_at"].isoformat()
+    await db.generations.insert_one(gdoc)
+
     await db.users.update_one(
         {"id": user_id},
         {
@@ -1060,6 +1080,57 @@ async def feature_endpoint(
     )
 
     return FeatureResponse(generation_id=gen.id, feature_id=feature_id, **result)
+
+
+# ---- Recent results (PR4c) --------------------------------------------------
+# Feeds the "RECENT" strip on the More tab: last N feature/decode results,
+# re-openable read-only at zero generation cost.
+
+@api.get("/recent-results")
+async def recent_results(
+    limit: int = 5,
+    user_id: str = Depends(get_current_user_id),
+):
+    cursor = (
+        db.generations.find(
+            {"user_id": user_id, "feature_id": {"$ne": None}}, {"_id": 0}
+        )
+        .sort("created_at", -1)
+        .limit(max(1, min(limit, 10)))
+    )
+    rows = await cursor.to_list(10)
+    out = []
+    for r in rows:
+        result = r.get("result") or {}
+        out.append(
+            {
+                "generation_id": r["id"],
+                "feature_id": r["feature_id"],
+                "verdict": result.get("verdict") or result.get("vibe_headline") or "",
+                "created_at": r["created_at"],
+            }
+        )
+    return out
+
+
+@api.get("/generations/{gen_id}")
+async def get_generation(
+    gen_id: str,
+    user_id: str = Depends(get_current_user_id),
+):
+    row = await db.generations.find_one(
+        {"id": gen_id, "user_id": user_id}, {"_id": 0}
+    )
+    if not row:
+        raise HTTPException(status_code=404, detail="Not found.")
+    return row
+
+
+@api.delete("/generations")
+async def delete_generations(user_id: str = Depends(get_current_user_id)):
+    """'Delete my memories' also wipes stored results (the RECENT strip)."""
+    res = await db.generations.delete_many({"user_id": user_id})
+    return {"deleted": res.deleted_count}
 
 
 @api.post("/feedback")

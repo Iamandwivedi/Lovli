@@ -311,6 +311,36 @@ export const runFeature = async (input: {
   return data;
 };
 
+// ---- Recent results (PR4c) ---------------------------------------------------
+export type RecentResult = {
+  generation_id: string;
+  feature_id: string; // "decode" or a feature id
+  verdict: string;
+  created_at: string;
+};
+
+export const listRecentResults = async (limit = 5) => {
+  const { data } = await api.get<RecentResult[]>(`/recent-results?limit=${limit}`);
+  return data;
+};
+
+export type StoredGeneration = {
+  id: string;
+  feature_id: string | null;
+  memory_card_id: string | null;
+  result: Record<string, unknown> | null;
+  created_at: string;
+};
+
+export const getGeneration = async (genId: string) => {
+  const { data } = await api.get<StoredGeneration>(`/generations/${genId}`);
+  return data;
+};
+
+export const deleteAllGenerations = async () => {
+  await api.delete("/generations");
+};
+
 export const postFeedback = async (generation_id: string, copied_reply_index: number) => {
   await api.post("/feedback", { generation_id, copied_reply_index });
 };
