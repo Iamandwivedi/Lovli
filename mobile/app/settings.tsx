@@ -201,6 +201,7 @@ export default function SettingsScreen() {
           <Pressable
             onPress={deleteMemories}
             disabled={confirmText.trim().toUpperCase() !== "DELETE" || deleting}
+            accessibilityState={{ disabled: confirmText.trim().toUpperCase() !== "DELETE" || deleting }}
             style={[styles.deleteCta, (confirmText.trim().toUpperCase() !== "DELETE" || deleting) && { opacity: 0.45 }]}
             testID="delete-confirm-button"
           >

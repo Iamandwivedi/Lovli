@@ -215,3 +215,18 @@ frontend:
   - memory/edit/[id].tsx: existing MemoryForm edit flow (unchanged).
   - decode.tsx Save to Memory now appends a timeline entry (title 'Decode saved') instead of a note.
 NOTE for tester: facts add/remove UI is NOT in this PR (edit via API/Edit-form scope note) — don't report as bug. Delete-person action moved out of the list (list is tap-to-detail); deletion via edit flow scope.
+
+## PR-V2-7 (Premium waitlist paywall + Settings) + FINAL V2 QA PASS — VERIFIED (iteration_15, 5/5 pass)
+frontend:
+  - task: "Settings: account row → /paywall, language picker (PATCH /api/settings, persists), vibe/dating pickers + notif/faceid toggles persist in lovli_prefs; Delete my memories (type-DELETE guard) wipes all memory cards via API + lovli_ask_thread + lovli_ask_pending; logout clears both keys"
+    implemented: true
+    working: true
+  - task: "Paywall: waitlist-only CTA (POST /api/waitlist pro/premium_v2/plan) → confirmation state, no double-submit; yearly preselect + BEST VALUE; restore toast; PAYMENTS_ENABLED=false intentional"
+    implemented: true
+    working: true
+  - task: "Final QA: honesty regex ZERO matches across 8 screens; dark audit clean (white only on CTA pills/toggle knobs); 4-tab active states + ✦ glow OK; strict tsc clean after fixing _layout TabButton, Input focus types, storage.getItem fallbacks, MemoryForm cast"
+    implemented: true
+    working: true
+agent_communication:
+  - agent: "main"
+    message: "V2 milestone COMPLETE. Added accessibilityState.disabled to delete-confirm-button (testing agent LOW finding). Ananya reseeded with full V2 fields (stage/platform/city/3 timeline/4 facts). Release blockers tracked as checkboxes in /app/docs/RELEASE_CHECKLIST.md — env stays on preview proxy until a release build is cut (PR4 is next)."
