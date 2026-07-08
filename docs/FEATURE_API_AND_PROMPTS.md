@@ -1,9 +1,10 @@
 # Lovli — `/api/feature` contract + per-feature prompts (PR4, reconciled for V2)
 
 > June 2026: original pre-V2 spec recovered from the user's local repo and merged
-> with the V2 reconciliation. The stable `feature_id` values in
-> `mobile/src/constants/more-features.ts` are the contract keys.
-> STATUS: APPROVED (user review) — implemented in PR4a.
+> with the V2 reconciliation. The stable `feature_id` values live in
+> `backend/llm_service.py` (`FEATURE_SUFFIXES`) and
+> `mobile/src/constants/feature-config.ts` — they MUST stay in sync.
+> STATUS: APPROVED (user review) — implemented in PR4a, all 7 tools wired in PR4b.
 
 ## 1. Route — ONE additive endpoint
 

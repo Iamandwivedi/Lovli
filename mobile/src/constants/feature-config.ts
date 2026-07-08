@@ -12,6 +12,10 @@ export type FeatureUiConfig = {
   cta: string;          // primary button label
   stages: string[];     // staged-loader lines
   pastePlaceholder: string;
+  /** user-voice suffix for the "✦ Ask Lovli about this" handoff message */
+  askSuffix: string;
+  /** offer the chained "✦ Glow up this reply" action on reply cards */
+  chainGlowUp?: boolean;
   /** glow_up: required draft field; paste/upload become optional context */
   wantsDraft?: boolean;
   /** optional labeled secondary input (fair_verdict / what_should_i_do) */
@@ -31,11 +35,12 @@ export const FEATURE_CONFIG: Record<string, FeatureUiConfig> = {
     cta: "Check it",
     stages: [
       "Reading what happened…",
-      "Separating normal from not…",
-      "Checking the pattern…",
-      "Being honest with you…",
+      "Normal ya red flag — checking…",
+      "Looking for the pattern…",
+      "Being straight with you…",
     ],
     pastePlaceholder: "What did they do? Paste the chat or describe it…",
+    askSuffix: "Is this actually a big deal, or am I overthinking it?",
     rose: true,
   },
   what_should_i_do: {
@@ -53,29 +58,33 @@ export const FEATURE_CONFIG: Record<string, FeatureUiConfig> = {
       "Picking the smart move…",
     ],
     pastePlaceholder: "What's going on? Paste the chat or describe it…",
+    askSuffix: "Walk me through the first step?",
+    chainGlowUp: true,
     secondary: { label: "Your goal", placeholder: "What do you want here? (e.g. a second date)" },
   },
   settle_the_fight: {
     id: "settle_the_fight",
     title: "Settle the fight",
     resultTitle: "What really happened",
-    intro: "Show me the fight — I'll find what's underneath and how to fix it.",
+    intro: "Show me the fight — I'll find what's underneath and how to fix it without losing face.",
     kicker: "THE REAL ISSUE",
     pointsLabel: "WHAT'S UNDERNEATH",
     cta: "Work it out",
     stages: [
       "Reading both sides…",
       "Finding the real trigger…",
-      "Looking under the words…",
+      "Listening under the words…",
       "Working out the repair…",
     ],
     pastePlaceholder: "What was the fight about? Paste or describe it…",
+    askSuffix: "How do I bring this up without starting round two?",
+    chainGlowUp: true,
   },
   the_other_side: {
     id: "the_other_side",
     title: "The other side",
     resultTitle: "Their side of it",
-    intro: "I'll walk you through how this probably looks from where they're standing.",
+    intro: "Let me walk you through how this probably looks from where they're standing.",
     kicker: "THEIR SIDE",
     pointsLabel: "WHY THEY MIGHT BE ACTING THIS WAY",
     cta: "Show me their side",
@@ -86,6 +95,7 @@ export const FEATURE_CONFIG: Record<string, FeatureUiConfig> = {
       "Putting it into words…",
     ],
     pastePlaceholder: "What happened? Paste the chat or describe it…",
+    askSuffix: "Okay — so how do I respond, knowing this?",
   },
   fair_verdict: {
     id: "fair_verdict",
@@ -102,7 +112,8 @@ export const FEATURE_CONFIG: Record<string, FeatureUiConfig> = {
       "Calling it honestly…",
     ],
     pastePlaceholder: "Your side — what happened? Paste or describe it…",
-    secondary: { label: "Their side (as you understand it)", placeholder: "What would they say happened?" },
+    askSuffix: "How do I make this right without keeping score?",
+    secondary: { label: "Other person's perspective", placeholder: "What would they say happened?" },
   },
   breakup_clarity: {
     id: "breakup_clarity",
@@ -119,6 +130,8 @@ export const FEATURE_CONFIG: Record<string, FeatureUiConfig> = {
       "Finding you some clarity…",
     ],
     pastePlaceholder: "What's been going on? Take your time…",
+    askSuffix:
+      "Help me sit with this. I'm not trying to win them back — I just want clarity and some peace.",
   },
   glow_up_reply: {
     id: "glow_up_reply",
@@ -132,9 +145,10 @@ export const FEATURE_CONFIG: Record<string, FeatureUiConfig> = {
       "Reading your draft…",
       "Keeping your voice…",
       "Smoothing the delivery…",
-      "Polishing the send…",
+      "Making it land — no cringe…",
     ],
     pastePlaceholder: "Optional: paste the chat so I get the context…",
+    askSuffix: "Anything I should watch for after I send it?",
     wantsDraft: true,
   },
 };

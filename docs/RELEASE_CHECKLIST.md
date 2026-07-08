@@ -21,8 +21,9 @@ app intentionally stays wired to the Emergent preview proxy for development.
 
 ## 🟡 Known gaps shipping as "coming soon" (decide before launch)
 
-- [ ] **7 placeholder tools in the More grid** (PR4): currently visual
-  placeholders — map to real flows via `POST /api/feature` or gate/hide them.
+- [x] **7 placeholder tools in the More grid** (PR4): DONE — all 9 tools live
+  (Decode/Read the signals → `/decode`; other 7 → `POST /api/feature` via the
+  shared `/feature/[id]` screen). Zero "coming soon" placeholders remain.
 - [ ] **Facts edit + per-person delete UI**: Memory facts are display-only and
   a person can only be deleted via "Delete my memories" (all) — add per-card
   delete + facts editing, or accept for v1.

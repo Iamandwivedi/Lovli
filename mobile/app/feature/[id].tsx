@@ -15,9 +15,11 @@ import { Chip } from "@/src/components/Chip";
 import { Sparkle } from "@/src/components/Sparkle";
 import { StagedLoader } from "@/src/components/reply/StagedLoader";
 import { useToast } from "@/src/context/ToastContext";
+import { useAuth } from "@/src/context/AuthContext";
 import {
   FeaturePointTone,
   FeatureResult,
+  Language,
   MemoryCard,
   listMemoryCards,
   patchMemoryCard,
@@ -38,17 +40,23 @@ const TONE_COLOR: Record<FeaturePointTone, string> = {
 };
 
 export default function FeatureScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  // `draft` + `person` params: prefilled by the chained "✦ Glow up this reply"
+  // hand-off from settle_the_fight / what_should_i_do. Never auto-runs.
+  const params = useLocalSearchParams<{ id: string; draft?: string; person?: string }>();
+  const { id } = params;
   const router = useRouter();
   const toast = useToast();
+  const { user } = useAuth();
   const cfg = FEATURE_CONFIG[id ?? ""];
 
   const [phase, setPhase] = useState<Phase>("input");
   const [image, setImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [manual, setManual] = useState("");
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState(typeof params.draft === "string" ? params.draft : "");
   const [secondary, setSecondary] = useState("");
-  const [memoryId, setMemoryId] = useState<string | null>(null);
+  const [memoryId, setMemoryId] = useState<string | null>(
+    typeof params.person === "string" && params.person ? params.person : null,
+  );
   const [cards, setCards] = useState<MemoryCard[]>([]);
   const [stage, setStage] = useState(0);
   const [result, setResult] = useState<FeatureResult | null>(null);
@@ -106,6 +114,7 @@ export default function FeatureScreen() {
           text_secondary: secondary,
           draft_text: draft,
           memory_card_id: memoryId,
+          language: (user?.language_preference as Language) || undefined,
           image: image
             ? {
                 uri: image.uri,
@@ -158,9 +167,17 @@ export default function FeatureScreen() {
     const topPoints = result.points.slice(0, 2).map((p) => p.text).join(" ");
     const text =
       `I just used "${cfg.title}". Your take was: "${result.verdict}" ${topPoints} ` +
-      `What should I do next?`;
+      cfg.askSuffix;
     await storage.setItem(ASK_PENDING_KEY, JSON.stringify({ text, personId: memoryId }));
     router.push("/(tabs)/ask-lovli");
+  };
+
+  // Chained hand-off: open Glow up with this reply prefilled (edit before submit).
+  const glowUpThisReply = (replyText: string) => {
+    router.push({
+      pathname: "/feature/[id]",
+      params: { id: "glow_up_reply", draft: replyText, person: memoryId ?? "" },
+    });
   };
 
   return (
@@ -303,19 +320,34 @@ export default function FeatureScreen() {
                     {result.replies.map((r, i) => (
                       <View key={i} style={[styles.replyCard, i > 0 && { marginTop: 10 }]}>
                         <Text style={styles.replyText}>{r}</Text>
-                        <Pressable
-                          onPress={() => copyReply(r, i)}
-                          style={styles.copyBtn}
-                          hitSlop={8}
-                          testID={`feature-copy-${i}`}
-                        >
-                          <Ionicons
-                            name={copiedIndex === i ? "checkmark" : "copy-outline"}
-                            size={15}
-                            color={copiedIndex === i ? colors.greenFlag : colors.lavenderText}
-                          />
-                          <Text style={styles.copyText}>{copiedIndex === i ? "Copied" : "Copy"}</Text>
-                        </Pressable>
+                        <View style={styles.replyActions}>
+                          {cfg.chainGlowUp ? (
+                            <Pressable
+                              onPress={() => glowUpThisReply(r)}
+                              style={styles.copyBtn}
+                              hitSlop={8}
+                              testID={`feature-glow-${i}`}
+                            >
+                              <Sparkle size={12} color={colors.lavender} />
+                              <Text style={styles.copyText}>Glow up this reply</Text>
+                            </Pressable>
+                          ) : (
+                            <View />
+                          )}
+                          <Pressable
+                            onPress={() => copyReply(r, i)}
+                            style={styles.copyBtn}
+                            hitSlop={8}
+                            testID={`feature-copy-${i}`}
+                          >
+                            <Ionicons
+                              name={copiedIndex === i ? "checkmark" : "copy-outline"}
+                              size={15}
+                              color={copiedIndex === i ? colors.greenFlag : colors.lavenderText}
+                            />
+                            <Text style={styles.copyText}>{copiedIndex === i ? "Copied" : "Copy"}</Text>
+                          </Pressable>
+                        </View>
                       </View>
                     ))}
                   </View>
@@ -469,9 +501,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    alignSelf: "flex-end",
-    marginTop: 8,
     paddingVertical: 2,
+  },
+  replyActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 8,
   },
   copyText: { ...typography.body.bodySemibold, fontSize: 12.5, color: colors.lavenderText },
   footerActions: {

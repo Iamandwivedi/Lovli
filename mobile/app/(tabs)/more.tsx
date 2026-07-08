@@ -1,6 +1,7 @@
 // More · Tools — "V2 · Coach — More · Tools". 9 tools in 3 labeled sections.
 // Ask Lovli is NOT in the grid (it's a tab). Decode + Read the signals use
-// /decode; remaining tools keep their existing placeholder flow until PR4.
+// /decode; everything else routes to the shared /feature/[id] screen (PR4b —
+// zero placeholders remain).
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
@@ -9,7 +10,6 @@ import { Screen } from "@/src/components/Screen";
 import { AppHeader } from "@/src/components/AppHeader";
 import { Sparkle } from "@/src/components/Sparkle";
 import { useAuth } from "@/src/context/AuthContext";
-import { useToast } from "@/src/context/ToastContext";
 import { colors, radii, space, typography } from "@/src/theme";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -30,30 +30,29 @@ const SECTIONS: { label: string; tools: Tool[] }[] = [
     tools: [
       { id: "decode", title: "Decode the situation", sub: "What's really going on?", icon: "search-outline", decode: true },
       { id: "signals", title: "Read the signals", sub: "Into you, or not?", icon: "bar-chart-outline", decode: true },
-      { id: "other_side", title: "The other side", sub: "How they might see it.", icon: "time-outline" },
+      { id: "other_side", title: "The other side", sub: "How they might see it.", icon: "time-outline", featureId: "the_other_side" },
     ],
   },
   {
     label: "MAKE A MOVE",
     tools: [
-      { id: "glow_reply", title: "Glow up my reply", sub: "Make my draft land better.", icon: "sparkle" },
-      { id: "what_to_do", title: "What should I do?", sub: "Your next move, mapped.", icon: "compass-outline" },
+      { id: "glow_reply", title: "Glow up my reply", sub: "Make my draft land better.", icon: "sparkle", featureId: "glow_up_reply" },
+      { id: "what_to_do", title: "What should I do?", sub: "Your next move, mapped.", icon: "compass-outline", featureId: "what_should_i_do" },
     ],
   },
   {
     label: "WORK IT OUT",
     tools: [
-      { id: "settle_fight", title: "Settle the fight", sub: "Say it without the sting.", icon: "pencil-outline" },
+      { id: "settle_fight", title: "Settle the fight", sub: "Say it without the sting.", icon: "pencil-outline", featureId: "settle_the_fight" },
       { id: "red_flag", title: "Red flag check", sub: "Spot it early.", icon: "flag-outline", rose: true, featureId: "red_flag_check" },
-      { id: "fair_verdict", title: "Fair verdict", sub: "Who's right? Honestly.", icon: "scale-outline" },
-      { id: "breakup", title: "Breakup clarity", sub: "Closure, not spiralling.", icon: "heart-dislike-outline" },
+      { id: "fair_verdict", title: "Fair verdict", sub: "Who's right? Honestly.", icon: "scale-outline", featureId: "fair_verdict" },
+      { id: "breakup", title: "Breakup clarity", sub: "Closure, not spiralling.", icon: "heart-dislike-outline", featureId: "breakup_clarity" },
     ],
   },
 ];
 
 export default function MoreScreen() {
   const router = useRouter();
-  const toast = useToast();
   const { user } = useAuth();
 
   const onTool = (t: Tool) => {
@@ -63,9 +62,7 @@ export default function MoreScreen() {
     }
     if (t.featureId) {
       router.push(`/feature/${t.featureId}`);
-      return;
     }
-    toast.success(`${t.title} — coming soon ✦`);
   };
 
   return (
