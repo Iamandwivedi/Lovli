@@ -254,3 +254,16 @@ frontend:
 agent_communication:
   - agent: "main"
     message: "Post-test fix: More grid ScrollView was scrollEnabled={false} clipping the last row behind the tab bar — now scrollable with paddingBottom 96. Deleted dead src/constants/more-features.ts (ids live in feature-config.ts + FEATURE_SUFFIXES). RELEASE_CHECKLIST PR4 blocker ticked. Testing agent's 'reset state on params.id change' suggestion intentionally skipped — push creates a new stack instance (verified working in chained flow)."
+
+## PR4c (RECENT strip + copy fixes) — VERIFIED by testing agent (iteration_18, all green, 0 LLM)
+backend:
+  - task: "Decode results now persisted to generations (feature_id='decode'); GET /api/recent-results (last N feature/decode rows: generation_id/feature_id/verdict/created_at); GET /api/generations/{id} (owner-scoped, 404 otherwise); DELETE /api/generations (all user rows — wired into Delete my memories)"
+    implemented: true
+    working: true
+frontend:
+  - task: "More tab RECENT section (≤5 rows, tool·verdict·relative time, hidden when empty, refetch on focus); tap → read-only restore via ?gen= param on /decode and /feature/[id] (zero generation cost, back → More); Settings delete also calls DELETE /api/generations + updated sheet copy; fair_verdict points label 'BOTH SIDES, HONESTLY'; red_flag tier-aware Ask-Lovli handoff (safety suffix on tier 4)"
+    implemented: true
+    working: true
+agent_communication:
+  - agent: "main"
+    message: "PR4c complete. Tier-4 handoff visually verified (Lovli responded safety-first). Post-test: generations wiped by destructive test (strip empty until new results), Ananya recreated + reseeded with rich V2 fields (id fad34d06-33b8-4b54-9e9a-8bbbf73bb491). Known cosmetic: RN-web deprecated shadow*/pointerEvents warnings."
