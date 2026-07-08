@@ -6,6 +6,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
+import type { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, typography } from "@/src/theme";
 
@@ -52,14 +53,26 @@ function AskLovliIcon({ color, focused }: { color: string; focused: boolean }) {
   );
 }
 
-function TabButton(props: React.ComponentProps<typeof Pressable>) {
+function TabButton({
+  children,
+  onPress,
+  onLongPress,
+  accessibilityState,
+  accessibilityLabel,
+  testID,
+}: BottomTabBarButtonProps) {
   return (
     <Pressable
-      {...props}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      accessibilityRole="button"
+      accessibilityState={accessibilityState}
+      accessibilityLabel={accessibilityLabel}
+      testID={testID}
       android_ripple={{ color: "transparent" }}
       style={styles.tabButton}
     >
-      {props.children as React.ReactNode}
+      {children}
     </Pressable>
   );
 }

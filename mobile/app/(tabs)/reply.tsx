@@ -31,6 +31,8 @@ import { PersonChip } from "@/src/components/PersonChip";
 import { ChatPreview } from "@/src/components/reply/ChatPreview";
 import { StagedLoader, GENERATION_STAGES } from "@/src/components/reply/StagedLoader";
 import { parseChatText } from "@/src/utils/chatParse";
+import { storage } from "@/src/utils/storage";
+import { PREFS_KEY } from "@/src/config/storage-keys";
 import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
 import {
@@ -101,9 +103,18 @@ export default function ReplyScreen() {
   // Settings defaults — sent unchanged unless overridden on the Intent screen.
   const defaultLanguage: Language = (user?.language_preference as Language) || "Hinglish";
   const platform: PlatformLabel = platformValueToLabel(user?.preferred_platform || "instagram");
-  const vibe: Vibe = "Playful";
+  const [vibe, setVibe] = useState<Vibe>("Playful");
 
   const refreshContext = useCallback(async () => {
+    try {
+      const raw = await storage.getItem<string>(PREFS_KEY, "");
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p?.default_vibe) setVibe(p.default_vibe as Vibe);
+      }
+    } catch {
+      // keep default
+    }
     try {
       const u = await getUsage(getClientLocalDate());
       setUsage(u);

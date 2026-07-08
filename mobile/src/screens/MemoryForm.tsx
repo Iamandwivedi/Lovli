@@ -62,7 +62,7 @@ export const MemoryForm: React.FC<Props> = ({ mode, id }) => {
           const next: MemoryCardInput = { ...EMPTY };
           for (const key of Object.keys(EMPTY) as (keyof MemoryCardInput)[]) {
             const v = (rest as Partial<MemoryCard>)[key];
-            (next as Record<string, string>)[key as string] = typeof v === "string" ? v : "";
+            (next as unknown as Record<string, string>)[key as string] = typeof v === "string" ? v : "";
           }
           setForm(next);
         } else {

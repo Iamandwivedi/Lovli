@@ -8,6 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Screen } from "@/src/components/Screen";
 import { AppHeader } from "@/src/components/AppHeader";
 import { Sparkle } from "@/src/components/Sparkle";
+import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
 import { colors, radii, space, typography } from "@/src/theme";
 
@@ -51,6 +52,7 @@ const SECTIONS: { label: string; tools: Tool[] }[] = [
 export default function MoreScreen() {
   const router = useRouter();
   const toast = useToast();
+  const { user } = useAuth();
 
   const onTool = (t: Tool) => {
     if (t.decode) {
@@ -99,17 +101,19 @@ export default function MoreScreen() {
           </View>
         ))}
 
-        <Pressable
-          onPress={() => router.push("/paywall")}
-          testID="more-pro-row"
-          style={({ pressed }) => [styles.upsellRow, pressed && { opacity: 0.85 }]}
-        >
+        {user?.plan !== "pro" ? (
+          <Pressable
+            onPress={() => router.push("/paywall")}
+            testID="more-pro-row"
+            style={({ pressed }) => [styles.upsellRow, pressed && { opacity: 0.85 }]}
+          >
           <View style={{ flex: 1 }}>
             <Text style={styles.upsellTitle}>Get Lovli Premium</Text>
             <Text style={styles.upsellSub}>Unlimited replies · deeper decoding · Ask Lovli anytime</Text>
           </View>
           <Text style={styles.upsellChevron}>›</Text>
-        </Pressable>
+          </Pressable>
+        ) : null}
       </ScrollView>
     </Screen>
   );

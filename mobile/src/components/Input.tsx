@@ -3,11 +3,9 @@
 // Focus border violet #7C5CFF (unchanged).
 import React, { forwardRef, useState } from "react";
 import {
-  NativeSyntheticEvent,
   StyleSheet,
   Text,
   TextInput,
-  TextInputFocusEventData,
   TextInputProps,
   View,
   ViewStyle,
@@ -38,11 +36,11 @@ export const Input = forwardRef<TextInput, Props>(function Input(
         selectionColor={colors.violet}
         {...rest}
         multiline={multiline}
-        onFocus={(e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+        onFocus={(e) => {
           setFocused(true);
           onFocus?.(e);
         }}
-        onBlur={(e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+        onBlur={(e) => {
           setFocused(false);
           onBlur?.(e);
         }}

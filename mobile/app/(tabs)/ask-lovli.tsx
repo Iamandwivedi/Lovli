@@ -56,7 +56,7 @@ export default function AskLovliScreen() {
   useEffect(() => {
     (async () => {
       try {
-        const raw = await storage.getItem(THREAD_KEY);
+        const raw = await storage.getItem<string>(THREAD_KEY, "");
         if (raw) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed)) setMessages(parsed);
@@ -130,7 +130,7 @@ export default function AskLovliScreen() {
       if (!loaded) return;
       (async () => {
         try {
-          const raw = await storage.getItem(ASK_PENDING_KEY);
+          const raw = await storage.getItem<string>(ASK_PENDING_KEY, "");
           if (!raw) return;
           await storage.removeItem(ASK_PENDING_KEY);
           const pending = JSON.parse(raw);
