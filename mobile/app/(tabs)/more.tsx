@@ -73,7 +73,10 @@ export default function MoreScreen() {
         <Text style={styles.sub}>For when you need more than a reply.</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} scrollEnabled={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 96 }}
+      >
         {SECTIONS.map((section) => (
           <View key={section.label} style={{ marginTop: space.l }}>
             <Text style={styles.sectionLabel}>{section.label}</Text>

@@ -245,3 +245,12 @@ frontend:
 agent_communication:
   - agent: "main"
     message: "PR4a: only red_flag_check is wired in the More grid — other 6 tiles intentionally 'coming soon' (PR4b), do NOT report as bug. All 7 feature_ids already work via direct URL /feature/<id> and via API. Free limit is now 10/day. LLM budget: keep feature calls minimal."
+
+## PR4b (remaining 6 tools + chained glow-up) — VERIFIED by testing agent (iteration_17, all green)
+frontend:
+  - task: "More grid: all 9 tiles live, zero placeholders (decode+signals → /decode, other 7 → /feature/[id]); per-feature input variants (secondary inputs for what_should_i_do/fair_verdict, required draft for glow_up); copy pass (first-person Lovli, Hinglish touches, per-feature askSuffix); chained '✦ Glow up this reply' on settle/what_should reply cards → opens glow_up prefilled (draft+person), never auto-runs; breakup_clarity: no reply card ever + closure-framed Ask Lovli handoff; user language_preference now sent on feature calls"
+    implemented: true
+    working: true  # iteration_17: all 9 navigations, chained flow, closure framing exact-match, 429 at 10th gen handled gracefully, honesty regex zero matches
+agent_communication:
+  - agent: "main"
+    message: "Post-test fix: More grid ScrollView was scrollEnabled={false} clipping the last row behind the tab bar — now scrollable with paddingBottom 96. Deleted dead src/constants/more-features.ts (ids live in feature-config.ts + FEATURE_SUFFIXES). RELEASE_CHECKLIST PR4 blocker ticked. Testing agent's 'reset state on params.id change' suggestion intentionally skipped — push creates a new stack instance (verified working in chained flow)."
