@@ -42,4 +42,12 @@ app intentionally stays wired to the Emergent preview proxy for development.
   intentional CTA pill / toggle knob per `DESIGN_SYSTEM_V2_DARK.md`).
 - [x] TypeScript strict pass clean (`npx tsc --noEmit`).
 - [x] "Delete my memories" wipes memory cards + Ask Lovli thread + pending
-  Decode hand-off context; logout clears the local thread too.
+  Decode hand-off context; logout clears the local thread too. (PR4c: also
+  wipes stored results via `DELETE /api/generations`.)
+
+## 💡 Backlog / ideas (not blockers)
+
+- **Unlimited result history as a Premium perk**: the RECENT strip caps at 5 —
+  "unlimited result history" is a natural free→pro differentiator to add to the
+  paywall outcome list **when payments open** (do NOT touch paywall copy before
+  then).

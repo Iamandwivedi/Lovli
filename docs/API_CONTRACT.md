@@ -131,3 +131,28 @@ new fields. GET/POST shapes unchanged — new fields simply appear when set.
 Context: when a card is attached (`memory_card_id` / `person_id`), stage/platform/
 city/timeline/facts are serialized into the LLM context for generate-replies,
 ask-lovli, and decode.
+
+## Feature engine + Recent results  (PR4)
+
+### POST /api/feature
+See `/app/docs/FEATURE_API_AND_PROMPTS.md` for the full contract (multipart like
+/decode + `feature_id`, optional `text_secondary` / `draft_text`; returns
+`{generation_id, feature_id, verdict, points[{text,tone}], actions[], replies[]}`).
+
+### GET /api/recent-results?limit=5  (PR4c)
+Auth: Bearer. Last N (≤10) stored feature/decode results, newest first — feeds
+the More-tab RECENT strip.
+```json
+[{ "generation_id": "uuid", "feature_id": "red_flag_check" | "decode" | ...,
+   "verdict": "one-line verdict (vibe_headline for decode rows)",
+   "created_at": "ISO timestamp" }]
+```
+
+### GET /api/generations/{generation_id}  (PR4c)
+Auth: Bearer, owner-scoped (404 otherwise). Full stored generation row incl.
+`result` (feature shape, or DecodeResponse shape when `feature_id == "decode"`)
+and `memory_card_id`. Used for zero-cost read-only restore of a result.
+
+### DELETE /api/generations  (PR4c)
+Auth: Bearer. Deletes ALL generation rows for the user → `{"deleted": n}`.
+Wired into Settings → "Delete my memories" (wipes the RECENT strip).
