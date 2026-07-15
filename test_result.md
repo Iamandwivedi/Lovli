@@ -267,3 +267,22 @@ frontend:
 agent_communication:
   - agent: "main"
     message: "PR4c complete. Tier-4 handoff visually verified (Lovli responded safety-first). Post-test: generations wiped by destructive test (strip empty until new results), Ananya recreated + reseeded with rich V2 fields (id fad34d06-33b8-4b54-9e9a-8bbbf73bb491). Known cosmetic: RN-web deprecated shadow*/pointerEvents warnings."
+
+## FINAL BACKLOG PR (notifications + Face ID + facts edit + per-person delete) — VERIFIED (iteration_19 + main-agent fix verification)
+backend:
+  - task: "TimelineEntry += optional date (ISO, additive, never parsed from date_label)"
+    implemented: true
+    working: true  # curl-verified PATCH round-trip
+frontend:
+  - task: "Local notifications (expo-notifications): discreet-by-default copy, 'Show details' toggle (default OFF), reminders at 9AM local from upcoming entries with real date, weekly check-in Sun 6PM, contextual permission w/ Open Settings on blocked, resync on start/toggle/add-moment/delete/logout. NATIVE-ONLY delivery → RELEASE_CHECKLIST device-verification item. Pure logic unit-tested (scripts/test-pure-logic.js 14/14)"
+    implemented: true
+    working: true  # web-testable parts green in iteration_19
+  - task: "Face ID gate (AppLockGate + expo-local-authentication): locks on launch + background→active (NOT inactive→active), passcode fallback, retry overlay; web = no-op w/ toast. Device verification on checklist"
+    implemented: true
+    working: true
+  - task: "Facts add/remove chips + kind picker in Edit; 'Delete this person' typed confirm (clears pending Ask Lovli ref, resyncs notifications, lands on /memory)"
+    implemented: true
+    working: true
+agent_communication:
+  - agent: "main"
+    message: "Fixed iteration_19 CRITICAL fact-wipe bug (setFacts on load had been lost in an edit race — re-applied; round-trip verified via UI+API). Fixed post-delete landing (/reply bug): load effect re-ran on router identity change firing bogus 'Memory not found.'+back() — effect now keyed [mode,id] with cancelled guard; delete modal switched to fade (RN-web slide stuck offscreen on this screen). Delete e2e re-verified: sheet renders, lands /memory, list consistent. Ananya intact (3 facts)."

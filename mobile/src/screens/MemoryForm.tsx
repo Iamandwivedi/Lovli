@@ -70,10 +70,12 @@ export const MemoryForm: React.FC<Props> = ({ mode, id }) => {
 
   useEffect(() => {
     if (mode !== "edit" || !id) return;
+    let cancelled = false;
     (async () => {
       try {
         const cards = await listMemoryCards();
         const target = cards.find((c) => c.id === id);
+        if (cancelled) return;
         if (target) {
           // map MemoryCard → MemoryCardInput (strip id, replace null with "")
           const { id: _omit, ...rest } = target as MemoryCard;
@@ -83,18 +85,27 @@ export const MemoryForm: React.FC<Props> = ({ mode, id }) => {
             (next as unknown as Record<string, string>)[key as string] = typeof v === "string" ? v : "";
           }
           setForm(next);
+          setFacts(Array.isArray(target.facts) ? target.facts : []);
         } else {
           toast.error("Memory not found.");
           router.back();
         }
       } catch {
-        toast.error("Could not load memory.");
-        router.back();
+        if (!cancelled) {
+          toast.error("Could not load memory.");
+          router.back();
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
-  }, [mode, id, router, toast]);
+    return () => {
+      cancelled = true;
+    };
+    // load once per card — router/toast identities change on navigation and
+    // re-running after delete caused a bogus "Memory not found." + back().
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, id]);
 
   const set = <K extends keyof MemoryCardInput>(key: K, value: MemoryCardInput[K]) =>
     setForm((p) => ({ ...p, [key]: value }));
@@ -401,8 +412,9 @@ export const MemoryForm: React.FC<Props> = ({ mode, id }) => {
         ) : null}
       </View>
 
-      {/* Delete-person confirm sheet (typed flow) */}
-      <Modal visible={confirmOpen} transparent animationType="slide" onRequestClose={() => setConfirmOpen(false)}>
+      {/* Delete-person confirm sheet (typed flow). animationType="fade": the
+          RN-web "slide" animation can stick offscreen inside this screen. */}
+      <Modal visible={confirmOpen} transparent animationType="fade" onRequestClose={() => setConfirmOpen(false)}>
         <Pressable style={styles.scrim} onPress={() => setConfirmOpen(false)} />
         <View style={styles.sheet} testID="delete-person-sheet">
           <Text style={styles.sheetTitle}>{`Delete ${form.nickname || "this person"}?`}</Text>
