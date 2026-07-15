@@ -150,6 +150,9 @@ class TimelineEntry(BaseModel):
     model_config = ConfigDict(extra="ignore")
     title: str
     date_label: Optional[str] = None
+    # Final PR (additive): optional real date "YYYY-MM-DD" — powers local
+    # reminder notifications. date_label stays the free-text display string.
+    date: Optional[str] = None
     detail: Optional[str] = None
     upcoming: bool = False
 

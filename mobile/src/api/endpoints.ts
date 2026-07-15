@@ -76,6 +76,8 @@ export type MemoryCard = {
 export type TimelineEntry = {
   title: string;
   date_label?: string | null;
+  /** optional real date "YYYY-MM-DD" — powers local reminder notifications */
+  date?: string | null;
   detail?: string | null;
   upcoming?: boolean;
 };

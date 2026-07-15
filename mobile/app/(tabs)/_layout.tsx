@@ -1,13 +1,14 @@
 // Bottom tab layout — V2 dark, 4 tabs: Reply · Ask Lovli · Memory · More.
 // bg rgba(9,10,20,.9) + blur(20) (iOS), solid rgba(9,10,20,.96) elsewhere.
 // Top hairline #2A2B3A. Active #A78BFA (✦ glows), inactive #71717A.
-import React from "react";
+import React, { useEffect } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import type { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { initNotifications, resyncNotificationsFromStorage } from "@/src/utils/notifications";
 import { colors, typography } from "@/src/theme";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -79,6 +80,12 @@ function TabButton({
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
+
+  // Final PR: keep local reminder notifications in sync on (authed) app start.
+  useEffect(() => {
+    initNotifications();
+    resyncNotificationsFromStorage();
+  }, []);
 
   return (
     <Tabs

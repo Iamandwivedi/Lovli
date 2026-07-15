@@ -1,6 +1,7 @@
 // Memory · Timeline / person detail — "V2 · Coach — Memory · Timeline".
 import React, { useCallback, useMemo, useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
@@ -12,8 +13,17 @@ import {
   listMemoryCards,
   patchMemoryCard,
 } from "@/src/api/endpoints";
+import { resyncNotificationsFromStorage } from "@/src/utils/notifications";
 import { personMeta } from "@/app/(tabs)/memory";
 import { colors, radii, typography } from "@/src/theme";
+
+const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+const toIso = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const niceDate = (iso: string) => {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+};
 
 export default function PersonDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,6 +35,8 @@ export default function PersonDetail() {
   const [dateLabel, setDateLabel] = useState("");
   const [detail, setDetail] = useState("");
   const [upcoming, setUpcoming] = useState(false);
+  const [dateIso, setDateIso] = useState(""); // optional real date (reminders)
+  const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -52,9 +64,12 @@ export default function PersonDetail() {
     if (!card || !title.trim()) return;
     setSaving(true);
     try {
+      const validIso = ISO_RE.test(dateIso.trim()) ? dateIso.trim() : null;
       const entry: TimelineEntry = {
         title: title.trim(),
-        date_label: dateLabel.trim() || null,
+        // free text wins; a picked date auto-fills the label when empty
+        date_label: dateLabel.trim() || (validIso ? niceDate(validIso) : null),
+        date: validIso,
         detail: detail.trim() || null,
         upcoming,
       };
@@ -64,7 +79,9 @@ export default function PersonDetail() {
       setCard(updated);
       setSheetOpen(false);
       setTitle(""); setDateLabel(""); setDetail(""); setUpcoming(false);
+      setDateIso(""); setShowPicker(false);
       toast.success("Moment saved.");
+      resyncNotificationsFromStorage(); // new upcoming date → reschedule
     } catch {
       toast.error("Could not save that moment.");
     } finally {
@@ -166,6 +183,36 @@ export default function PersonDetail() {
             value={dateLabel} onChangeText={setDateLabel} placeholder='Date label (e.g. "June 21")'
             placeholderTextColor={colors.textFaint} style={styles.sheetInput} testID="moment-date-input"
           />
+          {/* Optional REAL date — powers local reminders (label stays free text) */}
+          {Platform.OS === "web" ? (
+            <TextInput
+              value={dateIso} onChangeText={setDateIso}
+              placeholder="Real date for reminders (optional) — YYYY-MM-DD"
+              placeholderTextColor={colors.textFaint} style={styles.sheetInput}
+              testID="moment-date-iso-input"
+            />
+          ) : (
+            <Pressable
+              onPress={() => setShowPicker((v) => !v)}
+              style={styles.sheetDateBtn}
+              testID="moment-date-picker-button"
+            >
+              <Text style={[styles.sheetDateText, { color: dateIso ? colors.text : colors.textFaint }]}>
+                {dateIso ? `Reminder date: ${niceDate(dateIso)}` : "Real date for reminders (optional)"}
+              </Text>
+            </Pressable>
+          )}
+          {showPicker && Platform.OS !== "web" ? (
+            <DateTimePicker
+              value={ISO_RE.test(dateIso) ? new Date(dateIso) : new Date()}
+              mode="date"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={(_e: unknown, d?: Date) => {
+                if (Platform.OS !== "ios") setShowPicker(false);
+                if (d) setDateIso(toIso(d));
+              }}
+            />
+          ) : null}
           <TextInput
             value={detail} onChangeText={setDetail} placeholder="Detail (optional)"
             placeholderTextColor={colors.textFaint} style={styles.sheetInput} testID="moment-detail-input"
@@ -238,6 +285,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.input, paddingVertical: 13, paddingHorizontal: 15,
     ...typography.body.base, fontSize: 14.5, color: colors.text,
   },
+  sheetDateBtn: {
+    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairline,
+    borderRadius: radii.input, paddingVertical: 13, paddingHorizontal: 15,
+  },
+  sheetDateText: { ...typography.body.base, fontSize: 14.5 },
   toggleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 4 },
   toggleLabel: { ...typography.body.bodySemibold, fontSize: 14, color: colors.textSoft },
   sheetCta: {

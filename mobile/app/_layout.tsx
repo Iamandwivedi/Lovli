@@ -22,6 +22,7 @@ import {
 } from "@expo-google-fonts/fraunces";
 import { AuthProvider } from "@/src/context/AuthContext";
 import { ToastProvider } from "@/src/context/ToastContext";
+import { AppLockGate } from "@/src/components/AppLockGate";
 import { colors } from "@/src/theme/colors";
 
 // Keep splash visible until fonts are ready so we never flash unstyled text.
@@ -66,14 +67,16 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <AuthProvider>
           <ToastProvider>
-            <StatusBar style="light" />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: colors.bg },
-                animation: "fade",
-              }}
-            />
+            <AppLockGate>
+              <StatusBar style="light" />
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: colors.bg },
+                  animation: "fade",
+                }}
+              />
+            </AppLockGate>
           </ToastProvider>
         </AuthProvider>
       </SafeAreaProvider>

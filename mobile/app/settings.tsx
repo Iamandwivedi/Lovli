@@ -2,7 +2,7 @@
 // Face ID + notification toggles are PREFERENCE-ONLY for now (stored locally,
 // wired to native auth / push in a later build).
 import React, { useEffect, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Linking, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -15,6 +15,7 @@ import {
   Language, Vibe, getTimezone, listMemoryCards, deleteMemoryCard, deleteAllGenerations, patchSettings,
 } from "@/src/api/endpoints";
 import { storage } from "@/src/utils/storage";
+import { ensureNotifPermission, resyncNotificationsFromStorage } from "@/src/utils/notifications";
 import { ASK_PENDING_KEY, ASK_THREAD_KEY, PREFS_KEY } from "@/src/config/storage-keys";
 import { colors, radii, typography } from "@/src/theme";
 
@@ -27,11 +28,12 @@ type Prefs = {
   dating: string;
   notif_reminders: boolean;
   notif_checkin: boolean;
+  notif_details: boolean; // discreet by default — no names on the lock screen
   face_id: boolean;
 };
 const DEFAULT_PREFS: Prefs = {
   default_vibe: "Playful", dating: "Women",
-  notif_reminders: true, notif_checkin: false, face_id: false,
+  notif_reminders: true, notif_checkin: false, notif_details: false, face_id: false,
 };
 
 export default function SettingsScreen() {
@@ -53,9 +55,43 @@ export default function SettingsScreen() {
     });
   }, []);
 
-  const savePrefs = (next: Prefs) => {
+  const savePrefs = async (next: Prefs) => {
     setPrefs(next);
-    storage.setItem(PREFS_KEY, JSON.stringify(next)).catch(() => {});
+    await storage.setItem(PREFS_KEY, JSON.stringify(next)).catch(() => {});
+  };
+
+  // Notification toggles: contextual permission ask on turning ON (native),
+  // then cancel-all-and-reschedule from the freshly saved prefs.
+  const toggleNotif = async (key: "notif_reminders" | "notif_checkin" | "notif_details") => {
+    const turningOn = !prefs[key];
+    if (turningOn && key !== "notif_details" && Platform.OS !== "web") {
+      const perm = await ensureNotifPermission();
+      if (perm === "blocked") {
+        Alert.alert(
+          "Notifications are off for Lovli",
+          "Turn them on in your phone settings so I can remind you.",
+          [
+            { text: "Not now", style: "cancel" },
+            { text: "Open Settings", onPress: () => Linking.openSettings() },
+          ],
+        );
+        return;
+      }
+      if (perm === "denied") {
+        toast.error("I need permission to remind you — try again anytime.");
+        return;
+      }
+    }
+    await savePrefs({ ...prefs, [key]: turningOn });
+    resyncNotificationsFromStorage();
+  };
+
+  const toggleFaceId = async () => {
+    const turningOn = !prefs.face_id;
+    if (turningOn && Platform.OS === "web") {
+      toast.success("Saved — Face ID arms on your phone.");
+    }
+    await savePrefs({ ...prefs, face_id: turningOn });
   };
 
   const setLanguage = async (l: Language) => {
@@ -76,6 +112,7 @@ export default function SettingsScreen() {
       await deleteAllGenerations(); // wipes stored results (RECENT strip)
       await storage.removeItem(ASK_THREAD_KEY);
       await storage.removeItem(ASK_PENDING_KEY);
+      resyncNotificationsFromStorage(); // cards are gone → reminders cancel too
       setConfirmOpen(false);
       setConfirmText("");
       toast.success("Gone — every memory, wiped clean.");
@@ -141,17 +178,23 @@ export default function SettingsScreen() {
       <Text style={styles.sectionLabel}>NOTIFICATIONS</Text>
       <View style={styles.card}>
         <ToggleRow label="Date & birthday reminders" value={prefs.notif_reminders}
-          onToggle={() => savePrefs({ ...prefs, notif_reminders: !prefs.notif_reminders })} testID="toggle-reminders" />
+          onToggle={() => toggleNotif("notif_reminders")} testID="toggle-reminders" />
         <View style={styles.divider} />
         <ToggleRow label="Weekly check-in from Lovli" value={prefs.notif_checkin}
-          onToggle={() => savePrefs({ ...prefs, notif_checkin: !prefs.notif_checkin })} testID="toggle-checkin" />
+          onToggle={() => toggleNotif("notif_checkin")} testID="toggle-checkin" />
+        <View style={styles.divider} />
+        <ToggleRow label="Show details in notifications" value={prefs.notif_details}
+          onToggle={() => toggleNotif("notif_details")} testID="toggle-notif-details" />
       </View>
+      <Text style={styles.sectionHint}>
+        Notifications stay discreet by default — no names, no details on your lock screen.
+      </Text>
 
       {/* PRIVACY */}
       <Text style={styles.sectionLabel}>PRIVACY</Text>
       <View style={styles.card}>
         <ToggleRow label="Lock with Face ID" value={prefs.face_id}
-          onToggle={() => savePrefs({ ...prefs, face_id: !prefs.face_id })} testID="toggle-faceid" />
+          onToggle={toggleFaceId} testID="toggle-faceid" />
         <View style={styles.divider} />
         <ValueRow label="Delete my memories" value="" onPress={() => setConfirmOpen(true)} testID="settings-row-delete" />
       </View>
@@ -240,6 +283,10 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: typography.fonts.bodyBold, fontSize: 12, letterSpacing: 1.2,
     textTransform: "uppercase", color: colors.textFaint, marginTop: 8,
+  },
+  sectionHint: {
+    ...typography.body.caption, fontSize: 12, color: colors.textFaint,
+    marginTop: -6, paddingHorizontal: 4,
   },
   card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairline, borderRadius: 18, paddingHorizontal: 17 },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 13 },

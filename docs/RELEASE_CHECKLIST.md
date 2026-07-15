@@ -16,8 +16,23 @@ app intentionally stays wired to the Emergent preview proxy for development.
 - [ ] **Remove test-login bypass**: unset `ALLOW_TEST_LOGIN` in the production
   backend env (kills `POST /api/auth/test-login` and the seeded
   `tester@lovli.app` user).
+- [ ] **Never point test tooling at production**: no testing agent, QA script, or
+  automated test may EVER run against `https://api.lovli.in` — testing happens on
+  the preview proxy only. Verify `EXPO_PUBLIC_BACKEND_URL` before any test run.
 - [ ] `PAYMENTS_ENABLED` stays **false** until IAP ships — Premium screen is
   waitlist-only (`POST /api/waitlist`, source `premium_v2`).
+
+## 🟡 Device verification required before launch (implemented, needs real device build)
+
+- [ ] **Local notifications** (final PR): reminder scheduling (9 AM local on the
+  entry's real `date`), weekly check-in (Sun 6 PM), discreet-by-default copy +
+  "Show details" toggle, permission ask/denied/blocked flows, cold-start
+  rescheduling, Android channel. Pure selection logic is unit-tested
+  (`mobile/scripts/test-pure-logic.js`); delivery CANNOT be verified in the web
+  preview — needs Expo Go / dev build on a real device.
+- [ ] **Face ID app lock** (final PR): `expo-local-authentication` gate on cold
+  launch + background→active, passcode fallback, no inactive→active loop. Gate
+  logic unit-tested; the biometric prompt itself needs a real device build.
 
 ## 🟡 Known gaps shipping as "coming soon" (decide before launch)
 

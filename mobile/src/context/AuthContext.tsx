@@ -4,6 +4,7 @@ import { authLogin, authMe, authSignup, User } from "@/src/api/endpoints";
 import { loadAuthToken, setAuthToken, setUnauthorizedHandler } from "@/src/api/client";
 import { storage } from "@/src/utils/storage";
 import { ASK_PENDING_KEY, ASK_THREAD_KEY } from "@/src/config/storage-keys";
+import { cancelAllNotifications } from "@/src/utils/notifications";
 
 type Status = "checking" | "authed" | "unauthed";
 
@@ -77,6 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Personal local data must not leak across accounts (PR-V2-4 carry-in fix).
     await storage.removeItem(ASK_THREAD_KEY);
     await storage.removeItem(ASK_PENDING_KEY);
+    await cancelAllNotifications();
     setUser(null);
     setStatus("unauthed");
   }, []);

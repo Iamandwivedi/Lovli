@@ -124,6 +124,8 @@ export default function ReplyScreen() {
     try {
       const cards = await listMemoryCards();
       setMemoryCards(cards || []);
+      // Final PR: drop a stale selection if that person was deleted.
+      setMemoryId((cur) => (cur && !(cards || []).some((c) => c.id === cur) ? null : cur));
     } catch {
       setMemoryCards([]);
     }
