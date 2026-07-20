@@ -60,8 +60,13 @@ app intentionally stays wired to the Emergent preview proxy for development.
   Decode hand-off context; logout clears the local thread too. (PR4c: also
   wipes stored results via `DELETE /api/generations`.)
 
-## 💡 Backlog / ideas (not blockers)
+## 💡 Backlog / ideas (not blockers — FEATURE FREEZE until release)
 
+- **"This week ✦" upcoming strip on Reply home**: with `TimelineEntry.date` now
+  structured, surface entries dated within 7 days in-app — useful for users who
+  decline notification permission. Post-release.
+- **Structured birthday field on the person** (MemoryCard) so birthdays remind
+  without needing a timeline entry. Post-release.
 - **Unlimited result history as a Premium perk**: the RECENT strip caps at 5 —
   "unlimited result history" is a natural free→pro differentiator to add to the
   paywall outcome list **when payments open** (do NOT touch paywall copy before
