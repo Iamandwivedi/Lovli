@@ -299,3 +299,5 @@ frontend:
 agent_communication:
   - agent: "main"
     message: "PR-V2-3 was the code-review blocker (never implemented; plan skipped V2-2→V2-3.1). Note: mobile/app/tabs_tmp/ does not exist anywhere (nothing to delete). Home CTA is 'Get replies', intent phase CTA testID write-it-button. Free limit 10/day, counter reset to 1 used."
+  - agent: "testing" (iteration_20)
+    message: "PR-V2-3 FULLY VERIFIED: legacy keys exact (no leak), rich insight + read/labels coexist, interested→warm mapping, honesty regex clean, network capture confirms feeling/intent/outcome/rich sent, V2 surface + edit/copy/tone-regenerate all pass. Added 3 tests to backend/tests/test_pr_int.py — 28/28 pass. No bugs."
