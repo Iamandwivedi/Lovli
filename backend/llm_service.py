@@ -154,6 +154,10 @@ def build_user_prompt(
     user_note: Optional[str],
     has_image: bool,
     memory_context: Optional[str] = None,
+    feeling: Optional[str] = None,
+    intent: Optional[str] = None,
+    outcome: Optional[str] = None,
+    goal: Optional[str] = None,
 ) -> str:
     platform_value = _normalize_platform(platform)
     parts = [
@@ -177,6 +181,16 @@ def build_user_prompt(
         parts.append(f"User note / extra context: {user_note}")
     if memory_context:
         parts.append(f"Memory context about this person: {memory_context}")
+    # PR-V2-3 (additive): emotional/intent context. When absent, the prompt is
+    # byte-identical to the pre-V2-3 build.
+    if feeling:
+        parts.append(f"How the user is feeling right now: {feeling}.")
+    if intent:
+        parts.append(f"What the user wants to do with this reply: {intent}.")
+    if outcome:
+        parts.append(f"How the user wants this reply to land: {outcome}.")
+    if goal:
+        parts.append(f"The user's bigger dating goal: {goal}.")
 
     parts.append(
         "Output JSON schema (and ONLY this JSON, nothing else):\n"
@@ -267,6 +281,10 @@ def build_user_prompt_v2(
     user_note: Optional[str],
     has_image: bool,
     memory_context: Optional[str] = None,
+    feeling: Optional[str] = None,
+    intent: Optional[str] = None,
+    outcome: Optional[str] = None,
+    goal: Optional[str] = None,
 ) -> str:
     """Rich-mode prompt: situation read + 3 register-differentiated labeled replies.
 
@@ -294,6 +312,16 @@ def build_user_prompt_v2(
         parts.append(f"User note / extra context: {user_note}")
     if memory_context:
         parts.append(f"Memory context about this person: {memory_context}")
+    # PR-V2-3 (additive): emotional/intent context — folded into the read so the
+    # insight speaks to what the user is actually going through.
+    if feeling:
+        parts.append(f"How the user is feeling right now: {feeling}.")
+    if intent:
+        parts.append(f"What the user wants to do with this reply: {intent}.")
+    if outcome:
+        parts.append(f"How the user wants this reply to land: {outcome}.")
+    if goal:
+        parts.append(f"The user's bigger dating goal: {goal}.")
 
     parts.append(
         "RICH MODE INSTRUCTION:\n"
@@ -319,7 +347,8 @@ def build_user_prompt_v2(
         '    {"text": "...", "label": "Flirty"},\n'
         '    {"text": "...", "label": "Bold"}\n'
         "  ],\n"
-        '  "tone_notes": "1 short sentence on why these work"\n'
+        '  "tone_notes": "1 short sentence on why these work",\n'
+        '  "wingman_advice": "one honest first-person line — what you would do next if you were the user\'s wingman (no scores, no percentages)"\n'
         "}"
     )
     parts.append(
@@ -391,6 +420,12 @@ def validate_payload_v2(payload: dict) -> None:
     if not isinstance(tone, str) or not tone.strip():
         raise LovliValidationError("tone_notes empty/non-string")
 
+    # PR-V2-3: wingman_advice is soft-optional — coerce junk to absent so the
+    # server falls back to tone_notes instead of failing the generation.
+    wingman = payload.get("wingman_advice")
+    if not isinstance(wingman, str) or not wingman.strip():
+        payload.pop("wingman_advice", None)
+
 
 # ----- Provider abstraction -------------------------------------------------
 
@@ -408,6 +443,12 @@ class LovliRequest:
     # PR-INT: when True, request the rich situation-read + labeled replies schema.
     # Default False keeps the legacy behavior byte-identical.
     rich: bool = False
+    # PR-V2-3 (additive): emotional/intent context — all optional; absent keeps
+    # prompts byte-identical to the pre-V2-3 build.
+    feeling: Optional[str] = None
+    intent: Optional[str] = None
+    outcome: Optional[str] = None
+    goal: Optional[str] = None
 
 
 class LovliLlmError(RuntimeError):
@@ -442,6 +483,10 @@ async def _generate_anthropic(req: LovliRequest, retry: bool = False) -> dict:
         user_note=req.user_note,
         has_image=bool(req.image_base64),
         memory_context=req.memory_context,
+        feeling=req.feeling,
+        intent=req.intent,
+        outcome=req.outcome,
+        goal=req.goal,
     )
     if retry:
         if req.rich:
@@ -451,7 +496,7 @@ async def _generate_anthropic(req: LovliRequest, retry: bool = False) -> dict:
                 '{"read":{"situation":"s","temperature":"interested|neutral|cold",'
                 '"signals":["s"],"outcome":["s"]},'
                 '"replies":[{"text":"s","label":"Safe"},{"text":"s","label":"Flirty"},'
-                '{"text":"s","label":"Bold"}],"tone_notes":"s"}. '
+                '{"text":"s","label":"Bold"}],"tone_notes":"s","wingman_advice":"s"}. '
                 "No prose. No code fences.\n\n" + user_prompt
             )
         else:
@@ -525,6 +570,10 @@ async def _generate_emergent(req: LovliRequest, retry: bool = False) -> dict:
         user_note=req.user_note,
         has_image=bool(req.image_base64),
         memory_context=req.memory_context,
+        feeling=req.feeling,
+        intent=req.intent,
+        outcome=req.outcome,
+        goal=req.goal,
     )
     if retry:
         if req.rich:
@@ -534,7 +583,7 @@ async def _generate_emergent(req: LovliRequest, retry: bool = False) -> dict:
                 '{"read":{"situation":"s","temperature":"interested|neutral|cold",'
                 '"signals":["s"],"outcome":["s"]},'
                 '"replies":[{"text":"s","label":"Safe"},{"text":"s","label":"Flirty"},'
-                '{"text":"s","label":"Bold"}],"tone_notes":"s"}. '
+                '{"text":"s","label":"Bold"}],"tone_notes":"s","wingman_advice":"s"}. '
                 "No prose. No code fences.\n\n" + user_prompt
             )
         else:

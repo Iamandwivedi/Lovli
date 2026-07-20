@@ -192,6 +192,8 @@ RICH_FIXTURE = {
         {"text": "r3", "label": "Bold"},
     ],
     "tone_notes": "playful match",
+    # PR-V2-3: wingman_advice powers the insight object
+    "wingman_advice": "I'd lead with the flirty one and ask about her weekend",
 }
 
 
@@ -284,11 +286,43 @@ class TestGenerateRepliesEndpoint:
         r = _post(client, rich="true")
         assert r.status_code == 200, r.text
         b = r.json()
+        # PR-V2-3 adds `insight` on top of the PR-INT 8-key shape → 9 keys total
         assert set(b.keys()) == {
             "generation_id", "replies", "tone_notes",
             "daily_generation_count", "daily_limit", "plan",
-            "reply_labels", "read",
+            "reply_labels", "read", "insight",
         }
+
+    # ---- PR-V2-3 insight object -------------------------------------------
+    def test_pr_v2_3_insight_present_on_rich(self, client):
+        b = _post(client, rich="true").json()
+        assert "insight" in b and isinstance(b["insight"], dict)
+        ins = b["insight"]
+        assert set(ins.keys()) == {"temperature", "noticing", "whats_going_on", "wingman_advice"}
+        assert ins["temperature"] in ("warm", "mixed", "cold")
+        # interested → warm mapping
+        assert ins["temperature"] == "warm"
+        assert 1 <= len(ins["noticing"]) <= 3
+        assert all(isinstance(x, str) for x in ins["noticing"])
+        assert ins["whats_going_on"].strip()
+        assert ins["wingman_advice"].strip()
+
+    def test_pr_v2_3_new_form_params_accepted(self, client):
+        # feeling / intent / outcome / goal must be silently folded into the
+        # prompt; presence must NOT break the response shape.
+        r = _post(
+            client, rich="true",
+            feeling="Excited", intent="Restart the conversation",
+            outcome="Warm and inviting", goal="Talking to date",
+        )
+        assert r.status_code == 200
+        b = r.json()
+        assert "insight" in b
+
+    def test_pr_v2_3_legacy_call_omits_insight(self, client):
+        # No rich, no new params → response must NOT contain insight
+        b = _post(client).json()
+        assert "insight" not in b
 
     def test_rich_replies_flattened_to_strings(self, client):
         b = _post(client, rich="true").json()

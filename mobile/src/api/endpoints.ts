@@ -36,6 +36,14 @@ export type ReplyRead = {
   outcome: string[];
 };
 
+// PR-V2-3: coach insight for the Generated surface ("HERE'S WHAT I'M NOTICING").
+export type ReplyInsight = {
+  temperature: "warm" | "mixed" | "cold";
+  noticing: string[];
+  whats_going_on: string;
+  wingman_advice: string;
+};
+
 export type Replies = {
   generation_id: string;
   replies: string[];
@@ -46,6 +54,8 @@ export type Replies = {
   // PR-INT additive fields. Both undefined when rich=false (server omits them).
   reply_labels?: string[] | null;
   read?: ReplyRead | null;
+  // PR-V2-3 additive: present when rich=true and the read validated.
+  insight?: ReplyInsight | null;
 };
 
 export type MemoryCard = {
@@ -217,6 +227,11 @@ export type GenerateInput = {
   image?: { uri: string; name: string; type: string } | null;
   // PR-INT: opt-in rich-mode (situation read + labeled replies).
   rich?: boolean;
+  // PR-V2-3: optional emotional/intent context (folded into the prompt).
+  feeling?: string | null;
+  intent?: string | null;
+  outcome?: string | null;
+  goal?: string | null;
 };
 
 export const generateReplies = async (input: GenerateInput) => {
@@ -230,6 +245,10 @@ export const generateReplies = async (input: GenerateInput) => {
   if (input.user_note && input.user_note.trim()) form.append("user_note", input.user_note.trim());
   if (input.memory_card_id) form.append("memory_card_id", input.memory_card_id);
   if (input.rich) form.append("rich", "true");
+  if (input.feeling && input.feeling.trim()) form.append("feeling", input.feeling.trim());
+  if (input.intent && input.intent.trim()) form.append("intent", input.intent.trim());
+  if (input.outcome && input.outcome.trim()) form.append("outcome", input.outcome.trim());
+  if (input.goal && input.goal.trim()) form.append("goal", input.goal.trim());
   if (input.image) {
     // React Native FormData: pass an object with uri/name/type
     form.append("image", input.image as unknown as Blob);

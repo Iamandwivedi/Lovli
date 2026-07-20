@@ -268,6 +268,16 @@ class ReplyRead(BaseModel):
     outcome: List[str]
 
 
+class ReplyInsight(BaseModel):
+    """PR-V2-3 additive coach insight ("HERE'S WHAT I'M NOTICING"). Mapped
+    server-side from the rich read (+ wingman_advice) — `read` stays untouched
+    for old clients."""
+    temperature: Literal["warm", "mixed", "cold"]
+    noticing: List[str]
+    whats_going_on: str
+    wingman_advice: str
+
+
 class GenerateRepliesResponse(BaseModel):
     generation_id: str
     replies: List[str]
@@ -281,6 +291,8 @@ class GenerateRepliesResponse(BaseModel):
     # we keep them explicit here; clients ignore unknown keys).
     reply_labels: Optional[List[str]] = None
     read: Optional[ReplyRead] = None
+    # PR-V2-3 additive: present only when rich=true and the read validated.
+    insight: Optional[ReplyInsight] = None
 
 
 class UsageResponse(BaseModel):

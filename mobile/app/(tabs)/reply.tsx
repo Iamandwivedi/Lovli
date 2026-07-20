@@ -15,6 +15,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,14 +33,16 @@ import { ChatPreview } from "@/src/components/reply/ChatPreview";
 import { StagedLoader, GENERATION_STAGES } from "@/src/components/reply/StagedLoader";
 import { parseChatText } from "@/src/utils/chatParse";
 import { storage } from "@/src/utils/storage";
-import { PREFS_KEY } from "@/src/config/storage-keys";
+import { GOAL_KEY, PREFS_KEY } from "@/src/config/storage-keys";
 import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
+import { Sparkle } from "@/src/components/Sparkle";
 import {
   Language,
   MemoryCard,
   PlatformLabel,
   Replies,
+  ReplyInsight,
   ReplyRead,
   Vibe,
   generateReplies,
@@ -75,6 +78,8 @@ const OUTCOMES = [
   "Be mature",
 ];
 const LANGUAGES: Language[] = ["English", "Hinglish", "Hindi + English mixed"];
+// PR-V2-3: "OR MAKE IT…" tone chips — regenerate with a tone hint.
+const TONES = ["Funny", "Romantic", "Confident", "Shorter", "Longer"];
 
 export default function ReplyScreen() {
   const { user, updateUser } = useAuth();
@@ -86,6 +91,15 @@ export default function ReplyScreen() {
   const [feeling, setFeeling] = useState<string | null>(null);
   const [intent, setIntent] = useState<string>("Reply");
   const [outcome, setOutcome] = useState<string | null>(null);
+  // PR-V2-3: onboarding goal (lovli_goal) rides along with every generation.
+  const [goalPref, setGoalPref] = useState<string>("");
+
+  useEffect(() => {
+    storage
+      .getItem<string>(GOAL_KEY, "")
+      .then((g) => setGoalPref(typeof g === "string" ? g : ""))
+      .catch(() => {});
+  }, []);
   const [stage, setStage] = useState(0);
   const [result, setResult] = useState<Replies | null>(null);
   // PR-V2-3.1: per-generation overrides — reset to defaults on each new flow.
@@ -212,7 +226,7 @@ export default function ReplyScreen() {
     setPhase("intent");
   };
 
-  const startGeneration = async () => {
+  const startGeneration = async (toneHint?: string) => {
     setPhase("generating");
     setResult(null);
     // Keep the staged loader readable even on fast responses.
@@ -226,6 +240,15 @@ export default function ReplyScreen() {
           manual_text: manual,
           memory_card_id: memoryId,
           rich: true,
+          // PR-V2-3: emotional/intent context, folded into the prompt.
+          feeling,
+          intent,
+          outcome,
+          goal: goalPref,
+          // "OR MAKE IT…" chips regenerate with a tone hint.
+          user_note: toneHint
+            ? `Tone adjustment: make the reply ${toneHint.toLowerCase()}.`
+            : undefined,
           image: image
             ? {
                 uri: image.uri,
@@ -353,7 +376,7 @@ export default function ReplyScreen() {
 
           <PrimaryButton
             label="Write it for me"
-            onPress={startGeneration}
+            onPress={() => startGeneration()}
             testID="write-it-button"
           />
         </>
@@ -373,24 +396,58 @@ export default function ReplyScreen() {
           />
           <View testID="reply-results-block" style={{ gap: space.l }}>
             {(() => {
+              const insight = safeInsight(result.insight);
+              if (insight) {
+                // PR-V2-3 "Generated" surface.
+                return (
+                  <>
+                    <InsightCard insight={insight} />
+                    <PrimaryReplyCard
+                      key={result.generation_id}
+                      text={result.replies[0] ?? ""}
+                      onCopy={(t) => onCopy(t, 0)}
+                      onRegenerate={() => startGeneration()}
+                    />
+                    <View>
+                      <Text style={styles.sectionLabel}>OR MAKE IT…</Text>
+                      <View style={styles.chipsRow}>
+                        {TONES.map((t) => (
+                          <Chip
+                            key={t}
+                            label={t}
+                            selected={false}
+                            onPress={() => startGeneration(t)}
+                            testID={`tone-${t}`}
+                          />
+                        ))}
+                      </View>
+                    </View>
+                  </>
+                );
+              }
+              // Fallback: insight missing → pre-V2-3 behavior.
               const read = safeRead(result.read);
-              return read ? <ReadCard read={read} /> : null;
-            })()}
-            {result.replies.map((reply, i) => {
-              const richLabel = Array.isArray(result.reply_labels)
-                ? (result.reply_labels[i] || "").trim()
-                : "";
               return (
-                <ReplyResultCard
-                  key={`${result.generation_id}-${i}`}
-                  text={reply}
-                  toneLabel={richLabel || "Warm"}
-                  index={i}
-                  onCopy={() => onCopy(reply, i)}
-                  onRegenerate={startGeneration}
-                />
+                <>
+                  {read ? <ReadCard read={read} /> : null}
+                  {result.replies.map((reply, i) => {
+                    const richLabel = Array.isArray(result.reply_labels)
+                      ? (result.reply_labels[i] || "").trim()
+                      : "";
+                    return (
+                      <ReplyResultCard
+                        key={`${result.generation_id}-${i}`}
+                        text={reply}
+                        toneLabel={richLabel || "Warm"}
+                        index={i}
+                        onCopy={() => onCopy(reply, i)}
+                        onRegenerate={() => startGeneration()}
+                      />
+                    );
+                  })}
+                </>
               );
-            })}
+            })()}
           </View>
         </>
       ) : null}
@@ -567,6 +624,102 @@ const TEMPERATURE_META: Record<ReplyRead["temperature"], { emoji: string; label:
   interested: { emoji: "🔥", label: "Interested" },
   neutral: { emoji: "🙂", label: "Neutral" },
   cold: { emoji: "❄", label: "Cold" },
+};
+
+// --- PR-V2-3 "Generated" surface -------------------------------------------
+
+function safeInsight(value: ReplyInsight | null | undefined): ReplyInsight | null {
+  const v = value as ReplyInsight | null | undefined;
+  if (!v || typeof v !== "object") return null;
+  if (v.temperature !== "warm" && v.temperature !== "mixed" && v.temperature !== "cold") {
+    return null;
+  }
+  if (typeof v.whats_going_on !== "string" || !v.whats_going_on.trim()) return null;
+  if (typeof v.wingman_advice !== "string" || !v.wingman_advice.trim()) return null;
+  const noticing = Array.isArray(v.noticing)
+    ? v.noticing.filter((s) => typeof s === "string" && s.trim()).slice(0, 3)
+    : [];
+  return { ...v, noticing };
+}
+
+// Spec: dot-pills, not emoji. Warm = amber #FFB259.
+const INSIGHT_TEMP: Record<ReplyInsight["temperature"], { label: string; color: string }> = {
+  warm: { label: "Warm", color: "#FFB259" },
+  mixed: { label: "Mixed", color: colors.lavender },
+  cold: { label: "Cold", color: "#7FA6C9" },
+};
+
+const InsightCard: React.FC<{ insight: ReplyInsight }> = ({ insight }) => {
+  const temp = INSIGHT_TEMP[insight.temperature];
+  return (
+    <GlassCard padded variant="elevated" testID="insight-card">
+      <View style={styles.insightHeader}>
+        <Text style={styles.readEyebrow}>{"HERE'S WHAT I'M NOTICING"}</Text>
+        <View style={[styles.tempPill, { backgroundColor: `${temp.color}1F`, borderColor: `${temp.color}55` }]} testID="insight-temp-pill">
+          <View style={[styles.tempDot, { backgroundColor: temp.color }]} />
+          <Text style={[styles.tempPillText, { color: temp.color }]}>{temp.label}</Text>
+        </View>
+      </View>
+      {insight.noticing.map((n, i) => (
+        <View key={i} style={styles.noticeRow}>
+          <Sparkle size={12} color={colors.lavender} />
+          <Text style={styles.noticeText}>{n}</Text>
+        </View>
+      ))}
+      <Text style={styles.insightLine}>
+        <Text style={styles.insightLabel}>{"What's really going on: "}</Text>
+        {insight.whats_going_on}
+      </Text>
+      <Text style={styles.insightLine}>
+        <Text style={styles.insightLabel}>{"If I were your wingman: "}</Text>
+        {insight.wingman_advice}
+      </Text>
+    </GlassCard>
+  );
+};
+
+const PrimaryReplyCard: React.FC<{
+  text: string;
+  onCopy: (text: string) => void;
+  onRegenerate: () => void;
+}> = ({ text, onCopy, onRegenerate }) => {
+  const [value, setValue] = useState(text);
+  const [editing, setEditing] = useState(false);
+  return (
+    <View>
+      <Text style={styles.sectionLabel}>{"I'D SEND THIS 👇"}</Text>
+      <View style={styles.primaryCard} testID="primary-reply-card">
+        {editing ? (
+          <TextInput
+            value={value}
+            onChangeText={setValue}
+            multiline
+            autoFocus
+            style={[styles.primaryText, styles.primaryInput]}
+            testID="primary-reply-edit-input"
+          />
+        ) : (
+          <Text style={styles.primaryText} testID="primary-reply-text">
+            {value}
+          </Text>
+        )}
+        <View style={styles.primaryActions}>
+          <Pressable style={styles.primaryAction} onPress={() => onCopy(value)} hitSlop={6} testID="primary-copy">
+            <Ionicons name="copy-outline" size={15} color={colors.lavenderText} />
+            <Text style={styles.primaryActionText}>Copy</Text>
+          </Pressable>
+          <Pressable style={styles.primaryAction} onPress={() => setEditing((e) => !e)} hitSlop={6} testID="primary-edit">
+            <Ionicons name={editing ? "checkmark" : "pencil-outline"} size={15} color={colors.lavenderText} />
+            <Text style={styles.primaryActionText}>{editing ? "Done" : "Edit"}</Text>
+          </Pressable>
+          <Pressable style={styles.primaryAction} onPress={onRegenerate} hitSlop={6} testID="primary-regenerate">
+            <Ionicons name="refresh-outline" size={15} color={colors.lavenderText} />
+            <Text style={styles.primaryActionText}>Regenerate</Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
 };
 
 const ReadCard: React.FC<{ read: ReplyRead }> = ({ read }) => {
@@ -855,6 +1008,68 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   readTitleRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  // --- PR-V2-3 "Generated" surface ---
+  insightHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    marginBottom: 10,
+  },
+  tempPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  tempDot: { width: 7, height: 7, borderRadius: 4 },
+  tempPillText: {
+    ...typography.body.bodySemibold,
+    fontSize: 11.5,
+    letterSpacing: 0.4,
+  },
+  noticeRow: { flexDirection: "row", alignItems: "flex-start", gap: 8, paddingVertical: 3 },
+  noticeText: { ...typography.body.base, fontSize: 13.5, lineHeight: 19, color: colors.textSoft, flex: 1 },
+  insightLine: {
+    ...typography.body.base,
+    fontSize: 13.5,
+    lineHeight: 19.5,
+    color: colors.textMuted,
+    marginTop: 8,
+  },
+  insightLabel: { ...typography.body.bodySemibold, color: colors.text },
+  primaryCard: {
+    backgroundColor: colors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: colors.violetTintBorder,
+    borderRadius: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 18,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.45,
+    shadowRadius: 22,
+    elevation: 6,
+  },
+  primaryText: {
+    fontFamily: typography.fonts.displayMedium,
+    fontSize: 17,
+    lineHeight: 24,
+    letterSpacing: -0.2,
+    color: colors.text,
+  },
+  primaryInput: { padding: 0, minHeight: 48, textAlignVertical: "top" },
+  primaryActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 22,
+    marginTop: 14,
+  },
+  primaryAction: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4 },
+  primaryActionText: { ...typography.body.bodySemibold, fontSize: 13, color: colors.lavenderText },
   readEyebrow: {
     ...typography.body.bodySemibold,
     color: colors.lavenderText,

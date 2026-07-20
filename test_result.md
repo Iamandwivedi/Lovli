@@ -286,3 +286,16 @@ frontend:
 agent_communication:
   - agent: "main"
     message: "Fixed iteration_19 CRITICAL fact-wipe bug (setFacts on load had been lost in an edit race — re-applied; round-trip verified via UI+API). Fixed post-delete landing (/reply bug): load effect re-ran on router identity change firing bogus 'Memory not found.'+back() — effect now keyed [mode,id] with cancelled guard; delete modal switched to fade (RN-web slide stuck offscreen on this screen). Delete e2e re-verified: sheet renders, lands /memory, list consistent. Ananya intact (3 facts)."
+
+## PR-V2-3 (review blocker fix: emotional context + Generated surface) — implemented, needs testing agent verification
+backend:
+  - task: "/generate-replies: additive optional Form params feeling/intent/outcome/goal folded into both prompt builders (absent → prompt byte-identical, proven vs pre-change snapshot); rich schema += wingman_advice (soft-optional, falls back to tone_notes); new optional response object insight {temperature warm|mixed|cold, noticing[≤3], whats_going_on, wingman_advice} mapped server-side from read (read unchanged for old clients; legacy non-rich keys unchanged, curl-diff proven)"
+    implemented: true
+    working: true  # curl: legacy keys identical; rich returns insight + read + labels
+frontend:
+  - task: "reply.tsx: sends feeling/intent/outcome + goal (lovli_goal) with generation; results phase V2 surface — insight glass card (HERE'S WHAT I'M NOTICING + dot temp pill Warm amber #FFB259 / Mixed lavender / Cold blue-gray, ✦ noticing, What's really going on / If I were your wingman) → I'D SEND THIS 👇 single primary serif reply with Copy/Edit/Regenerate → OR MAKE IT… chips (Funny/Romantic/Confident/Shorter/Longer regenerate with tone hint via user_note); fallback to PR-INT ReadCard + 3 cards when insight missing"
+    implemented: true
+    working: "NA"  # main agent screenshot: full surface renders per spec
+agent_communication:
+  - agent: "main"
+    message: "PR-V2-3 was the code-review blocker (never implemented; plan skipped V2-2→V2-3.1). Note: mobile/app/tabs_tmp/ does not exist anywhere (nothing to delete). Home CTA is 'Get replies', intent phase CTA testID write-it-button. Free limit 10/day, counter reset to 1 used."

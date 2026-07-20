@@ -553,6 +553,12 @@ async def generate_replies_endpoint(
     timezone_str: Optional[str] = Form(None, alias="timezone"),
     # PR-INT: opt-in rich mode. Default False keeps the response byte-identical.
     rich: bool = Form(False),
+    # PR-V2-3 (additive): optional emotional/intent context folded into the
+    # prompt. All absent → prompt + response byte-identical to pre-V2-3.
+    feeling: Optional[str] = Form(None),
+    intent: Optional[str] = Form(None),
+    outcome: Optional[str] = Form(None),
+    goal: Optional[str] = Form(None),
     image: Optional[UploadFile] = File(None),
     user_id: str = Depends(get_current_user_id),
 ):
@@ -658,6 +664,10 @@ async def generate_replies_endpoint(
                 memory_context=memory_context,
                 session_id=f"u-{user_id}",
                 rich=rich,
+                feeling=feeling,
+                intent=intent,
+                outcome=outcome,
+                goal=goal,
             )
         )
     except LovliLlmError as e:
@@ -691,6 +701,22 @@ async def generate_replies_endpoint(
         rich_read = result.get("read") if isinstance(result.get("read"), dict) else None
     else:
         response_replies = list(result["replies"])
+
+    # PR-V2-3: map the rich read (+ wingman_advice) onto the additive insight
+    # object. `read` is returned unchanged so old clients keep working.
+    rich_insight: Optional[dict] = None
+    if rich and rich_read:
+        _temp_map = {"interested": "warm", "neutral": "mixed", "cold": "cold"}
+        wingman = str(
+            result.get("wingman_advice") or result.get("tone_notes") or ""
+        ).strip()
+        if wingman:
+            rich_insight = {
+                "temperature": _temp_map.get(str(rich_read.get("temperature")), "mixed"),
+                "noticing": list(rich_read.get("signals") or [])[:3],
+                "whats_going_on": str(rich_read.get("situation") or ""),
+                "wingman_advice": wingman,
+            }
 
     gen = Generation(
         user_id=user_id,
@@ -732,6 +758,7 @@ async def generate_replies_endpoint(
         plan=user["plan"],
         reply_labels=rich_reply_labels,
         read=rich_read,  # type: ignore[arg-type]  # pydantic coerces dict → ReplyRead
+        insight=rich_insight,  # type: ignore[arg-type]  # dict → ReplyInsight
     )
 
 
