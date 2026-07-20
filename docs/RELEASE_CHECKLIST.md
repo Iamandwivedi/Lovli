@@ -11,8 +11,8 @@ app intentionally stays wired to the Emergent preview proxy for development.
   go to production by design.
 - [x] **EMERGENT_LLM_KEY must not ship**: DONE — removed from `backend/.env`;
   `LLM_PROVIDER=anthropic` pinned so the provider never auto-falls back.
-  `ANTHROPIC_API_KEY` must be present in the production backend env (verified
-  via the single release-prep smoke call).
+  Anthropic path smoke test: **verified on Railway post-deploy** (prod key never
+  enters the dev environment — see "Backend deploy to Railway" below).
 - [x] **Remove test-login bypass**: DONE — the `/auth/test-login` route, its
   startup seeding block, and `ALLOW_TEST_LOGIN` are deleted from the codebase
   entirely (route now 404s). `tests/test_pr_v2_6_memory.py` switched to real
@@ -22,6 +22,17 @@ app intentionally stays wired to the Emergent preview proxy for development.
   verification was config inspection + one smoke call only.
 - [ ] `PAYMENTS_ENABLED` stays **false** until IAP ships — Premium screen is
   waitlist-only (`POST /api/waitlist`, source `premium_v2`).
+
+## 🔴 Backend deploy to Railway (production runs the OLD backend until this is done)
+
+- [ ] Push the current backend to the branch Railway deploys from.
+- [ ] Confirm Railway env has `ANTHROPIC_API_KEY` + `LLM_PROVIDER=anthropic`,
+  and does **NOT** have `EMERGENT_LLM_KEY` or `ALLOW_TEST_LOGIN` (or any
+  `TEST_LOGIN_*` vars).
+- [ ] Post-deploy verify: `GET https://api.lovli.in/api/` returns
+  `{"service":"lovli","status":"ok"}`, and ONE real `/generate-replies` call
+  from the app succeeds — **that call IS the Anthropic smoke test**.
+- [ ] Sanity: `POST https://api.lovli.in/api/auth/test-login` returns 404.
 
 ## 🟡 Device verification required before launch (implemented, needs real device build)
 

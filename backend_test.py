@@ -103,10 +103,11 @@ class LovliAPITester:
         self.log("\n[1] HEALTH CHECK", "INFO")
         self.test("GET /api/", "GET", "", 200)
 
-        # 2. Auth - Test Login (bypass)
-        self.log("\n[2] AUTH - TEST LOGIN BYPASS", "INFO")
+        # 2. Auth - Login (test-login bypass was removed in the release-prep pass)
+        self.log("\n[2] AUTH - LOGIN", "INFO")
         success, resp = self.test(
-            "POST /api/auth/test-login", "POST", "auth/test-login", 200
+            "POST /api/auth/login", "POST", "auth/login", 200,
+            json={"email": "tester@lovli.app", "password": "LovliTest@123"},
         )
         if success and resp:
             data = resp.json()
