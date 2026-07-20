@@ -7,7 +7,6 @@ flows both converge into the same JWT.
 Key endpoints (all prefixed with /api):
 - POST   /auth/signup
 - POST   /auth/login
-- POST   /auth/test-login         (only when ALLOW_TEST_LOGIN=true)
 - POST   /auth/google/session     (Emergent managed Google OAuth exchange)
 - GET    /auth/me
 - PATCH  /auth/onboarding
@@ -249,28 +248,6 @@ async def login(req: LoginRequest):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     await _touch_last_login(user["id"])
     user["last_login_at"] = datetime.now(timezone.utc).isoformat()
-    token = create_jwt(user["id"], user["email"])
-    return AuthResponse(access_token=token, user=_public_user(user))
-
-
-@api.post("/auth/test-login", response_model=AuthResponse)
-async def test_login():
-    """Bypass for automation. Disabled unless ALLOW_TEST_LOGIN=true.
-
-    REMOVE BEFORE PRODUCTION LAUNCH.
-    """
-    if os.environ.get("ALLOW_TEST_LOGIN", "").lower() != "true":
-        raise HTTPException(status_code=404, detail="Not Found")
-    email = os.environ.get("TEST_LOGIN_EMAIL", "tester@lovli.app").lower()
-    password = os.environ.get("TEST_LOGIN_PASSWORD", "LovliTest@123")
-    user = await db.users.find_one({"email": email}, {"_id": 0})
-    if not user:
-        user = await _create_user_doc(
-            name="Lovli Tester",
-            email=email,
-            hashed_password=hash_password(password),
-            auth_provider="password",
-        )
     token = create_jwt(user["id"], user["email"])
     return AuthResponse(access_token=token, user=_public_user(user))
 
@@ -1374,19 +1351,6 @@ async def on_startup():
         await db.waitlist.create_index("email")
     except Exception as e:
         logger.warning("index creation failed: %s", e)
-
-    if os.environ.get("ALLOW_TEST_LOGIN", "").lower() == "true":
-        email = os.environ.get("TEST_LOGIN_EMAIL", "tester@lovli.app").lower()
-        password = os.environ.get("TEST_LOGIN_PASSWORD", "LovliTest@123")
-        existing = await db.users.find_one({"email": email}, {"_id": 0})
-        if not existing:
-            await _create_user_doc(
-                name="Lovli Tester",
-                email=email,
-                hashed_password=hash_password(password),
-                auth_provider="password",
-            )
-            logger.info("Seeded test user %s", email)
 
 
 @app.on_event("shutdown")

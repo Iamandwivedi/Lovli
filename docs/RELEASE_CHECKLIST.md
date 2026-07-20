@@ -5,20 +5,21 @@ app intentionally stays wired to the Emergent preview proxy for development.
 
 ## 🔴 Release blockers — env & providers
 
-- [ ] **Flip backend URL**: in `/app/mobile/.env`, set
-  `EXPO_PUBLIC_BACKEND_URL=https://api.lovli.in` (currently points at the
-  preview proxy `https://reply-on-the-go.preview.emergentagent.com` so PR4+
-  preview work keeps functioning). The commented line is already in the file.
-- [ ] **EMERGENT_LLM_KEY must not ship**: remove `EMERGENT_LLM_KEY` from the
-  production backend env. Set `ANTHROPIC_API_KEY` so `_resolve_provider()`
-  (`backend/llm_service.py`) defaults to the direct **Anthropic** provider.
-  Optionally pin `LLM_PROVIDER=anthropic` explicitly.
-- [ ] **Remove test-login bypass**: unset `ALLOW_TEST_LOGIN` in the production
-  backend env (kills `POST /api/auth/test-login` and the seeded
-  `tester@lovli.app` user).
-- [ ] **Never point test tooling at production**: no testing agent, QA script, or
-  automated test may EVER run against `https://api.lovli.in` — testing happens on
-  the preview proxy only. Verify `EXPO_PUBLIC_BACKEND_URL` before any test run.
+- [x] **Flip backend URL**: DONE (release-prep) — `/app/mobile/.env` now sets
+  `EXPO_PUBLIC_BACKEND_URL=https://api.lovli.in`. The preview-proxy line is kept
+  commented for any future dev work. NOTE: the local web preview's API calls now
+  go to production by design.
+- [x] **EMERGENT_LLM_KEY must not ship**: DONE — removed from `backend/.env`;
+  `LLM_PROVIDER=anthropic` pinned so the provider never auto-falls back.
+  `ANTHROPIC_API_KEY` must be present in the production backend env (verified
+  via the single release-prep smoke call).
+- [x] **Remove test-login bypass**: DONE — the `/auth/test-login` route, its
+  startup seeding block, and `ALLOW_TEST_LOGIN` are deleted from the codebase
+  entirely (route now 404s). `tests/test_pr_v2_6_memory.py` switched to real
+  `/auth/login`.
+- [x] **Never point test tooling at production**: no testing agent, QA script, or
+  automated test may EVER run against `https://api.lovli.in` — release-prep
+  verification was config inspection + one smoke call only.
 - [ ] `PAYMENTS_ENABLED` stays **false** until IAP ships — Premium screen is
   waitlist-only (`POST /api/waitlist`, source `premium_v2`).
 

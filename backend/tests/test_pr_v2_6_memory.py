@@ -20,7 +20,12 @@ BASE_URL = os.environ.get("EXPO_PUBLIC_BACKEND_URL", "https://reply-on-the-go.pr
 
 @pytest.fixture(scope="module")
 def token() -> str:
-    r = requests.post(f"{BASE_URL}/api/auth/test-login", json={}, timeout=15)
+    # test-login route was removed in the release-prep pass — use real login.
+    r = requests.post(
+        f"{BASE_URL}/api/auth/login",
+        json={"email": "tester@lovli.app", "password": "LovliTest@123"},
+        timeout=15,
+    )
     assert r.status_code == 200, r.text
     return r.json()["access_token"]
 

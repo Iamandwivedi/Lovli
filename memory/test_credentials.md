@@ -41,3 +41,9 @@ db.memory_cards.deleteMany({});
 db.waitlist.deleteMany({});
 "
 ```
+
+## RELEASE-PREP UPDATE (June 2026)
+- `POST /api/auth/test-login` has been REMOVED from the codebase entirely (route + seeding + ALLOW_TEST_LOGIN). Do not use it.
+- Use regular login instead: `POST /api/auth/login` with `{"email":"tester@lovli.app","password":"LovliTest@123"}` (user exists in the LOCAL preview DB only).
+- `EXPO_PUBLIC_BACKEND_URL` now points at PRODUCTION `https://api.lovli.in`. NO testing agent / QA may run against production. For any future preview testing, flip it back to the commented preview-proxy line in /app/mobile/.env first (and restore it after).
+- Backend LLM: `LLM_PROVIDER=anthropic` pinned; EMERGENT_LLM_KEY removed. Local LLM calls require ANTHROPIC_API_KEY in backend/.env.
