@@ -1,6 +1,6 @@
 // Auth context — holds session state, token persisted in expo-secure-store.
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { authLogin, authMe, authSignup, User } from "@/src/api/endpoints";
+import { authLogin, authMe, authSignup, authTestLogin, User } from "@/src/api/endpoints";
 import { loadAuthToken, setAuthToken, setUnauthorizedHandler } from "@/src/api/client";
 import { storage } from "@/src/utils/storage";
 import { ASK_PENDING_KEY, ASK_THREAD_KEY } from "@/src/config/storage-keys";
@@ -22,14 +22,35 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+// Dev-only auto sign-in: needs BOTH the env flag and a dev build (__DEV__ is
+// false in release builds, so this can never ship to production).
+const DEV_AUTO_LOGIN = __DEV__ && process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN === "true";
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<Status>("checking");
+
+  const tryDevAutoLogin = useCallback(async (): Promise<User | null> => {
+    try {
+      const { access_token, user: u } = await authTestLogin();
+      await setAuthToken(access_token);
+      setUser(u);
+      setStatus("authed");
+      return u;
+    } catch {
+      // Backend gate is off or unreachable — fall back to the normal login screen.
+      return null;
+    }
+  }, []);
 
   const refreshMe = useCallback(async (): Promise<User | null> => {
     try {
       const token = await loadAuthToken();
       if (!token) {
+        if (DEV_AUTO_LOGIN) {
+          const devUser = await tryDevAutoLogin();
+          if (devUser) return devUser;
+        }
         setUser(null);
         setStatus("unauthed");
         return null;
@@ -44,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setStatus("unauthed");
       return null;
     }
-  }, []);
+  }, [tryDevAutoLogin]);
 
   useEffect(() => {
     refreshMe();

@@ -5,18 +5,22 @@ app intentionally stays wired to the Emergent preview proxy for development.
 
 ## 🔴 Release blockers — env & providers
 
-- [x] **Flip backend URL**: DONE (release-prep) — `/app/mobile/.env` now sets
-  `EXPO_PUBLIC_BACKEND_URL=https://api.lovli.in`. The preview-proxy line is kept
-  commented for any future dev work. NOTE: the local web preview's API calls now
-  go to production by design.
+- [ ] **Flip backend URL**: `/app/mobile/.env` is back on the preview proxy for
+  dev work (dev auto sign-in pass, June 2026). Before launch set
+  `EXPO_PUBLIC_BACKEND_URL=https://api.lovli.in`.
 - [x] **EMERGENT_LLM_KEY must not ship**: DONE — removed from `backend/.env`;
   `LLM_PROVIDER=anthropic` pinned so the provider never auto-falls back.
   Anthropic path smoke test: **verified on Railway post-deploy** (prod key never
   enters the dev environment — see "Backend deploy to Railway" below).
-- [x] **Remove test-login bypass**: DONE — the `/auth/test-login` route, its
-  startup seeding block, and `ALLOW_TEST_LOGIN` are deleted from the codebase
-  entirely (route now 404s). `tests/test_pr_v2_6_memory.py` switched to real
-  `/auth/login`.
+- [ ] **Disable dev auto sign-in bypass**: `/auth/test-login` was restored for
+  development (user request, June 2026) but is DOUBLE-GATED: it 404s unless
+  `ALLOW_TEST_LOGIN=true` AND `ENVIRONMENT != production`, and the server
+  REFUSES TO BOOT if both `ENVIRONMENT=production` and `ALLOW_TEST_LOGIN=true`
+  are set. The mobile auto sign-in additionally requires a dev build (`__DEV__`)
+  AND `EXPO_PUBLIC_DEV_AUTO_LOGIN=true`, so it cannot ship in a release build.
+  Before launch: (1) Railway must set `ENVIRONMENT=production` and must NOT set
+  `ALLOW_TEST_LOGIN`/`TEST_LOGIN_*`; (2) set `EXPO_PUBLIC_DEV_AUTO_LOGIN=false`
+  in `/app/mobile/.env`.
 - [x] **Never point test tooling at production**: no testing agent, QA script, or
   automated test may EVER run against `https://api.lovli.in` — release-prep
   verification was config inspection + one smoke call only.
@@ -26,9 +30,9 @@ app intentionally stays wired to the Emergent preview proxy for development.
 ## 🔴 Backend deploy to Railway (production runs the OLD backend until this is done)
 
 - [ ] Push the current backend to the branch Railway deploys from.
-- [ ] Confirm Railway env has `ANTHROPIC_API_KEY` + `LLM_PROVIDER=anthropic`,
-  and does **NOT** have `EMERGENT_LLM_KEY` or `ALLOW_TEST_LOGIN` (or any
-  `TEST_LOGIN_*` vars).
+- [ ] Confirm Railway env has `ANTHROPIC_API_KEY` + `LLM_PROVIDER=anthropic` +
+  `ENVIRONMENT=production`, and does **NOT** have `EMERGENT_LLM_KEY` or
+  `ALLOW_TEST_LOGIN` (or any `TEST_LOGIN_*` vars).
 - [ ] Post-deploy verify: `GET https://api.lovli.in/api/` returns
   `{"service":"lovli","status":"ok"}`, and ONE real `/generate-replies` call
   from the app succeeds — **that call IS the Anthropic smoke test**.

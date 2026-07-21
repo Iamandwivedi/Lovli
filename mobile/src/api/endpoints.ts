@@ -134,6 +134,12 @@ export const authSignup = async (name: string, email: string, password: string) 
   return data;
 };
 
+// Dev-only auto sign-in. Backend 404s unless ALLOW_TEST_LOGIN=true (never in production).
+export const authTestLogin = async () => {
+  const { data } = await api.post<AuthResponse>("/auth/test-login");
+  return data;
+};
+
 export const authMe = async () => {
   const { data } = await api.get<User>("/auth/me");
   return data;
