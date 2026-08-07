@@ -43,11 +43,11 @@ coverage/
 /tmp/
 *.local
 
-# Always commit example envs
-!.env.example
-!**/.env.example
 .env.*
 *.env
+# Always commit example envs (negations must come AFTER the ignore patterns)
+!.env.example
+!**/.env.example
 credentials.json
 *.pem
 .credentials
