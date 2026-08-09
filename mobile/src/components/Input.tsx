@@ -1,16 +1,16 @@
-// Dark inset input with optional label / helper. Auto focus border lavender.
+// Input — light variant (PR2.2 polish).
+// Resting border slightly stronger so the field is defined inside white cards.
+// Focus border violet #7C5CFF (unchanged).
 import React, { forwardRef, useState } from "react";
 import {
-  NativeSyntheticEvent,
   StyleSheet,
   Text,
   TextInput,
-  TextInputFocusEventData,
   TextInputProps,
   View,
   ViewStyle,
 } from "react-native";
-import { colors, fontSize, radii, space } from "@/src/theme/colors";
+import { colors, radii, space, typography } from "@/src/theme";
 
 type Props = TextInputProps & {
   label?: string;
@@ -32,15 +32,15 @@ export const Input = forwardRef<TextInput, Props>(function Input(
       <TextInput
         ref={ref}
         placeholderTextColor={colors.textFaint}
-        cursorColor={colors.lavender}
-        selectionColor={colors.lavender}
+        cursorColor={colors.violet}
+        selectionColor={colors.violet}
         {...rest}
         multiline={multiline}
-        onFocus={(e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+        onFocus={(e) => {
           setFocused(true);
           onFocus?.(e);
         }}
-        onBlur={(e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+        onBlur={(e) => {
           setFocused(false);
           onBlur?.(e);
         }}
@@ -60,21 +60,20 @@ export const Input = forwardRef<TextInput, Props>(function Input(
 const styles = StyleSheet.create({
   container: { gap: 6 },
   label: {
-    color: colors.textSoft,
-    fontSize: fontSize.sm,
-    fontWeight: "500",
+    ...typography.body.label,
+    color: colors.textPrimary,
     marginLeft: 2,
   },
   input: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    borderColor: colors.hairline,
     borderWidth: 1,
-    borderRadius: radii.md,
+    borderRadius: radii.input,
     paddingHorizontal: space.l,
     paddingVertical: 14,
-    color: colors.text,
-    fontSize: fontSize.md,
-    minHeight: 48,
+    ...typography.body.base,
+    color: colors.textPrimary,
+    minHeight: 50,
   },
   multiline: {
     minHeight: 96,
@@ -82,16 +81,16 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   focused: {
-    borderColor: colors.lavender,
-    shadowColor: colors.lavender,
+    borderColor: colors.violet,
+    shadowColor: colors.violet,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 2,
   },
   helper: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
+    ...typography.body.caption,
+    color: colors.textSecondary,
     marginLeft: 2,
     marginTop: 2,
   },

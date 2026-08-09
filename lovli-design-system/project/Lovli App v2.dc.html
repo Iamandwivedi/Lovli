@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#050509;}
+body{font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+*{box-sizing:border-box;}
+a{color:#C4B5FD;text-decoration:none;}
+a:hover{color:#A78BFA;}
+@keyframes lv-drift{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(34px,-26px,0) scale(1.12)}100%{transform:translate3d(0,0,0) scale(1)}}
+@keyframes lv-drift2{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(-30px,24px,0) scale(1.1)}100%{transform:translate3d(0,0,0) scale(1)}}
+@keyframes lv-breathe{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+@keyframes lv-shimmer{0%{background-position:-260% 0}100%{background-position:260% 0}}
+@keyframes lv-up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes lv-screen{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes lv-shine{0%{transform:translateX(-150%) skewX(-18deg)}55%,100%{transform:translateX(300%) skewX(-18deg)}}
+@keyframes lv-ring{0%{box-shadow:0 0 0 0 rgba(167,139,250,.25)}100%{box-shadow:0 0 0 14px rgba(167,139,250,0)}}
+@keyframes lv-tabin{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes lv-pop{0%{opacity:0;transform:scale(.5)}62%{opacity:1;transform:scale(1.07)}100%{opacity:1;transform:scale(1)}}
+@keyframes lv-halo{0%,100%{opacity:.45;transform:translate(-50%,-50%) scale(.9)}50%{opacity:.9;transform:translate(-50%,-50%) scale(1.12)}}
+@keyframes lv-ringexp{0%{opacity:.7;transform:translate(-50%,-50%) scale(.7)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.9)}}
+@keyframes lv-spin{to{transform:rotate(360deg)}}
+@keyframes lv-tilesheen{0%,55%{transform:translateX(-160%) skewX(-20deg)}90%,100%{transform:translateX(240%) skewX(-20deg)}}
+@keyframes lv-laser{0%{transform:translateX(-130%)}100%{transform:translateX(560%)}}
+@keyframes lv-pulse{0%,100%{opacity:.55;transform:scale(.95)}50%{opacity:1;transform:scale(1.05)}}
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:radial-gradient(1100px 640px at 50% -10%,rgba(109,59,245,.14),transparent 65%),#050509;padding:56px 40px 110px;display:flex;flex-direction:column;align-items:center;">
+
+  <div style="display:flex;flex-direction:column;align-items:center;text-align:center;max-width:720px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+      <div style="width:30px;height:30px;border-radius:9px;overflow:hidden;flex:none;box-shadow:0 4px 16px rgba(0,0,0,.5);"><img src="assets/lovli-app-icon.png" alt="Lovli" style="width:110%;height:110%;margin:-5% 0 0 -5%;display:block;object-fit:cover;"></div>
+      <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:17px;letter-spacing:-.5px;color:#F8FAFC;">Lovli</span>
+      <span style="padding:5px 11px;border-radius:999px;background:rgba(167,139,250,.14);border:1px solid rgba(167,139,250,.30);font-size:11.5px;font-weight:600;color:#C4B5FD;">App · V3 immersive</span>
+    </div>
+    <h1 style="margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:40px;line-height:46px;letter-spacing:-1.4px;color:#F8FAFC;">The whole app, alive in one phone.</h1>
+    <p style="margin:14px 0 0;font-size:15px;line-height:24px;color:#A1A1AA;max-width:56ch;">Boots like the real thing — animated logo splash, welcome, then the full loop. All three tabs work. Type, tap, copy.</p>
+  </div>
+
+  <div style="margin-top:44px;position:relative;">
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:640px;height:640px;border-radius:999px;background:radial-gradient(closest-side,rgba(109,59,245,.30),transparent 72%);filter:blur(90px);animation:lv-pulse 7s ease-in-out infinite;pointer-events:none;"></div>
+    <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+      <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;">
+        <div style="position:absolute;top:-150px;left:-90px;width:460px;height:460px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.28),transparent 70%);filter:blur(70px);animation:lv-drift 18s ease-in-out infinite;"></div>
+        <div style="position:absolute;bottom:-140px;right:-110px;width:420px;height:420px;border-radius:999px;background:radial-gradient(closest-side,rgba(196,110,145,.16),transparent 70%);filter:blur(80px);animation:lv-drift2 22s ease-in-out infinite;"></div>
+        <div style="position:absolute;top:38%;right:-120px;width:340px;height:340px;border-radius:999px;background:radial-gradient(closest-side,rgba(96,165,180,.10),transparent 70%);filter:blur(80px);animation:lv-drift 26s ease-in-out infinite;"></div>
+        <div style="position:absolute;inset:0;pointer-events:none;opacity:.04;mix-blend-mode:overlay;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E&quot;);"></div>
+        {{ app }}
+      </div>
+    </x-import>
+  </div>
+
+  <div style="margin-top:26px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;max-width:720px;">
+    <span style="padding:8px 15px;border-radius:999px;background:#0D0E17;border:1px solid #1B1C29;font-size:12.5px;color:#A1A1AA;">✦ splash → welcome → app</span>
+    <span style="padding:8px 15px;border-radius:999px;background:#0D0E17;border:1px solid #1B1C29;font-size:12.5px;color:#A1A1AA;">3 live tabs</span>
+    <span style="padding:8px 15px;border-radius:999px;background:#0D0E17;border:1px solid #1B1C29;font-size:12.5px;color:#A1A1AA;">Bricolage Grotesque + Outfit</span>
+    <span style="padding:8px 15px;border-radius:999px;background:#0D0E17;border:1px solid #1B1C29;font-size:12.5px;color:#A1A1AA;">replay: tap the wordmark</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:1250}}">
+const el = React.createElement;
+const VIBES = ["Playful", "Flirty", "Sincere", "Respectful", "Confident"];
+const TONE = { Playful: "PLAYFUL", Flirty: "SMOOTH", Sincere: "SINCERE", Respectful: "RESPECTFUL", Confident: "CONFIDENT" };
+const LANGS = ["English", "Hinglish", "हिंदी"];
+const PHASES = ["Reading the chat…", "Catching the tone…", "Writing it three ways…"];
+const REPLIES = {
+  Flirty: ["Okay but you owe me chai for making me wait this long \u{1F60C}", "Two days? Bold. I'll allow it — but Saturday you're picking the place.", "I was starting to think you'd found a better conversation. Prove me wrong?"],
+  Playful: ["Wow, two whole days. Should I send a search party or a resume?", "I'll take 'left on read' as 'was busy thinking of a good reply' \u{1F643}", "Okay you're forgiven — but only because Saturday still stands."],
+  Sincere: ["Hey — no pressure at all. I liked where we left it, if you're still up for Saturday.", "I get it, things get busy. Just wanted you to know I'm still keen.", "Was hoping to hear from you. Still on for the weekend?"],
+  Respectful: ["No rush at all — just checking in. Let me know if Saturday still works.", "Totally understand if this week got away from you. The offer stands.", "Hey, hope all's well. Happy to pick this up whenever you have a moment."],
+  Confident: ["Saturday, 7pm, that filter coffee place you mentioned. I'll be there.", "I don't chase, but I do follow up once. Still keen for the weekend?", "Right — Saturday's still open on my side. Say the word."],
+};
+const EXAMPLE = "her: sorry yaar was so caught up this week \u{1F62D}\nher: kya kar raha hai?";
+
+const FD = "'Bricolage Grotesque',sans-serif";
+const FB = "'Outfit',sans-serif";
+
+const S = {
+  label: { fontSize: 11, fontWeight: 700, letterSpacing: ".15em", textTransform: "uppercase", color: "#71717A", marginBottom: 10, fontFamily: FB },
+  glass: {
+    background: "linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05))",
+    backdropFilter: "blur(30px) saturate(130%)", WebkitBackdropFilter: "blur(30px) saturate(130%)",
+    border: "1px solid rgba(255,255,255,.09)",
+    boxShadow: "0 18px 44px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.16), inset 0 -1px 0 rgba(0,0,0,.35)",
+  },
+  solid: { background: "rgba(17,18,28,.86)", border: "1px solid #262737", boxShadow: "inset 0 1px 0 rgba(248,250,252,.05)" },
+  screen: { animation: "lv-screen 400ms cubic-bezier(.2,.8,.2,1) both" },
+  cta: {
+    height: 56, borderRadius: 999, background: "#FFFFFF", border: "1px solid #E5E7EB", color: "#050509",
+    fontFamily: FB, fontWeight: 700, fontSize: 16, cursor: "pointer", width: "100%",
+    display: "flex", alignItems: "center", justifyContent: "center", gap: 9,
+    boxShadow: "0 10px 28px rgba(167,139,250,.22)", transition: "transform 180ms cubic-bezier(.2,.8,.2,1)",
+    position: "relative", overflow: "hidden",
+  },
+};
+
+function spark(size, color, extra) {
+  return el("svg", { width: size, height: size, viewBox: "0 0 24 24", style: Object.assign({ flex: "none" }, extra || {}) },
+    el("path", { d: "M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z", fill: color }));
+}
+function tile(size, r, shadow) {
+  return el("div", { style: { width: size, height: size, borderRadius: r || "24%", overflow: "hidden", flex: "none", boxShadow: shadow || "none", position: "relative" } },
+    el("img", { src: "assets/lovli-app-icon.png", alt: "", style: { width: "110%", height: "110%", margin: "-5% 0 0 -5%", display: "block", objectFit: "cover" } }));
+}
+function ctaShine() {
+  return el("span", { style: { position: "absolute", top: 0, bottom: 0, width: 56, background: "linear-gradient(90deg,transparent,rgba(167,139,250,.35),transparent)", animation: "lv-shine 3.4s ease-in-out 1.2s infinite", pointerEvents: "none" } });
+}
+function chip(text, active, onClick, key) {
+  return el("button", {
+    key, onClick,
+    style: {
+      minHeight: 40, padding: "10px 16px", borderRadius: 999, cursor: "pointer", fontFamily: FB, fontSize: 13.5,
+      fontWeight: active ? 700 : 500, whiteSpace: "nowrap",
+      background: active ? "rgba(167,139,250,.11)" : "rgba(255,255,255,.045)",
+      border: active ? "1px solid rgba(167,139,250,.36)" : "1px solid rgba(255,255,255,.09)",
+      color: active ? "#C4B5FD" : "#A1A1AA",
+      boxShadow: active ? "inset 0 0 10px rgba(167,139,250,.10)" : "none",
+      transform: active ? "scale(1.03)" : "scale(1)",
+      animation: active ? "lv-ring 500ms cubic-bezier(.2,.8,.2,1) 1" : "none",
+      transition: "all 200ms cubic-bezier(.2,.8,.2,1)",
+    },
+  }, text);
+}
+function dots(color) {
+  return [0, 1, 2].map((i) => el("span", { key: i, style: { width: 7, height: 7, borderRadius: 999, background: color, animation: `lv-breathe 1.5s ease-in-out ${i * 0.18}s infinite` } }));
+}
+
+class Component extends DCLogic {
+  state = { boot: "splash", tab: "reply", phase: "home", text: "", vibe: "Flirty", lang: "Hinglish", stage: 0, copied: -1, toast: false, msgs: [], typing: false, draft: "" };
+
+  componentDidMount() { this.startBoot(); }
+  componentWillUnmount() { [this._b1, this._b2, this._d, this._c, this._a].forEach(clearTimeout); clearInterval(this._t); }
+
+  startBoot = () => {
+    [this._b1, this._b2].forEach(clearTimeout);
+    this.setState({ boot: "splash" });
+    this._b1 = setTimeout(() => this.setState({ boot: "welcome" }), 2600);
+  };
+
+  generate = () => {
+    const body = this.state.text.trim() ? this.state.text : EXAMPLE;
+    this.setState({ phase: "generating", stage: 0, text: body, copied: -1 });
+    clearInterval(this._t);
+    this._t = setInterval(() => this.setState((s) => ({ stage: Math.min(s.stage + 1, 2) })), 900);
+    this._d = setTimeout(() => { clearInterval(this._t); this.setState({ phase: "results" }); }, 2800);
+  };
+
+  copy = (i) => {
+    this.setState({ copied: i, toast: true });
+    clearTimeout(this._c);
+    this._c = setTimeout(() => this.setState({ toast: false }), 2200);
+  };
+
+  send = (msg) => {
+    const text = (msg || this.state.draft).trim();
+    if (!text || this.state.typing) return;
+    this.setState((s) => ({ msgs: s.msgs.concat([{ me: true, t: text }]), draft: "", typing: true }));
+    clearTimeout(this._a);
+    this._a = setTimeout(() => this.setState((s) => ({
+      typing: false,
+      msgs: s.msgs.concat([{ me: false, t: "That sting is real — two days of silence rewrites the whole story in your head. Before you decide anything: show me the chat? I'll tell you what I actually see, not what 2am-you sees." }]),
+    })), 1800);
+  };
+
+  header() {
+    return el("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 } },
+      el("button", { onClick: this.startBoot, title: "Replay intro", style: { display: "flex", alignItems: "center", background: "none", border: "none", padding: 0, cursor: "pointer" } },
+        el("div", { style: { width: 32, height: 32, borderRadius: 11, background: "rgba(167,139,250,.10)", border: "1px solid rgba(167,139,250,.26)", display: "flex", alignItems: "center", justifyContent: "center" } }, spark(15, "#C4B5FD"))),
+      el("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
+        el("span", { style: { padding: "6px 12px", borderRadius: 999, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.09)", fontSize: 11.5, fontWeight: 500, color: "#A1A1AA", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" } }, "5 free left"),
+        el("div", { style: { width: 34, height: 34, borderRadius: 999, background: "linear-gradient(135deg,#A78BFA,#8B5CF6)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, color: "#050509", boxShadow: "0 4px 12px rgba(167,139,250,.16)" } }, "R")));
+  }
+
+  tabbar() {
+    const tabs = [
+      { id: "reply", name: "Reply", icon: (a) => el("svg", { width: 21, height: 21, viewBox: "0 0 24 24", fill: "none", stroke: a ? "#C4B5FD" : "#71717A", strokeWidth: a ? 2.2 : 1.8, strokeLinecap: "round", strokeLinejoin: "round" }, el("path", { d: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" })) },
+      { id: "ask", name: "Ask Lovli", icon: (a) => spark(19, a ? "#C4B5FD" : "#71717A") },
+      { id: "memory", name: "Memory", icon: (a) => el("svg", { width: 21, height: 21, viewBox: "0 0 24 24", fill: "none", stroke: a ? "#C4B5FD" : "#71717A", strokeWidth: a ? 2 : 1.7, strokeLinecap: "round", strokeLinejoin: "round" }, el("path", { d: "M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z" })) },
+    ];
+    const idx = tabs.findIndex((t) => t.id === this.state.tab);
+    return el("div", {
+      style: {
+        position: "absolute", left: 16, right: 16, bottom: 30, height: 68, zIndex: 30,
+        borderRadius: 26, padding: 5, display: "flex", alignItems: "stretch",
+        background: "linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.06))",
+        backdropFilter: "blur(52px) saturate(150%)", WebkitBackdropFilter: "blur(52px) saturate(150%)",
+        border: "1px solid rgba(255,255,255,.10)",
+        boxShadow: "0 24px 60px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,255,255,.22)",
+        animation: "lv-tabin 500ms cubic-bezier(.2,.8,.2,1) 120ms both",
+      },
+    },
+      el("div", { style: { position: "absolute", top: -1, left: 20, right: 20, height: 1, overflow: "hidden", borderRadius: 999 } },
+        el("div", { style: { width: "24%", height: "100%", background: "linear-gradient(90deg,transparent,rgba(196,181,253,.85),transparent)", boxShadow: "0 0 8px rgba(167,139,250,.55)", animation: "lv-laser 3.2s cubic-bezier(.45,.05,.4,.95) .8s infinite" } })),
+      el("div", { style: { position: "absolute", top: 5, bottom: 5, width: "calc((100% - 10px)/3)", left: `calc(5px + ${idx} * (100% - 10px)/3)`, borderRadius: 21, background: "rgba(167,139,250,.10)", border: "1px solid rgba(167,139,250,.28)", boxShadow: "inset 0 0 12px rgba(167,139,250,.08)", transition: "left 320ms cubic-bezier(.2,.8,.2,1)" } }),
+      tabs.map((t) => {
+        const a = this.state.tab === t.id;
+        return el("button", { key: t.id, onClick: () => this.setState({ tab: t.id }), style: { position: "relative", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontFamily: FB } },
+          t.icon(a),
+          el("span", { style: { fontSize: 11, fontWeight: a ? 700 : 500, color: a ? "#C4B5FD" : "#71717A", transition: "color 200ms" } }, t.name));
+      }));
+  }
+
+  splash() {
+    return el("div", { style: { position: "relative", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden" } },
+      el("div", { style: { position: "absolute", top: "50%", left: "50%", width: 420, height: 420, borderRadius: 999, background: "radial-gradient(closest-side,rgba(109,59,245,.5),transparent 72%)", filter: "blur(60px)", animation: "lv-halo 3.4s ease-in-out infinite" } }),
+      el("div", { style: { position: "absolute", top: "50%", left: "50%", width: 190, height: 190, borderRadius: 999, border: "1px solid rgba(167,139,250,.5)", animation: "lv-ringexp 2.2s cubic-bezier(.2,.8,.2,1) .5s infinite" } }),
+      el("div", { style: { position: "absolute", top: "50%", left: "50%", width: 190, height: 190, borderRadius: 999, border: "1px solid rgba(167,139,250,.35)", animation: "lv-ringexp 2.2s cubic-bezier(.2,.8,.2,1) 1.3s infinite" } }),
+      el("div", { style: { position: "relative", animation: "lv-pop 750ms cubic-bezier(.2,.8,.2,1) both" } },
+        el("div", { style: { width: 108, height: 108, borderRadius: "24%", overflow: "hidden", position: "relative", boxShadow: "0 34px 70px -18px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.07)" } },
+          el("img", { src: "assets/lovli-app-icon.png", alt: "Lovli", style: { width: "110%", height: "110%", margin: "-5% 0 0 -5%", display: "block", objectFit: "cover" } }),
+          el("span", { style: { position: "absolute", top: 0, bottom: 0, width: 46, background: "linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent)", animation: "lv-tilesheen 2.6s ease-in-out .7s infinite" } }))),
+      el("div", { style: { marginTop: 30, fontSize: 14.5, color: "#A1A1AA", animation: "lv-up 500ms cubic-bezier(.2,.8,.2,1) .55s both" } }, "Never fumble the text that matters."));
+  }
+
+  welcome() {
+    return el("div", { style: Object.assign({ position: "relative", height: "100%", padding: "84px 28px 46px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }, S.screen) },
+      el("div", { style: { marginTop: 26, animation: "lv-pop 650ms cubic-bezier(.2,.8,.2,1) both" } }, tile(72, "24%", "0 24px 50px -14px rgba(0,0,0,.85)")),
+      el("h1", { style: { margin: "32px 0 0", fontFamily: FD, fontWeight: 700, fontSize: 34, lineHeight: "39px", letterSpacing: "-1.2px", color: "#F8FAFC", maxWidth: 300, animation: "lv-up 550ms cubic-bezier(.2,.8,.2,1) .15s both" } }, "Before you send it, let's read it together."),
+      el("p", { style: { margin: "16px 0 0", fontSize: 15, lineHeight: "23px", color: "#A1A1AA", maxWidth: 280, animation: "lv-up 550ms cubic-bezier(.2,.8,.2,1) .28s both" } }, "Paste any chat. Lovli reads what's really going on and writes you three replies — in Hinglish, if that's how you talk."),
+      el("div", { style: { marginTop: "auto", width: "100%", animation: "lv-up 550ms cubic-bezier(.2,.8,.2,1) .4s both" } },
+        el("button", { onClick: () => this.setState({ boot: "app" }), style: S.cta, "style-active": {} }, ctaShine(), spark(15, "#8B5CF6"), "Let's go"),
+        el("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 7, marginTop: 14 } },
+          el("svg", { width: 12, height: 12, viewBox: "0 0 24 24", fill: "none", stroke: "#71717A", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }, el("rect", { x: 3, y: 11, width: 18, height: 11, rx: 2 }), el("path", { d: "M7 11V7a5 5 0 0 1 10 0v4" })),
+          el("span", { style: { fontSize: 12.5, color: "#71717A" } }, "Your chats stay yours. Read once, never stored."))));
+  }
+
+  home() {
+    return el("div", { style: Object.assign({ position: "relative", height: "100%", padding: "58px 20px 0", display: "flex", flexDirection: "column", overflow: "hidden" }, S.screen) },
+      this.header(),
+      el("h1", { style: { margin: 0, fontFamily: FD, fontWeight: 700, fontSize: 33, lineHeight: "37px", letterSpacing: "-1px", background: "linear-gradient(100deg,#F8FAFC 35%,#C4B5FD 75%,#D6A6B0 100%)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" } }, "Kya scene hai?"),
+      el("p", { style: { margin: "8px 0 16px", fontSize: 14.5, lineHeight: "21px", color: "#A1A1AA", maxWidth: 300 } }, "Show me the chat — I'll read the vibe and write you three replies that sound like you."),
+      el("div", { style: Object.assign({ borderRadius: 24, padding: 16, position: "relative", overflow: "hidden" }, S.glass) },
+        el("div", { style: { position: "absolute", top: 0, left: 16, right: 16, height: 1, overflow: "hidden", borderRadius: 999 } },
+          el("div", { style: { width: "26%", height: "100%", background: "linear-gradient(90deg,transparent,rgba(196,181,253,.8),transparent)", boxShadow: "0 0 8px rgba(167,139,250,.5)", animation: "lv-laser 4s cubic-bezier(.45,.05,.4,.95) infinite" } })),
+        el("textarea", {
+          value: this.state.text,
+          onChange: (e) => this.setState({ text: e.target.value }),
+          placeholder: "Paste the chat, or just tell me what happened…",
+          style: { width: "100%", minHeight: 80, resize: "none", border: "none", outline: "none", background: "transparent", color: "#F8FAFC", fontFamily: FB, fontSize: 15, lineHeight: "22px" },
+        }),
+        el("div", { style: { display: "flex", gap: 8, marginTop: 10 } },
+          el("button", { onClick: () => this.setState({ text: EXAMPLE }), style: { height: 38, padding: "0 14px", borderRadius: 999, background: "rgba(255,255,255,.06)", border: "1px dashed rgba(167,139,250,.45)", color: "#C4B5FD", fontFamily: FB, fontWeight: 600, fontSize: 12.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 7 } },
+            el("svg", { width: 13, height: 13, viewBox: "0 0 24 24", fill: "none", stroke: "#A78BFA", strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round" }, el("path", { d: "M12 19V5M5 12l7-7 7 7" })), "Screenshot"),
+          el("button", { onClick: () => this.setState({ text: EXAMPLE }), style: { height: 38, padding: "0 14px", borderRadius: 999, background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.10)", color: "#A1A1AA", fontFamily: FB, fontWeight: 600, fontSize: 12.5, cursor: "pointer" } }, "Try an example"))),
+      el("div", { style: { marginTop: 16 } },
+        el("div", { style: S.label }, "Reply language"),
+        el("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, LANGS.map((l) => chip(l, this.state.lang === l, () => this.setState({ lang: l }), l)))),
+      el("div", { style: { marginTop: 16 } },
+        el("div", { style: S.label }, "Vibe"),
+        el("div", { style: { display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, marginRight: -20, paddingRight: 20 } }, VIBES.map((v) => chip(v, this.state.vibe === v, () => this.setState({ vibe: v }), v)))),
+      el("div", { style: { marginTop: "auto", paddingBottom: 114 } },
+        el("button", { onClick: this.generate, style: S.cta }, ctaShine(), spark(15, "#8B5CF6"), "Read & reply"),
+        el("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 7, marginTop: 12 } },
+          el("svg", { width: 12, height: 12, viewBox: "0 0 24 24", fill: "none", stroke: "#71717A", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }, el("rect", { x: 3, y: 11, width: 18, height: 11, rx: 2 }), el("path", { d: "M7 11V7a5 5 0 0 1 10 0v4" })),
+          el("span", { style: { fontSize: 12.5, color: "#71717A" } }, "Only share what you're comfortable with."))));
+  }
+
+  generating() {
+    const bar = (w, d) => el("div", { key: d, style: { height: 14, width: w, borderRadius: 7, background: "linear-gradient(90deg,rgba(255,255,255,.05) 25%,rgba(255,255,255,.12) 50%,rgba(255,255,255,.05) 75%)", backgroundSize: "260% 100%", animation: `lv-shimmer 1.8s linear ${d}s infinite` } });
+    return el("div", { style: Object.assign({ position: "relative", height: "100%", padding: "58px 20px 0", display: "flex", flexDirection: "column", overflow: "hidden" }, S.screen) },
+      this.header(),
+      el("div", { style: { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", paddingBottom: 130 } },
+        el("div", { style: { position: "relative", width: 120, height: 120, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 30 } },
+          el("div", { style: { position: "absolute", inset: -8, borderRadius: 999, background: "conic-gradient(from 0deg, transparent 0%, rgba(167,139,250,.55) 18%, transparent 40%)", filter: "blur(10px)", animation: "lv-spin 2.2s linear infinite" } }),
+          el("div", { style: { position: "absolute", inset: 6, borderRadius: 999, background: "rgba(5,5,9,.6)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" } }),
+          el("div", { style: { position: "relative", animation: "lv-pulse 1.8s ease-in-out infinite" } }, tile(66, "24%", "0 18px 40px rgba(0,0,0,.75)"))),
+        el("div", { key: this.state.stage, style: { fontFamily: FD, fontWeight: 700, fontSize: 22, letterSpacing: "-.5px", color: "#F8FAFC", marginBottom: 30, textAlign: "center", animation: "lv-up 320ms cubic-bezier(.2,.8,.2,1) both" } }, PHASES[this.state.stage]),
+        el("div", { style: Object.assign({ width: "100%", borderRadius: 24, padding: 20, display: "flex", flexDirection: "column", gap: 11 }, S.glass) }, bar("40%", 0), bar("100%", 0.15), bar("82%", 0.3))));
+  }
+
+  results() {
+    const list = REPLIES[this.state.vibe];
+    const card = (text, i) => el("div", {
+      key: this.state.vibe + i,
+      style: Object.assign({ borderRadius: 24, padding: 20, position: "relative", overflow: "hidden", animation: `lv-up 380ms cubic-bezier(.2,.8,.2,1) ${0.1 + i * 0.09}s both` }, i === 0 ? S.glass : S.solid),
+    },
+      i === 0 ? el("div", { style: { position: "absolute", top: 0, left: 20, right: 20, height: 1, overflow: "hidden", borderRadius: 999 } },
+        el("div", { style: { width: "28%", height: "100%", background: "linear-gradient(90deg,transparent,rgba(214,166,176,.85),transparent)", boxShadow: "0 0 8px rgba(214,166,176,.5)", animation: "lv-laser 3.6s cubic-bezier(.45,.05,.4,.95) .4s infinite" } })) : null,
+      el("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
+        el("span", { style: { width: 6, height: 6, borderRadius: 999, background: "#A78BFA", boxShadow: "0 0 5px rgba(167,139,250,.35)" } }),
+        el("span", { style: { fontSize: 11, fontWeight: 700, letterSpacing: ".15em", color: "#C4B5FD", fontFamily: FB } }, TONE[this.state.vibe])),
+      el("p", { style: { margin: "12px 0 0", fontFamily: FD, fontWeight: 600, fontSize: i === 0 ? 18 : 16.5, lineHeight: i === 0 ? "27px" : "25px", letterSpacing: "-.2px", color: "#F8FAFC" } }, text),
+      el("div", { style: { display: "flex", gap: 10, marginTop: 18 } },
+        el("button", {
+          onClick: () => this.copy(i),
+          style: {
+            flex: 1, height: 44, borderRadius: 999, cursor: "pointer", fontFamily: FB, fontWeight: 700, fontSize: 14,
+            background: this.state.copied === i ? "rgba(167,139,250,.11)" : "#FFFFFF",
+            border: this.state.copied === i ? "1px solid rgba(167,139,250,.36)" : "1px solid #E5E7EB",
+            color: this.state.copied === i ? "#C4B5FD" : "#050509",
+            boxShadow: this.state.copied === i ? "inset 0 0 8px rgba(167,139,250,.1)" : "0 6px 16px rgba(167,139,250,.18)",
+            transition: "all 200ms cubic-bezier(.2,.8,.2,1)",
+          },
+        }, this.state.copied === i ? "Copied ✦" : "Copy"),
+        el("button", { style: { height: 44, padding: "0 18px", borderRadius: 999, background: "transparent", border: "1px solid rgba(255,255,255,.12)", color: "#A1A1AA", fontFamily: FB, fontWeight: 600, fontSize: 14, cursor: "pointer" } }, "Edit")));
+
+    return el("div", { style: Object.assign({ position: "relative", height: "100%", overflow: "hidden" }, S.screen) },
+      el("div", { style: { position: "absolute", inset: 0, overflowY: "auto", padding: "58px 20px 132px" } },
+        el("div", { style: { display: "flex", alignItems: "center", gap: 14, marginBottom: 18 } },
+          el("button", { onClick: () => this.setState({ phase: "home" }), style: { width: 36, height: 36, borderRadius: 999, background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.10)", color: "#F8FAFC", fontSize: 19, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" } }, "\u2039"),
+          el("span", { style: { fontFamily: FD, fontWeight: 700, fontSize: 21, letterSpacing: "-.5px", color: "#F8FAFC" } }, "Three ways to say it")),
+        el("div", { style: Object.assign({ borderRadius: 24, padding: 20, marginBottom: 16, animation: "lv-up 380ms cubic-bezier(.2,.8,.2,1) both" }, S.glass) },
+          el("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 } },
+            el("span", { style: { fontSize: 11, fontWeight: 700, letterSpacing: ".15em", color: "#71717A", fontFamily: FB } }, "WHAT'S GOING ON"),
+            el("span", { style: { display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 12px", borderRadius: 999, background: "rgba(217,169,110,.12)", border: "1px solid rgba(217,169,110,.34)" } },
+              el("span", { style: { width: 6, height: 6, borderRadius: 999, background: "#D9A96E", animation: "lv-breathe 2s ease-in-out infinite" } }),
+              el("span", { style: { fontSize: 11.5, fontWeight: 700, color: "#D9A96E" } }, "Leaning interested"))),
+          el("p", { style: { margin: "13px 0 0", fontSize: 14.5, lineHeight: "22px", color: "#E5E7EB" } }, "She apologised without being asked, then turned it straight back to you. That's someone keeping the thread alive — not letting it go."),
+          el("div", { style: { height: 1, background: "rgba(255,255,255,.08)", margin: "15px 0" } }),
+          el("div", { style: { display: "flex", alignItems: "flex-start", gap: 9, marginBottom: 8 } }, spark(12, "#A78BFA", { marginTop: 5 }), el("span", { style: { fontSize: 13.5, lineHeight: "20px", color: "#A1A1AA" } }, "\u201Ckya kar raha hai\u201D is her handing you the next move.")),
+          el("div", { style: { display: "flex", alignItems: "flex-start", gap: 9 } }, spark(12, "#A78BFA", { marginTop: 5 }), el("span", { style: { fontSize: 13.5, lineHeight: "20px", color: "#A1A1AA" } }, "Don't ask why she vanished. She came back — that's the answer."))),
+        el("div", { style: { display: "flex", flexDirection: "column", gap: 13 } }, list.map(card)),
+        el("p", { style: { margin: "16px 0 0", fontSize: 12.5, color: "#71717A", textAlign: "center" } }, "Edit anything. The best version is yours."),
+        el("div", { style: { marginTop: 20 } },
+          el("div", { style: S.label }, "Or make it"),
+          el("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, VIBES.map((v) => chip(v, this.state.vibe === v, () => this.setState({ vibe: v, copied: -1 }), v))))),
+      this.state.toast ? el("div", {
+        style: Object.assign({ position: "absolute", left: 20, right: 20, bottom: 114, display: "flex", alignItems: "center", gap: 11, padding: "14px 18px", borderRadius: 20, zIndex: 40, animation: "lv-up 260ms cubic-bezier(.2,.8,.2,1) both" }, S.glass),
+      },
+        el("span", { style: { width: 20, height: 20, borderRadius: 999, background: "rgba(134,200,157,.16)", border: "1px solid rgba(134,200,157,.4)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } },
+          el("svg", { width: 11, height: 11, viewBox: "0 0 24 24", fill: "none", stroke: "#86C89D", strokeWidth: 3.4, strokeLinecap: "round", strokeLinejoin: "round" }, el("path", { d: "M20 6 9 17l-5-5" }))),
+        el("span", { style: { fontSize: 14, fontWeight: 600, color: "#F8FAFC", fontFamily: FB } }, "Copied — make it yours.")) : null);
+  }
+
+  ask() {
+    const bubble = (m, i) => m.me
+      ? el("div", { key: i, style: { display: "flex", justifyContent: "flex-end", animation: "lv-up 300ms cubic-bezier(.2,.8,.2,1) both" } },
+          el("div", { style: { maxWidth: "82%", padding: "13px 16px", borderRadius: "20px 20px 6px 20px", background: "rgba(167,139,250,.16)", border: "1px solid rgba(167,139,250,.32)", fontSize: 14.5, lineHeight: "22px", color: "#F8FAFC" } }, m.t))
+      : el("div", { key: i, style: { display: "flex", gap: 9, alignItems: "flex-start", animation: "lv-up 300ms cubic-bezier(.2,.8,.2,1) both" } },
+          spark(15, "#A78BFA", { marginTop: 10 }),
+          el("div", { style: Object.assign({ maxWidth: "82%", padding: "13px 16px", borderRadius: "20px 20px 20px 6px", fontSize: 14.5, lineHeight: "22px", color: "#E5E7EB" }, S.glass, { boxShadow: "inset 0 1px 0 rgba(255,255,255,.14)" }) }, m.t));
+    const starters = ["She left me on read for 2 days", "Is this a red flag?", "How do I restart a dead convo?"];
+    return el("div", { style: Object.assign({ position: "relative", height: "100%", overflow: "hidden" }, S.screen) },
+      el("div", { style: { position: "absolute", inset: 0, overflowY: "auto", padding: "58px 20px 190px", display: "flex", flexDirection: "column" } },
+        el("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 22 } },
+          spark(19, "#A78BFA", { filter: "drop-shadow(0 0 6px rgba(167,139,250,.35))" }),
+          el("span", { style: { fontFamily: FD, fontWeight: 700, fontSize: 21, letterSpacing: "-.5px", color: "#F8FAFC" } }, "Ask Lovli")),
+        el("div", { style: { display: "flex", flexDirection: "column", gap: 12 } },
+          bubble({ me: false, t: "Hey — what's on your mind? Tell me the situation, or ask me anything. No judgement, promise." }, "g"),
+          this.state.msgs.map(bubble),
+          this.state.typing ? el("div", { style: { display: "flex", gap: 9, alignItems: "center" } }, spark(15, "#A78BFA"), el("div", { style: Object.assign({ display: "flex", gap: 6, padding: "15px 18px", borderRadius: "20px 20px 20px 6px" }, S.glass) }, dots("#A78BFA"))) : null),
+        this.state.msgs.length === 0 ? el("div", { style: { display: "flex", flexDirection: "column", gap: 8, marginTop: 16, paddingLeft: 24 } },
+          starters.map((s, i) => el("button", { key: s, onClick: () => this.send(s), style: { alignSelf: "flex-start", padding: "11px 16px", borderRadius: 999, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.10)", fontSize: 13.5, fontWeight: 500, color: "#A1A1AA", cursor: "pointer", fontFamily: FB, animation: `lv-up 360ms cubic-bezier(.2,.8,.2,1) ${0.15 + i * 0.09}s both` } }, s))) : null),
+      el("div", { style: { position: "absolute", left: 16, right: 16, bottom: 112, zIndex: 25 } },
+        el("div", { style: Object.assign({ display: "flex", alignItems: "center", gap: 10, height: 54, borderRadius: 999, padding: "0 8px 0 20px" }, S.glass) },
+          el("input", {
+            value: this.state.draft,
+            onChange: (e) => this.setState({ draft: e.target.value }),
+            onKeyDown: (e) => { if (e.key === "Enter") this.send(); },
+            placeholder: "Tell me what happened…",
+            style: { flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 14.5, color: "#F8FAFC", fontFamily: FB },
+          }),
+          el("button", { onClick: () => this.send(), style: { width: 38, height: 38, borderRadius: 999, background: this.state.draft.trim() ? "#FFFFFF" : "rgba(255,255,255,.10)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: this.state.draft.trim() ? "0 5px 14px rgba(167,139,250,.16)" : "none", transition: "all 200ms" } },
+            el("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: this.state.draft.trim() ? "#050509" : "#52525B", strokeWidth: 2.4, strokeLinecap: "round", strokeLinejoin: "round" }, el("path", { d: "M12 19V5M5 12l7-7 7 7" }))))));
+  }
+
+  memory() {
+    const person = (init, name, meta, tags, d) => el("div", { style: Object.assign({ borderRadius: 24, padding: 18, animation: `lv-up 380ms cubic-bezier(.2,.8,.2,1) ${d}s both` }, S.solid) },
+      el("div", { style: { display: "flex", alignItems: "center", gap: 13 } },
+        el("div", { style: { width: 46, height: 46, borderRadius: 999, background: "linear-gradient(135deg,#A78BFA,#8B5CF6)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 18, color: "#050509", flex: "none", boxShadow: "0 5px 14px rgba(167,139,250,.16)" } }, init),
+        el("div", { style: { flex: 1 } },
+          el("div", { style: { fontFamily: FD, fontWeight: 700, fontSize: 18, letterSpacing: "-.3px", color: "#F8FAFC" } }, name),
+          el("div", { style: { fontSize: 12.5, color: "#71717A", marginTop: 2 } }, meta)),
+        el("span", { style: { color: "#52525B", fontSize: 22 } }, "\u203A")),
+      el("div", { style: { display: "flex", flexWrap: "wrap", gap: 7, marginTop: 13 } },
+        tags.map((t) => el("span", { key: t, style: { padding: "5px 11px", borderRadius: 999, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)", fontSize: 11.5, color: "#A1A1AA" } }, t))));
+    return el("div", { style: Object.assign({ position: "relative", height: "100%", padding: "58px 20px 0", display: "flex", flexDirection: "column", overflow: "hidden" }, S.screen) },
+      this.header(),
+      el("h1", { style: { margin: 0, fontFamily: FD, fontWeight: 700, fontSize: 33, letterSpacing: "-1px", color: "#F8FAFC" } }, "Memory"),
+      el("p", { style: { margin: "8px 0 20px", fontSize: 14.5, lineHeight: "21px", color: "#A1A1AA", maxWidth: 300 } }, "The little things, remembered — so your replies sound like you were actually listening."),
+      el("div", { style: { display: "flex", flexDirection: "column", gap: 12 } },
+        person("A", "Ananya", "Instagram · talking 3 weeks", ["Loves filter coffee", "Dog called Idli", "Hates voice notes"], 0.1),
+        person("K", "Kavya", "Hinge · 2nd date Friday", ["Vegetarian", "Loves live music"], 0.2)),
+      el("button", { style: { marginTop: 14, height: 52, borderRadius: 999, background: "rgba(255,255,255,.05)", border: "1px dashed rgba(167,139,250,.45)", color: "#C4B5FD", fontFamily: FB, fontWeight: 600, fontSize: 14.5, cursor: "pointer", animation: "lv-up 380ms cubic-bezier(.2,.8,.2,1) .3s both" } }, "+ Add someone"),
+      el("div", { style: { marginTop: "auto", paddingBottom: 118, display: "flex", alignItems: "center", justifyContent: "center", gap: 7 } },
+        el("svg", { width: 12, height: 12, viewBox: "0 0 24 24", fill: "none", stroke: "#71717A", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }, el("rect", { x: 3, y: 11, width: 18, height: 11, rx: 2 }), el("path", { d: "M7 11V7a5 5 0 0 1 10 0v4" })),
+        el("span", { style: { fontSize: 12.5, color: "#71717A" } }, "Private by default. Delete anyone, anytime.")));
+  }
+
+  renderVals() {
+    let view;
+    if (this.state.boot === "splash") view = this.splash();
+    else if (this.state.boot === "welcome") view = this.welcome();
+    else {
+      const inner = this.state.tab === "ask" ? this.ask() : this.state.tab === "memory" ? this.memory()
+        : this.state.phase === "home" ? this.home() : this.state.phase === "generating" ? this.generating() : this.results();
+      view = el("div", { style: { position: "relative", height: "100%" } }, inner, this.tabbar());
+    }
+    return { app: view };
+  }
+}
+</script>
+</body>
+</html>

@@ -11,7 +11,8 @@ import {
   ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, space } from "@/src/theme/colors";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors, gradients, space } from "@/src/theme/colors";
 
 type Props = {
   children: React.ReactNode;
@@ -77,7 +78,13 @@ export const Screen: React.FC<Props> = ({
   );
 
   return (
-    <View style={styles.root} testID={testID}>
+    <LinearGradient
+      colors={gradients.screen}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.root}
+      testID={testID}
+    >
       {keyboardAvoiding ? (
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -88,7 +95,7 @@ export const Screen: React.FC<Props> = ({
       ) : (
         inner
       )}
-    </View>
+    </LinearGradient>
   );
 };
 

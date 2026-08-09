@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#050509;}
+body{font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+*{box-sizing:border-box;}
+a{color:#C4B5FD;text-decoration:none;}
+a:hover{color:#A78BFA;}
+@keyframes lv-breathe{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+@keyframes lv-shimmer{0%{background-position:-260% 0}100%{background-position:260% 0}}
+@keyframes lv-pulse{0%,100%{opacity:.55;transform:scale(.95)}50%{opacity:1;transform:scale(1.05)}}
+@keyframes lv-spin{to{transform:rotate(360deg)}}
+@keyframes lv-ringexp{0%{opacity:.7;transform:translate(-50%,-50%) scale(.7)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.9)}}
+@keyframes lv-halo{0%,100%{opacity:.45;transform:translate(-50%,-50%) scale(.9)}50%{opacity:.9;transform:translate(-50%,-50%) scale(1.12)}}
+@keyframes lv-laser{0%{transform:translateX(-130%)}100%{transform:translateX(560%)}}
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:radial-gradient(1200px 700px at 30% -8%,rgba(109,59,245,.12),transparent 65%),#050509;padding:60px 48px 120px;">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;padding-bottom:26px;border-bottom:1px solid #1B1C29;">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+        <div style="width:30px;height:30px;border-radius:9px;overflow:hidden;flex:none;box-shadow:0 4px 16px rgba(0,0,0,.5);"><img src="assets/lovli-app-icon.png" alt="Lovli" style="width:110%;height:110%;margin:-5% 0 0 -5%;display:block;object-fit:cover;"></div>
+        <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:17px;letter-spacing:-.5px;color:#F8FAFC;">Lovli</span>
+      </div>
+      <h1 style="margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:42px;line-height:47px;letter-spacing:-1.5px;color:#F8FAFC;">UI mockup kit — every screen, ship-ready.</h1>
+      <p style="margin:14px 0 0;font-size:15px;line-height:24px;color:#A1A1AA;max-width:72ch;">Twenty mockups in the V3 language — the complete flow from the original board, rebuilt on glass: Bricolage Grotesque + Outfit, dark liquid glass, and the full accent palette working in the details — <span style="color:#D9A96E;">amber</span> for warmth, <span style="color:#D6A6B0;">pink</span> for flirt &amp; watch-outs, <span style="color:#9EC5DF;">sky</span> for info, <span style="color:#86C89D;">green</span> for good signs.</p>
+      <div style="display:flex;align-items:center;gap:22px;margin-top:20px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:10px;overflow:hidden;"><img src="assets/lovli-app-icon.png" alt="" style="width:110%;height:110%;margin:-5% 0 0 -5%;display:block;object-fit:cover;"></div><span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;">TILE<br>splash &amp; welcome only</span></div>
+        <div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:11px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.26);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#C4B5FD"></path></svg></div><span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;">SPARK SQUIRCLE<br>in-app mark</span></div>
+        <div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:999px;background:radial-gradient(circle at 32% 30%,#C4B5FD 0%,#8B5CF6 45%,#2A1258 100%);box-shadow:0 4px 14px rgba(109,59,245,.35);"></div><span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;">AURORA DOT<br>avatars &amp; empty states</span></div>
+        <div style="display:flex;align-items:center;gap:10px;"><div style="width:88px;height:1px;overflow:hidden;border-radius:999px;background:rgba(255,255,255,.07);"><div style="width:30%;height:100%;background:linear-gradient(90deg,transparent,rgba(196,181,253,.9),transparent);box-shadow:0 0 8px rgba(167,139,250,.6);animation:lv-laser 3s cubic-bezier(.45,.05,.4,.95) infinite;"></div></div><span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;">LASER LINE<br>live edges, tab bar, hero cards</span></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;flex:none;">
+      <div style="padding:7px 14px;border-radius:999px;background:rgba(167,139,250,.14);border:1px solid rgba(167,139,250,.30);font-size:12px;font-weight:600;color:#C4B5FD;">V3 · Mockup kit</div>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#52525B;">20 SCREENS · 402×874</div>
+    </div>
+  </div>
+
+  <div style="margin-top:48px;display:flex;gap:36px;flex-wrap:wrap;align-items:flex-start;">
+
+    <!-- 01 SPLASH -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">01</span> Splash</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <div style="position:absolute;top:50%;left:50%;width:420px;height:420px;border-radius:999px;background:radial-gradient(closest-side,rgba(109,59,245,.5),transparent 72%);filter:blur(60px);animation:lv-halo 3.4s ease-in-out infinite;"></div>
+          <div style="position:absolute;top:50%;left:50%;width:190px;height:190px;border-radius:999px;border:1px solid rgba(167,139,250,.5);animation:lv-ringexp 2.2s cubic-bezier(.2,.8,.2,1) .5s infinite;"></div>
+          <div style="position:relative;width:108px;height:108px;border-radius:24%;overflow:hidden;box-shadow:0 34px 70px -18px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.07);"><img src="assets/lovli-app-icon.png" alt="" style="width:110%;height:110%;margin:-5% 0 0 -5%;display:block;object-fit:cover;"></div>
+          <div style="position:relative;margin-top:30px;font-size:14.5px;color:#A1A1AA;">Never fumble the text that matters.</div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 02 WELCOME -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">02</span> Welcome</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:40px;left:50%;transform:translateX(-50%);width:460px;height:460px;border-radius:999px;background:radial-gradient(closest-side,rgba(139,92,246,.32),rgba(110,160,195,.06) 74%,transparent);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:110px 28px 46px;display:flex;flex-direction:column;align-items:center;text-align:center;">
+            <div style="width:72px;height:72px;border-radius:24%;overflow:hidden;box-shadow:0 24px 50px -14px rgba(0,0,0,.85);"><img src="assets/lovli-app-icon.png" alt="" style="width:110%;height:110%;margin:-5% 0 0 -5%;display:block;object-fit:cover;"></div>
+            <h1 style="margin:32px 0 0;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:34px;line-height:39px;letter-spacing:-1.2px;color:#F8FAFC;max-width:300px;">Before you send it, let's read it together.</h1>
+            <p style="margin:16px 0 0;font-size:15px;line-height:23px;color:#A1A1AA;max-width:280px;">Paste any chat. Lovli reads what's really going on and writes you three replies — in Hinglish, if that's how you talk.</p>
+            <div style="display:flex;gap:8px;margin-top:22px;">
+              <span style="padding:7px 13px;border-radius:999px;background:rgba(110,160,195,.10);border:1px solid rgba(110,160,195,.28);font-size:12px;font-weight:600;color:#9EC5DF;">Instagram</span>
+              <span style="padding:7px 13px;border-radius:999px;background:rgba(134,200,157,.10);border:1px solid rgba(134,200,157,.26);font-size:12px;font-weight:600;color:#86C89D;">WhatsApp</span>
+              <span style="padding:7px 13px;border-radius:999px;background:rgba(214,166,176,.10);border:1px solid rgba(214,166,176,.28);font-size:12px;font-weight:600;color:#D6A6B0;">Dating apps</span>
+            </div>
+            <div style="margin-top:auto;width:100%;">
+              <button style="width:100%;height:56px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-family:'Outfit',sans-serif;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 10px 28px rgba(167,139,250,.22);">Let's go</button>
+              <div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:14px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span style="font-size:12.5px;color:#71717A;">Your chats stay yours. Read once, never stored.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 03 ONBOARDING LANGUAGE -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">03</span> Onboarding · language</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#090A14);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:-140px;right:-80px;width:420px;height:420px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.24),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:66px 20px 40px;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:30px;">
+              <div style="display:flex;gap:6px;"><span style="width:26px;height:3px;border-radius:999px;background:#A78BFA;"></span><span style="width:26px;height:3px;border-radius:999px;background:#A78BFA;"></span><span style="width:26px;height:3px;border-radius:999px;background:#2A2B3A;"></span></div>
+              <span style="font-size:13px;font-weight:600;color:#52525B;">Skip</span>
+            </div>
+            <h1 style="margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:31px;line-height:36px;letter-spacing:-1px;color:#F8FAFC;max-width:290px;">How do you actually text?</h1>
+            <p style="margin:12px 0 26px;font-size:14.5px;line-height:22px;color:#A1A1AA;max-width:285px;">Pick by ear — replies come back in this by default.</p>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="padding:17px 18px;border-radius:18px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);"><div style="font-size:15px;font-weight:600;color:#E5E7EB;">English</div><div style="font-size:13px;color:#71717A;margin-top:5px;">Sorry, this week ran away from me.</div></div>
+              <div style="padding:17px 18px;border-radius:18px;background:rgba(167,139,250,.09);border:1px solid rgba(167,139,250,.34);box-shadow:inset 0 0 12px rgba(167,139,250,.08);"><div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:15px;font-weight:700;color:#F8FAFC;">Hinglish</span><span style="width:20px;height:20px;border-radius:999px;background:#A78BFA;display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#050509" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span></div><div style="font-size:13px;color:#C4B5FD;margin-top:5px;">Arre sorry yaar, week hi aisa tha 😭</div></div>
+              <div style="padding:17px 18px;border-radius:18px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);"><div style="font-size:15px;font-weight:600;color:#E5E7EB;">हिंदी</div><div style="font-size:13px;color:#71717A;margin-top:5px;">माफ़ करना, हफ़्ता ही पागल था।</div></div>
+            </div>
+            <div style="margin-top:auto;">
+              <button style="width:100%;height:56px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-family:'Outfit',sans-serif;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 10px 28px rgba(167,139,250,.22);">Continue</button>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 04 HOME -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">04</span> Home · Reply</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:-150px;left:-90px;width:460px;height:460px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.28),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:absolute;bottom:-130px;right:-100px;width:400px;height:400px;border-radius:999px;background:radial-gradient(closest-side,rgba(196,110,145,.15),transparent 70%);filter:blur(80px);"></div>
+          <div style="position:relative;height:100%;padding:58px 20px 0;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+              <div style="width:32px;height:32px;border-radius:11px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.26);display:flex;align-items:center;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#C4B5FD"></path></svg></div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(217,169,110,.10);border:1px solid rgba(217,169,110,.28);font-size:11.5px;font-weight:600;color:#D9A96E;"><svg width="10" height="10" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#D9A96E"></path></svg>5 free left</span>
+                <div style="width:34px;height:34px;border-radius:999px;background:linear-gradient(135deg,#A78BFA,#8B5CF6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#050509;">R</div>
+              </div>
+            </div>
+            <h1 style="margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:33px;line-height:37px;letter-spacing:-1px;background:linear-gradient(100deg,#F8FAFC 35%,#C4B5FD 75%,#D6A6B0 100%);-webkit-background-clip:text;background-clip:text;color:transparent;">Kya scene hai?</h1>
+            <p style="margin:8px 0 14px;font-size:14.5px;line-height:21px;color:#A1A1AA;max-width:300px;">Tell me what happened — or just show me the conversation.</p>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
+              <span style="font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#71717A;">How are you feeling?</span>
+              <span style="font-size:12px;font-weight:600;color:#52525B;">Skip</span>
+            </div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;">
+              <span style="padding:8px 13px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:12.5px;font-weight:500;color:#A1A1AA;"><span style="display:inline-block;width:6px;height:6px;border-radius:999px;background:#D9A96E;margin-right:7px;vertical-align:1px;"></span>Excited</span>
+              <span style="padding:8px 13px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:12.5px;font-weight:500;color:#A1A1AA;"><span style="display:inline-block;width:6px;height:6px;border-radius:999px;background:#9EC5DF;margin-right:7px;vertical-align:1px;"></span>Confused</span>
+              <span style="padding:8px 13px;border-radius:999px;background:rgba(167,139,250,.11);border:1px solid rgba(167,139,250,.36);font-size:12.5px;font-weight:700;color:#C4B5FD;box-shadow:inset 0 0 10px rgba(167,139,250,.10);"><span style="display:inline-block;width:6px;height:6px;border-radius:999px;background:#C4B5FD;margin-right:7px;vertical-align:1px;"></span>Overthinking</span>
+              <span style="padding:8px 13px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:12.5px;font-weight:500;color:#A1A1AA;"><span style="display:inline-block;width:6px;height:6px;border-radius:999px;background:#D6A6B0;margin-right:7px;vertical-align:1px;"></span>Falling for someone</span>
+              <span style="padding:8px 13px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:12.5px;font-weight:500;color:#A1A1AA;"><span style="display:inline-block;width:6px;height:6px;border-radius:999px;background:#86C89D;margin-right:7px;vertical-align:1px;"></span>Healing</span>
+              <span style="padding:8px 13px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:12.5px;font-weight:500;color:#A1A1AA;"><span style="display:inline-block;width:6px;height:6px;border-radius:999px;background:#71717A;margin-right:7px;vertical-align:1px;"></span>Just curious</span>
+            </div>
+            <div style="border-radius:24px;padding:16px;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));backdrop-filter:blur(30px) saturate(130%);-webkit-backdrop-filter:blur(30px) saturate(130%);border:1px solid rgba(255,255,255,.09);box-shadow:0 18px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.16);">
+              <div style="display:flex;align-items:center;gap:13px;padding:15px 16px;border-radius:16px;border:1.5px dashed rgba(167,139,250,.45);background:rgba(167,139,250,.06);">
+                <span style="width:38px;height:38px;border-radius:999px;background:rgba(167,139,250,.14);border:1px solid rgba(167,139,250,.3);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"></path></svg></span>
+                <div><div style="font-size:14px;font-weight:600;color:#F8FAFC;">Show me the conversation</div><div style="font-size:12px;color:#71717A;margin-top:2px;">Screenshot from any chat app</div></div>
+              </div>
+              <div style="min-height:56px;padding:14px 4px 0;font-size:15px;line-height:22px;color:#71717A;">Or paste the chat here…</div>
+            </div>
+            <div style="margin-top:auto;padding-bottom:114px;">
+              <button style="width:100%;height:56px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-family:'Outfit',sans-serif;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 10px 28px rgba(167,139,250,.22);"><svg width="15" height="15" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#8B5CF6"></path></svg>Get replies</button>
+            </div>
+            <div style="position:absolute;left:16px;right:16px;bottom:30px;height:68px;border-radius:26px;padding:5px;display:flex;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.06));backdrop-filter:blur(52px) saturate(150%);-webkit-backdrop-filter:blur(52px) saturate(150%);border:1px solid rgba(255,255,255,.10);box-shadow:0 24px 60px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.22);">
+              <div style="position:absolute;top:-1px;left:20px;right:20px;height:1px;overflow:hidden;border-radius:999px;"><div style="width:24%;height:100%;background:linear-gradient(90deg,transparent,rgba(196,181,253,.85),transparent);box-shadow:0 0 8px rgba(167,139,250,.55);animation:lv-laser 3.2s cubic-bezier(.45,.05,.4,.95) .8s infinite;"></div></div>
+              <div style="flex:1;border-radius:21px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);box-shadow:inset 0 0 12px rgba(167,139,250,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg><span style="font-size:11px;font-weight:700;color:#C4B5FD;">Reply</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#71717A"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Ask Lovli</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Memory</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect></svg><span style="font-size:11px;font-weight:500;color:#71717A;">More</span></div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 05 GENERATING -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">05</span> Generating</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:480px;height:480px;border-radius:999px;background:radial-gradient(closest-side,rgba(109,59,245,.38),transparent 72%);filter:blur(70px);animation:lv-pulse 4s ease-in-out infinite;"></div>
+          <div style="position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center;margin-bottom:30px;">
+            <div style="position:absolute;inset:-8px;border-radius:999px;background:conic-gradient(from 0deg,transparent 0%,rgba(167,139,250,.55) 18%,transparent 40%);filter:blur(10px);animation:lv-spin 2.2s linear infinite;"></div>
+            <div style="position:absolute;inset:6px;border-radius:999px;background:rgba(5,5,9,.6);"></div>
+            <div style="position:relative;width:66px;height:66px;border-radius:24%;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.75);animation:lv-pulse 1.8s ease-in-out infinite;"><img src="assets/lovli-app-icon.png" alt="" style="width:110%;height:110%;margin:-5% 0 0 -5%;display:block;object-fit:cover;"></div>
+          </div>
+          <div style="position:relative;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:22px;letter-spacing:-.5px;color:#F8FAFC;">Catching the tone…</div>
+          <div style="position:relative;width:calc(100% - 80px);margin-top:34px;display:flex;flex-direction:column;gap:15px;">
+            <div style="display:flex;align-items:center;gap:11px;"><span style="width:20px;height:20px;border-radius:999px;background:rgba(134,200,157,.16);border:1px solid rgba(134,200,157,.4);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#86C89D" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="font-size:14px;color:#A1A1AA;">Reading the message…</span></div>
+            <div style="display:flex;align-items:center;gap:11px;"><span style="width:20px;height:20px;border-radius:999px;background:rgba(134,200,157,.16);border:1px solid rgba(134,200,157,.4);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#86C89D" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="font-size:14px;color:#A1A1AA;">Checking the vibe…</span></div>
+            <div style="display:flex;align-items:center;gap:11px;"><span style="width:20px;height:20px;border-radius:999px;border:2px solid #A78BFA;box-shadow:0 0 6px rgba(167,139,250,.28);flex:none;animation:lv-pulse 1.4s ease-in-out infinite;"></span><span style="font-size:14.5px;font-weight:600;color:#F8FAFC;">Understanding context…</span></div>
+            <div style="display:flex;align-items:center;gap:11px;"><span style="width:20px;height:20px;border-radius:999px;border:1.5px solid rgba(255,255,255,.14);flex:none;"></span><span style="font-size:14px;color:#52525B;">Finding the best reply…</span></div>
+            <div style="display:flex;align-items:center;gap:11px;"><span style="width:20px;height:20px;border-radius:999px;border:1.5px solid rgba(255,255,255,.14);flex:none;"></span><span style="font-size:14px;color:#52525B;">Writing naturally…</span></div>
+          </div>
+          <div style="position:absolute;left:16px;right:16px;bottom:30px;height:68px;border-radius:26px;padding:5px;display:flex;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.06));backdrop-filter:blur(52px) saturate(150%);-webkit-backdrop-filter:blur(52px) saturate(150%);border:1px solid rgba(255,255,255,.10);box-shadow:0 24px 60px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.22);">
+            <div style="position:absolute;top:-1px;left:20px;right:20px;height:1px;overflow:hidden;border-radius:999px;"><div style="width:24%;height:100%;background:linear-gradient(90deg,transparent,rgba(196,181,253,.85),transparent);box-shadow:0 0 8px rgba(167,139,250,.55);animation:lv-laser 3.2s cubic-bezier(.45,.05,.4,.95) .8s infinite;"></div></div>
+            <div style="flex:1;border-radius:21px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);box-shadow:inset 0 0 12px rgba(167,139,250,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg><span style="font-size:11px;font-weight:700;color:#C4B5FD;">Reply</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#71717A"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Ask Lovli</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Memory</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect></svg><span style="font-size:11px;font-weight:500;color:#71717A;">More</span></div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 06 RESULTS -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">06</span> Results</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:-150px;right:-90px;width:460px;height:460px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.26),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:58px 20px 0;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+              <span style="width:36px;height:36px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:#F8FAFC;font-size:19px;display:flex;align-items:center;justify-content:center;">‹</span>
+              <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:21px;letter-spacing:-.5px;color:#F8FAFC;">Three ways to say it</span>
+            </div>
+            <div style="border-radius:24px;padding:18px;margin-bottom:14px;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));backdrop-filter:blur(30px) saturate(130%);-webkit-backdrop-filter:blur(30px) saturate(130%);border:1px solid rgba(255,255,255,.09);box-shadow:0 18px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.16);">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                <span style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;">WHAT'S GOING ON</span>
+                <span style="display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;background:rgba(217,169,110,.12);border:1px solid rgba(217,169,110,.34);"><span style="width:6px;height:6px;border-radius:999px;background:#D9A96E;animation:lv-breathe 2s ease-in-out infinite;"></span><span style="font-size:11.5px;font-weight:700;color:#D9A96E;">Leaning interested</span></span>
+              </div>
+              <p style="margin:12px 0 0;font-size:14px;line-height:21px;color:#E5E7EB;">She apologised without being asked, then turned it straight back to you. That's keeping the thread alive.</p>
+              <div style="display:flex;gap:8px;margin-top:12px;">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:rgba(134,200,157,.10);border:1px solid rgba(134,200,157,.26);font-size:11px;font-weight:600;color:#86C89D;">✓ Came back on her own</span>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:rgba(214,166,176,.10);border:1px solid rgba(214,166,176,.28);font-size:11px;font-weight:600;color:#D6A6B0;">! Don't ask why</span>
+              </div>
+            </div>
+            <div style="border-radius:24px;padding:20px;position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));backdrop-filter:blur(30px) saturate(130%);-webkit-backdrop-filter:blur(30px) saturate(130%);border:1px solid rgba(255,255,255,.09);box-shadow:0 18px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.16);margin-bottom:12px;">
+              <div style="position:absolute;top:0;left:20px;right:20px;height:1px;overflow:hidden;border-radius:999px;"><div style="width:28%;height:100%;background:linear-gradient(90deg,transparent,rgba(214,166,176,.85),transparent);box-shadow:0 0 8px rgba(214,166,176,.5);animation:lv-laser 3.6s cubic-bezier(.45,.05,.4,.95) .4s infinite;"></div></div>
+              <div style="display:flex;align-items:center;gap:8px;"><span style="width:6px;height:6px;border-radius:999px;background:#D6A6B0;box-shadow:0 0 5px rgba(214,166,176,.35);"></span><span style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#D6A6B0;">SMOOTH</span></div>
+              <p style="margin:12px 0 0;font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:18px;line-height:27px;letter-spacing:-.2px;color:#F8FAFC;">Okay but you owe me chai for making me wait this long 😌</p>
+              <div style="display:flex;gap:10px;margin-top:16px;">
+                <span style="flex:1;height:44px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(167,139,250,.18);">Copy</span>
+                <span style="height:44px;padding:0 18px;border-radius:999px;border:1px solid rgba(255,255,255,.12);color:#A1A1AA;font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;">Edit</span>
+              </div>
+            </div>
+            <div style="border-radius:24px;padding:18px;background:rgba(17,18,28,.86);border:1px solid #262737;margin-bottom:12px;">
+              <div style="display:flex;align-items:center;gap:8px;"><span style="width:6px;height:6px;border-radius:999px;background:#D6A6B0;"></span><span style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#D6A6B0;">SMOOTH</span></div>
+              <p style="margin:11px 0 0;font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:16px;line-height:24px;color:#F8FAFC;">Two days? Bold. I'll allow it — but Saturday you're picking the place.</p>
+            </div>
+            <div style="border-radius:24px;padding:18px;background:rgba(17,18,28,.86);border:1px solid #262737;">
+              <div style="display:flex;align-items:center;gap:8px;"><span style="width:6px;height:6px;border-radius:999px;background:#D6A6B0;"></span><span style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#D6A6B0;">SMOOTH</span></div>
+              <p style="margin:11px 0 0;font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:16px;line-height:24px;color:#F8FAFC;">I was starting to think you'd found a better conversation. Prove me wrong?</p>
+            </div>
+            <p style="margin:14px 0 0;font-size:12.5px;color:#71717A;text-align:center;">Edit anything. The best version is yours.</p>
+            <div style="position:absolute;left:16px;right:16px;bottom:30px;height:68px;border-radius:26px;padding:5px;display:flex;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.06));backdrop-filter:blur(52px) saturate(150%);-webkit-backdrop-filter:blur(52px) saturate(150%);border:1px solid rgba(255,255,255,.10);box-shadow:0 24px 60px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.22);"><div style="position:absolute;top:-1px;left:20px;right:20px;height:1px;overflow:hidden;border-radius:999px;"><div style="width:24%;height:100%;background:linear-gradient(90deg,transparent,rgba(196,181,253,.85),transparent);box-shadow:0 0 8px rgba(167,139,250,.55);animation:lv-laser 3.2s cubic-bezier(.45,.05,.4,.95) .8s infinite;"></div></div><div style="flex:1;border-radius:21px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);box-shadow:inset 0 0 12px rgba(167,139,250,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg><span style="font-size:11px;font-weight:700;color:#C4B5FD;">Reply</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#71717A"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Ask Lovli</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Memory</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect></svg><span style="font-size:11px;font-weight:500;color:#71717A;">More</span></div></div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 07 COPIED TOAST -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">07</span> Copied state</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:-150px;right:-90px;width:460px;height:460px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.26),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:58px 20px 0;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+              <span style="width:36px;height:36px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:#F8FAFC;font-size:19px;display:flex;align-items:center;justify-content:center;">‹</span>
+              <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:21px;letter-spacing:-.5px;color:#F8FAFC;">Three ways to say it</span>
+            </div>
+            <div style="border-radius:24px;padding:20px;position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));backdrop-filter:blur(30px) saturate(130%);-webkit-backdrop-filter:blur(30px) saturate(130%);border:1px solid rgba(255,255,255,.09);box-shadow:0 18px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.16);">
+              <div style="position:absolute;top:0;left:20px;right:20px;height:1px;overflow:hidden;border-radius:999px;"><div style="width:28%;height:100%;background:linear-gradient(90deg,transparent,rgba(214,166,176,.85),transparent);box-shadow:0 0 8px rgba(214,166,176,.5);animation:lv-laser 3.6s cubic-bezier(.45,.05,.4,.95) .4s infinite;"></div></div>
+              <div style="display:flex;align-items:center;gap:8px;"><span style="width:6px;height:6px;border-radius:999px;background:#D6A6B0;box-shadow:0 0 5px rgba(214,166,176,.35);"></span><span style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#D6A6B0;">SMOOTH</span></div>
+              <p style="margin:12px 0 0;font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:18px;line-height:27px;letter-spacing:-.2px;color:#F8FAFC;">Okay but you owe me chai for making me wait this long 😌</p>
+              <div style="display:flex;gap:10px;margin-top:16px;">
+                <span style="flex:1;height:44px;border-radius:999px;background:rgba(167,139,250,.11);border:1px solid rgba(167,139,250,.36);color:#C4B5FD;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 14px rgba(167,139,250,.2);">Copied ✦</span>
+                <span style="height:44px;padding:0 18px;border-radius:999px;border:1px solid rgba(255,255,255,.12);color:#A1A1AA;font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;">Edit</span>
+              </div>
+            </div>
+            <div style="margin-top:auto;padding-bottom:114px;">
+              <div style="display:flex;align-items:center;gap:11px;padding:14px 18px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.06));backdrop-filter:blur(40px) saturate(140%);-webkit-backdrop-filter:blur(40px) saturate(140%);border:1px solid rgba(134,200,157,.30);box-shadow:0 18px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.18);">
+                <span style="width:22px;height:22px;border-radius:999px;background:rgba(134,200,157,.16);border:1px solid rgba(134,200,157,.4);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#86C89D" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+                <span style="font-size:14px;font-weight:600;color:#F8FAFC;">Copied — make it yours.</span>
+              </div>
+            </div>
+            <div style="position:absolute;left:16px;right:16px;bottom:30px;height:68px;border-radius:26px;padding:5px;display:flex;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.06));backdrop-filter:blur(52px) saturate(150%);-webkit-backdrop-filter:blur(52px) saturate(150%);border:1px solid rgba(255,255,255,.10);box-shadow:0 24px 60px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.22);"><div style="position:absolute;top:-1px;left:20px;right:20px;height:1px;overflow:hidden;border-radius:999px;"><div style="width:24%;height:100%;background:linear-gradient(90deg,transparent,rgba(196,181,253,.85),transparent);box-shadow:0 0 8px rgba(167,139,250,.55);animation:lv-laser 3.2s cubic-bezier(.45,.05,.4,.95) .8s infinite;"></div></div><div style="flex:1;border-radius:21px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);box-shadow:inset 0 0 12px rgba(167,139,250,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg><span style="font-size:11px;font-weight:700;color:#C4B5FD;">Reply</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#71717A"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Ask Lovli</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Memory</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect></svg><span style="font-size:11px;font-weight:500;color:#71717A;">More</span></div></div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 08 ASK LOVLI -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">08</span> Ask Lovli</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:-130px;left:-70px;width:420px;height:420px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.22),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:58px 20px 0;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px;">
+              <svg width="19" height="19" viewBox="0 0 24 24" style="filter:drop-shadow(0 0 6px rgba(167,139,250,.35))"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#A78BFA"></path></svg>
+              <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:21px;letter-spacing:-.5px;color:#F8FAFC;">Ask Lovli</span>
+              <span style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:rgba(134,200,157,.10);border:1px solid rgba(134,200,157,.26);font-size:11px;font-weight:600;color:#86C89D;"><span style="width:5px;height:5px;border-radius:999px;background:#86C89D;"></span>online</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;justify-content:flex-end;"><div style="max-width:82%;padding:13px 16px;border-radius:20px 20px 6px 20px;background:rgba(167,139,250,.16);border:1px solid rgba(167,139,250,.32);font-size:14.5px;line-height:22px;color:#F8FAFC;">She left me on read for 2 days and now she's back like nothing happened 😭</div></div>
+              <div style="display:flex;gap:9px;align-items:flex-start;">
+                <svg width="15" height="15" viewBox="0 0 24 24" style="margin-top:10px;flex:none;"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#A78BFA"></path></svg>
+                <div style="max-width:82%;padding:13px 16px;border-radius:20px 20px 20px 6px;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,.09);box-shadow:inset 0 1px 0 rgba(255,255,255,.14);font-size:14.5px;line-height:22px;color:#E5E7EB;">That sting is real — two days of silence rewrites the whole story in your head. Before you decide anything: show me the chat?</div>
+              </div>
+              <div style="display:flex;gap:9px;align-items:center;">
+                <svg width="15" height="15" viewBox="0 0 24 24" style="flex:none;"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#A78BFA"></path></svg>
+                <div style="display:flex;gap:6px;padding:15px 18px;border-radius:20px 20px 20px 6px;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));border:1px solid rgba(255,255,255,.09);">
+                  <span style="width:7px;height:7px;border-radius:999px;background:#A78BFA;animation:lv-breathe 1.5s ease-in-out infinite;"></span>
+                  <span style="width:7px;height:7px;border-radius:999px;background:#A78BFA;animation:lv-breathe 1.5s ease-in-out .18s infinite;"></span>
+                  <span style="width:7px;height:7px;border-radius:999px;background:#A78BFA;animation:lv-breathe 1.5s ease-in-out .36s infinite;"></span>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:auto;padding-bottom:112px;">
+              <div style="display:flex;align-items:center;gap:10px;height:54px;border-radius:999px;padding:0 8px 0 20px;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));backdrop-filter:blur(40px) saturate(140%);-webkit-backdrop-filter:blur(40px) saturate(140%);border:1px solid rgba(255,255,255,.09);box-shadow:0 16px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.16);">
+                <span style="flex:1;font-size:14.5px;color:#71717A;">Tell me what happened…</span>
+                <span style="width:38px;height:38px;border-radius:999px;background:rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52525B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></span>
+              </div>
+            </div>
+            <div style="position:absolute;left:16px;right:16px;bottom:30px;height:68px;border-radius:26px;padding:5px;display:flex;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.06));backdrop-filter:blur(52px) saturate(150%);-webkit-backdrop-filter:blur(52px) saturate(150%);border:1px solid rgba(255,255,255,.10);box-shadow:0 24px 60px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.22);"><div style="position:absolute;top:-1px;left:20px;right:20px;height:1px;overflow:hidden;border-radius:999px;"><div style="width:24%;height:100%;background:linear-gradient(90deg,transparent,rgba(196,181,253,.85),transparent);box-shadow:0 0 8px rgba(167,139,250,.55);animation:lv-laser 3.2s cubic-bezier(.45,.05,.4,.95) .8s infinite;"></div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Reply</span></div><div style="flex:1;border-radius:21px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);box-shadow:inset 0 0 12px rgba(167,139,250,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#C4B5FD"></path></svg><span style="font-size:11px;font-weight:700;color:#C4B5FD;">Ask Lovli</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Memory</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect></svg><span style="font-size:11px;font-weight:500;color:#71717A;">More</span></div></div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 09 MEMORY -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">09</span> Memory</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:-120px;left:-60px;width:400px;height:400px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.20),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:58px 20px 0;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+              <div style="width:32px;height:32px;border-radius:11px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.26);display:flex;align-items:center;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#C4B5FD"></path></svg></div>
+              <div style="width:34px;height:34px;border-radius:999px;background:linear-gradient(135deg,#A78BFA,#8B5CF6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#050509;">R</div>
+            </div>
+            <h1 style="margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:33px;letter-spacing:-1px;color:#F8FAFC;">Memory</h1>
+            <p style="margin:8px 0 20px;font-size:14.5px;line-height:21px;color:#A1A1AA;max-width:300px;">The little things, remembered — so your replies sound like you were actually listening.</p>
+            <div style="border-radius:24px;padding:18px;background:rgba(17,18,28,.86);border:1px solid #262737;margin-bottom:12px;">
+              <div style="display:flex;align-items:center;gap:13px;">
+                <div style="width:46px;height:46px;border-radius:999px;background:linear-gradient(135deg,#A78BFA,#8B5CF6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#050509;flex:none;box-shadow:0 5px 14px rgba(167,139,250,.16);">A</div>
+                <div style="flex:1;"><div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:18px;letter-spacing:-.3px;color:#F8FAFC;">Aanya</div><div style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:#71717A;margin-top:2px;"><span style="width:5px;height:5px;border-radius:999px;background:#9EC5DF;"></span>Hinge · talking 3 weeks · Mumbai</div></div>
+                <span style="color:#52525B;font-size:22px;">›</span>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:13px;">
+                <span style="padding:5px 11px;border-radius:999px;background:rgba(217,169,110,.08);border:1px solid rgba(217,169,110,.24);font-size:11.5px;color:#D9A96E;">Loves filter coffee</span>
+                <span style="padding:5px 11px;border-radius:999px;background:rgba(134,200,157,.08);border:1px solid rgba(134,200,157,.22);font-size:11.5px;color:#86C89D;">Dog: Simba</span>
+                <span style="padding:5px 11px;border-radius:999px;background:rgba(214,166,176,.08);border:1px solid rgba(214,166,176,.24);font-size:11.5px;color:#D6A6B0;">Hates voice notes</span>
+              </div>
+            </div>
+            <div style="border-radius:24px;padding:18px;background:rgba(17,18,28,.86);border:1px solid #262737;">
+              <div style="display:flex;align-items:center;gap:13px;">
+                <div style="width:46px;height:46px;border-radius:999px;background:linear-gradient(135deg,#7BA6C9,#8B5CF6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#050509;flex:none;box-shadow:0 5px 14px rgba(110,160,195,.14);">K</div>
+                <div style="flex:1;"><div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:18px;letter-spacing:-.3px;color:#F8FAFC;">Kabir</div><div style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:#71717A;margin-top:2px;"><span style="width:5px;height:5px;border-radius:999px;background:#D6A6B0;"></span>College friend · it’s complicated</div></div>
+                <span style="color:#52525B;font-size:22px;">›</span>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:13px;">
+                <span style="padding:5px 11px;border-radius:999px;background:rgba(110,160,195,.08);border:1px solid rgba(110,160,195,.24);font-size:11.5px;color:#9EC5DF;">Overthinks like you</span>
+                <span style="padding:5px 11px;border-radius:999px;background:rgba(214,166,176,.08);border:1px solid rgba(214,166,176,.24);font-size:11.5px;color:#D6A6B0;">It’s complicated</span>
+              </div>
+            </div>
+            <button style="margin-top:14px;height:52px;border-radius:999px;background:rgba(255,255,255,.05);border:1px dashed rgba(167,139,250,.45);color:#C4B5FD;font-family:'Outfit',sans-serif;font-weight:600;font-size:14.5px;cursor:pointer;">+ Add someone</button>
+            <div style="margin-top:auto;padding-bottom:114px;display:flex;align-items:center;justify-content:center;gap:7px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span style="font-size:12.5px;color:#71717A;">Private by default. Delete anyone, anytime.</span>
+            </div>
+            <div style="position:absolute;left:16px;right:16px;bottom:30px;height:68px;border-radius:26px;padding:5px;display:flex;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.06));backdrop-filter:blur(52px) saturate(150%);-webkit-backdrop-filter:blur(52px) saturate(150%);border:1px solid rgba(255,255,255,.10);box-shadow:0 24px 60px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.22);"><div style="position:absolute;top:-1px;left:20px;right:20px;height:1px;overflow:hidden;border-radius:999px;"><div style="width:24%;height:100%;background:linear-gradient(90deg,transparent,rgba(196,181,253,.85),transparent);box-shadow:0 0 8px rgba(167,139,250,.55);animation:lv-laser 3.2s cubic-bezier(.45,.05,.4,.95) .8s infinite;"></div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Reply</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#71717A"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Ask Lovli</span></div><div style="flex:1;border-radius:21px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);box-shadow:inset 0 0 12px rgba(167,139,250,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg><span style="font-size:11px;font-weight:700;color:#C4B5FD;">Memory</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect></svg><span style="font-size:11px;font-weight:500;color:#71717A;">More</span></div></div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 10 PERSON DETAIL -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">10</span> Memory · person</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:-110px;right:-70px;width:400px;height:400px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.22),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:58px 20px 0;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px;">
+              <span style="width:36px;height:36px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:#F8FAFC;font-size:19px;display:flex;align-items:center;justify-content:center;">‹</span>
+              <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:20px;letter-spacing:-.4px;color:#F8FAFC;flex:1;">Aanya</span>
+              <span style="font-size:13.5px;font-weight:600;color:#C4B5FD;">Edit</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:15px;margin-bottom:22px;">
+              <div style="width:60px;height:60px;border-radius:999px;background:linear-gradient(135deg,#A78BFA,#8B5CF6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;color:#050509;flex:none;box-shadow:0 6px 18px rgba(167,139,250,.16);">A</div>
+              <div>
+                <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:23px;letter-spacing:-.4px;color:#F8FAFC;">Aanya</div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#71717A;margin-top:4px;"><span style="width:5px;height:5px;border-radius:999px;background:#9EC5DF;"></span>Hinge · talking 3 weeks · Mumbai</div>
+              </div>
+            </div>
+            <div style="border-radius:24px;padding:20px;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));backdrop-filter:blur(30px) saturate(130%);-webkit-backdrop-filter:blur(30px) saturate(130%);border:1px solid rgba(255,255,255,.09);box-shadow:0 18px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.16);">
+              <div style="display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.15em;color:#86C89D;"><span style="width:5px;height:5px;border-radius:999px;background:#86C89D;"></span>GOOD TO REMEMBER</div>
+              <p style="margin:9px 0 0;font-size:14.5px;line-height:22px;color:#E5E7EB;">Filter coffee over anything. Reading Perumal Murugan. Her dog is called Simba — golden retriever, her whole world.</p>
+              <div style="height:1px;background:rgba(255,255,255,.08);margin:16px 0;"></div>
+              <div style="display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.15em;color:#D6A6B0;"><span style="width:5px;height:5px;border-radius:999px;background:#D6A6B0;"></span>THINGS TO AVOID</div>
+              <p style="margin:9px 0 0;font-size:14.5px;line-height:22px;color:#E5E7EB;">Voice notes. Anything about her ex.</p>
+              <div style="height:1px;background:rgba(255,255,255,.08);margin:16px 0;"></div>
+              <div style="display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.15em;color:#9EC5DF;"><span style="width:5px;height:5px;border-radius:999px;background:#9EC5DF;"></span>HOW THEY TALK</div>
+              <p style="margin:9px 0 0;font-size:14.5px;line-height:22px;color:#E5E7EB;">Short, dry, lowercase. Sends memes instead of answering questions.</p>
+              <div style="height:1px;background:rgba(255,255,255,.08);margin:16px 0;"></div>
+              <div style="display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.15em;color:#D9A96E;"><span style="width:5px;height:5px;border-radius:999px;background:#D9A96E;"></span>INSIDE JOKES</div>
+              <p style="margin:9px 0 0;font-size:14.5px;line-height:22px;color:#E5E7EB;">The auto guy who took us to the wrong Koramangala.</p>
+            </div>
+            <div style="margin-top:auto;padding-bottom:118px;">
+              <button style="width:100%;height:46px;border-radius:999px;background:rgba(224,102,122,.10);border:1px solid rgba(224,102,122,.22);color:#D6A6B0;font-family:'Outfit',sans-serif;font-weight:600;font-size:14.5px;cursor:pointer;">Delete Aanya</button>
+            </div>
+            <div style="position:absolute;left:16px;right:16px;bottom:30px;height:68px;border-radius:26px;padding:5px;display:flex;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.06));backdrop-filter:blur(52px) saturate(150%);-webkit-backdrop-filter:blur(52px) saturate(150%);border:1px solid rgba(255,255,255,.10);box-shadow:0 24px 60px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.22);"><div style="position:absolute;top:-1px;left:20px;right:20px;height:1px;overflow:hidden;border-radius:999px;"><div style="width:24%;height:100%;background:linear-gradient(90deg,transparent,rgba(196,181,253,.85),transparent);box-shadow:0 0 8px rgba(167,139,250,.55);animation:lv-laser 3.2s cubic-bezier(.45,.05,.4,.95) .8s infinite;"></div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Reply</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#71717A"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Ask Lovli</span></div><div style="flex:1;border-radius:21px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);box-shadow:inset 0 0 12px rgba(167,139,250,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg><span style="font-size:11px;font-weight:700;color:#C4B5FD;">Memory</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect></svg><span style="font-size:11px;font-weight:500;color:#71717A;">More</span></div></div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 11 LIMIT -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">11</span> Daily limit</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:120px;left:50%;transform:translateX(-50%);width:440px;height:400px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.24),transparent 72%);filter:blur(76px);"></div>
+          <div style="position:relative;height:100%;padding:58px 26px 40px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">
+            <div style="position:relative;width:88px;height:88px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;">
+              <svg width="88" height="88" viewBox="0 0 88 88" style="position:absolute;transform:rotate(-90deg);"><circle cx="44" cy="44" r="40" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="5"></circle><circle cx="44" cy="44" r="40" fill="none" stroke="#D9A96E" stroke-width="5" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="0"></circle></svg>
+              <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:26px;color:#D9A96E;">8<span style="font-size:15px;color:#71717A;">/8</span></span>
+            </div>
+            <h1 style="margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:29px;line-height:34px;letter-spacing:-1px;color:#F8FAFC;max-width:270px;">That's your eight for today.</h1>
+            <p style="margin:14px 0 0;font-size:14.5px;line-height:22px;color:#A1A1AA;max-width:265px;">Resets at midnight. Honestly? Sometimes the better move is to sit with the draft a while anyway.</p>
+            <div style="margin-top:auto;width:100%;">
+              <button style="width:100%;height:56px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-family:'Outfit',sans-serif;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 10px 28px rgba(167,139,250,.22);">Get Early Access to Pro</button>
+              <button style="width:100%;height:50px;margin-top:11px;border-radius:999px;background:transparent;border:1px solid rgba(255,255,255,.12);color:#A1A1AA;font-family:'Outfit',sans-serif;font-weight:600;font-size:14.5px;cursor:pointer;">Back to Reply</button>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 12 FACE ID -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">12</span> Locked</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:#050509;overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;inset:0;padding:100px 20px;display:flex;flex-direction:column;gap:14px;opacity:.5;">
+            <div style="height:36px;width:60%;border-radius:10px;background:#171827;"></div>
+            <div style="height:120px;border-radius:24px;background:#11121C;"></div>
+            <div style="display:flex;gap:8px;"><div style="height:40px;width:92px;border-radius:999px;background:#11121C;"></div><div style="height:40px;width:100px;border-radius:999px;background:#11121C;"></div></div>
+            <div style="height:180px;border-radius:24px;background:#171827;"></div>
+          </div>
+          <div style="position:absolute;inset:0;background:rgba(5,5,9,.72);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);"></div>
+          <div style="position:relative;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 34px;">
+            <div style="width:64px;height:64px;border-radius:20px;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.28);display:flex;align-items:center;justify-content:center;margin-bottom:24px;box-shadow:0 0 30px rgba(167,139,250,.2);">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"></path><path d="M9 10v1M15 10v1M9 15c1.5 1.2 4.5 1.2 6 0"></path></svg>
+            </div>
+            <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:25px;letter-spacing:-.6px;color:#F8FAFC;">Lovli is locked</div>
+            <p style="margin:12px 0 0;font-size:14.5px;line-height:22px;color:#A1A1AA;">Your chats stay yours.</p>
+            <button style="margin-top:30px;height:48px;padding:0 28px;border-radius:999px;background:rgba(255,255,255,.06);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.14);color:#E5E7EB;font-family:'Outfit',sans-serif;font-weight:600;font-size:14.5px;cursor:pointer;">Unlock with Face ID</button>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+  </div>
+
+  <div style="margin-top:56px;display:flex;align-items:baseline;gap:14px;">
+    <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#52525B;">B</span>
+    <h2 style="margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:27px;letter-spacing:-.8px;color:#F8FAFC;">The coach flow &amp; tools — from the original board</h2>
+  </div>
+
+  <div style="margin-top:26px;display:flex;gap:36px;flex-wrap:wrap;align-items:flex-start;">
+
+    <!-- 13 GOAL -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">13</span> Onboarding · goal</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:-140px;left:-80px;width:420px;height:420px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.24),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:66px 20px 40px;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:30px;">
+              <span style="color:#F8FAFC;font-size:20px;line-height:1;">‹</span>
+              <div style="flex:1;height:4px;border-radius:999px;background:rgba(255,255,255,.08);"><div style="width:33%;height:100%;border-radius:999px;background:linear-gradient(90deg,#A78BFA,#8B5CF6);box-shadow:0 0 6px rgba(167,139,250,.28);"></div></div>
+              <span style="font-size:12px;color:#52525B;">1 of 3</span>
+            </div>
+            <h1 style="margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:31px;line-height:36px;letter-spacing:-1px;color:#F8FAFC;">What brings you here?</h1>
+            <p style="margin:10px 0 24px;font-size:14.5px;color:#A1A1AA;">I'll shape my advice around it.</p>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;align-items:center;padding:16px 18px;border-radius:18px;background:rgba(167,139,250,.09);border:1px solid rgba(167,139,250,.34);box-shadow:inset 0 0 12px rgba(167,139,250,.08);"><span style="flex:1;font-size:15px;font-weight:700;color:#F8FAFC;">Find a relationship</span><span style="width:20px;height:20px;border-radius:999px;background:#A78BFA;display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#050509" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span></div>
+              <div style="padding:16px 18px;border-radius:18px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:15px;font-weight:500;color:#E5E7EB;">Fix things with someone</div>
+              <div style="padding:16px 18px;border-radius:18px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:15px;font-weight:500;color:#E5E7EB;">Get better at dating apps</div>
+              <div style="padding:16px 18px;border-radius:18px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:15px;font-weight:500;color:#E5E7EB;">Survive the talking stage</div>
+              <div style="padding:16px 18px;border-radius:18px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:15px;font-weight:500;color:#E5E7EB;">Heading toward marriage</div>
+              <div style="padding:16px 18px;border-radius:18px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:15px;font-weight:500;color:#E5E7EB;">Recover after a breakup</div>
+            </div>
+            <div style="margin-top:auto;">
+              <button style="width:100%;height:56px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-family:'Outfit',sans-serif;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 10px 28px rgba(167,139,250,.22);">Continue</button>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 14 CONTEXT -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">14</span> Context · after the chat is read</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:-130px;right:-80px;width:420px;height:420px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.22),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:60px 20px 40px;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+              <span style="color:#F8FAFC;font-size:20px;line-height:1;">‹</span>
+              <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:20px;letter-spacing:-.5px;color:#F8FAFC;">Got it. I read the chat.</span>
+            </div>
+            <div style="border-radius:20px;padding:14px;background:rgba(17,18,28,.86);border:1px solid #262737;display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+              <div style="align-self:flex-start;max-width:82%;padding:10px 13px;border-radius:14px 14px 14px 5px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);font-size:12.5px;line-height:18px;color:#A1A1AA;">was so fun yesterday haha. you're trouble 😏</div>
+              <div style="align-self:flex-end;max-width:82%;padding:10px 13px;border-radius:14px 14px 5px 14px;background:rgba(167,139,250,.14);border:1px solid rgba(167,139,250,.26);font-size:12.5px;line-height:18px;color:#E5E7EB;">hahaha good trouble or bad trouble?</div>
+              <div style="align-self:flex-start;max-width:82%;padding:10px 13px;border-radius:14px 14px 14px 5px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);font-size:12.5px;line-height:18px;color:#A1A1AA;">wouldn't you like to know 😏</div>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;margin-bottom:9px;">WHAT DO YOU WANT?</div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px;">
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(167,139,250,.11);border:1px solid rgba(167,139,250,.36);font-size:13px;font-weight:700;color:#C4B5FD;box-shadow:inset 0 0 10px rgba(167,139,250,.10);">Reply</span>
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:13px;font-weight:500;color:#A1A1AA;">Understand</span>
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:13px;font-weight:500;color:#A1A1AA;">Flirt</span>
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:13px;font-weight:500;color:#A1A1AA;">Set boundaries</span>
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:13px;font-weight:500;color:#A1A1AA;">End it</span>
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:13px;font-weight:500;color:#A1A1AA;">Save the vibe</span>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;margin-bottom:9px;">HOW SHOULD IT LAND?</div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap;">
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:13px;font-weight:500;color:#A1A1AA;">Make them smile</span>
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(167,139,250,.11);border:1px solid rgba(167,139,250,.36);font-size:13px;font-weight:700;color:#C4B5FD;box-shadow:inset 0 0 10px rgba(167,139,250,.10);">Keep the mystery</span>
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:13px;font-weight:500;color:#A1A1AA;">Sound confident</span>
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:13px;font-weight:500;color:#A1A1AA;">Don't look desperate</span>
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:13px;font-weight:500;color:#A1A1AA;">Be funny</span>
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:13px;font-weight:500;color:#A1A1AA;">Stay casual</span>
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:13px;font-weight:500;color:#A1A1AA;">Be mature</span>
+            </div>
+            <div style="margin-top:auto;">
+              <button style="width:100%;height:56px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-family:'Outfit',sans-serif;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;box-shadow:0 10px 28px rgba(167,139,250,.22);"><svg width="15" height="15" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#8B5CF6"></path></svg>Write it for me</button>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 15 YOUR REPLY -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">15</span> Your reply · wingman voice</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:-140px;left:-80px;width:440px;height:440px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.24),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:60px 20px 0;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+              <span style="color:#F8FAFC;font-size:20px;line-height:1;">‹</span>
+              <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:21px;letter-spacing:-.5px;color:#F8FAFC;">Your reply</span>
+            </div>
+            <div style="border-radius:24px;padding:18px;margin-bottom:16px;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));backdrop-filter:blur(30px) saturate(130%);-webkit-backdrop-filter:blur(30px) saturate(130%);border:1px solid rgba(255,255,255,.09);box-shadow:0 18px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.16);">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;">HERE'S WHAT I'M NOTICING</span>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:rgba(217,169,110,.12);border:1px solid rgba(217,169,110,.34);"><span style="width:5px;height:5px;border-radius:999px;background:#D9A96E;"></span><span style="font-size:11px;font-weight:700;color:#D9A96E;">Warm</span></span>
+              </div>
+              <div style="display:flex;gap:9px;align-items:flex-start;margin-top:13px;"><svg width="12" height="12" viewBox="0 0 24 24" style="margin-top:4px;flex:none;"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#A78BFA"></path></svg><span style="font-size:13.5px;line-height:20px;color:#A1A1AA;">"wouldn't you like to know 😏" is an invitation, not a brush-off.</span></div>
+              <div style="display:flex;gap:9px;align-items:flex-start;margin-top:8px;"><svg width="12" height="12" viewBox="0 0 24 24" style="margin-top:4px;flex:none;"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#A78BFA"></path></svg><span style="font-size:13.5px;line-height:20px;color:#A1A1AA;">She's keeping the game going — she wants you to play.</span></div>
+              <div style="height:1px;background:rgba(255,255,255,.08);margin:13px 0;"></div>
+              <p style="margin:0;font-size:13.5px;line-height:20px;color:#E5E7EB;"><strong style="color:#F8FAFC;font-weight:700;">What's really going on:</strong> she's testing if you can keep up. This is flirting, not deflection.</p>
+              <p style="margin:9px 0 0;font-size:13.5px;line-height:20px;color:#E5E7EB;"><strong style="color:#C4B5FD;font-weight:700;">If I were your wingman:</strong> match her tease, don't answer the question. Mystery for mystery.</p>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;margin-bottom:9px;">I'D SEND THIS<svg width="11" height="11" viewBox="0 0 24 24" style="margin-left:6px;vertical-align:-1px;"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#C4B5FD"></path></svg></div>
+            <div style="border-radius:24px;padding:20px;position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));backdrop-filter:blur(30px) saturate(130%);-webkit-backdrop-filter:blur(30px) saturate(130%);border:1px solid rgba(255,255,255,.09);box-shadow:0 18px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.16);">
+              <div style="position:absolute;top:0;left:20px;right:20px;height:1px;overflow:hidden;border-radius:999px;"><div style="width:28%;height:100%;background:linear-gradient(90deg,transparent,rgba(214,166,176,.85),transparent);box-shadow:0 0 8px rgba(214,166,176,.5);animation:lv-laser 3.6s cubic-bezier(.45,.05,.4,.95) .4s infinite;"></div></div>
+              <p style="margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:18px;line-height:27px;letter-spacing:-.2px;color:#F8FAFC;">Oh I already know. I just wanted to hear you say it.</p>
+              <div style="display:flex;gap:8px;margin-top:16px;">
+                <span style="flex:1;height:42px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-weight:700;font-size:13.5px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(167,139,250,.18);">Copy</span>
+                <span style="height:42px;padding:0 15px;border-radius:999px;border:1px solid rgba(255,255,255,.12);color:#A1A1AA;font-weight:600;font-size:13.5px;display:flex;align-items:center;justify-content:center;">Edit</span>
+                <span style="height:42px;padding:0 15px;border-radius:999px;border:1px solid rgba(255,255,255,.12);color:#A1A1AA;font-weight:600;font-size:13.5px;display:flex;align-items:center;justify-content:center;">↻ Regenerate</span>
+              </div>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;margin:16px 0 9px;">OR MAKE IT…</div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap;">
+              <span style="padding:8px 14px;border-radius:999px;background:rgba(217,169,110,.08);border:1px solid rgba(217,169,110,.26);font-size:12.5px;font-weight:600;color:#D9A96E;">Funny</span>
+              <span style="padding:8px 14px;border-radius:999px;background:rgba(214,166,176,.08);border:1px solid rgba(214,166,176,.26);font-size:12.5px;font-weight:600;color:#D6A6B0;">Romantic</span>
+              <span style="padding:8px 14px;border-radius:999px;background:rgba(110,160,195,.08);border:1px solid rgba(110,160,195,.26);font-size:12.5px;font-weight:600;color:#9EC5DF;">Confident</span>
+              <span style="padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:12.5px;font-weight:600;color:#A1A1AA;">Shorter</span>
+              <span style="padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);font-size:12.5px;font-weight:600;color:#A1A1AA;">Longer</span>
+            </div>
+            <div style="margin-top:auto;padding-bottom:114px;display:flex;justify-content:center;">
+              <span style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;background:rgba(134,200,157,.10);border:1px solid rgba(134,200,157,.3);font-size:13px;font-weight:600;color:#86C89D;">✓ Copied — go get 'em.</span>
+            </div>
+            <div style="position:absolute;left:16px;right:16px;bottom:30px;height:68px;border-radius:26px;padding:5px;display:flex;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.06));backdrop-filter:blur(52px) saturate(150%);-webkit-backdrop-filter:blur(52px) saturate(150%);border:1px solid rgba(255,255,255,.10);box-shadow:0 24px 60px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.22);"><div style="position:absolute;top:-1px;left:20px;right:20px;height:1px;overflow:hidden;border-radius:999px;"><div style="width:24%;height:100%;background:linear-gradient(90deg,transparent,rgba(196,181,253,.85),transparent);box-shadow:0 0 8px rgba(167,139,250,.55);animation:lv-laser 3.2s cubic-bezier(.45,.05,.4,.95) .8s infinite;"></div></div><div style="flex:1;border-radius:21px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);box-shadow:inset 0 0 12px rgba(167,139,250,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg><span style="font-size:11px;font-weight:700;color:#C4B5FD;">Reply</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#71717A"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Ask Lovli</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Memory</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect></svg><span style="font-size:11px;font-weight:500;color:#71717A;">More</span></div></div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 16 DECODE -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">16</span> The decode</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:-140px;right:-80px;width:440px;height:440px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.24),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:60px 20px 0;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+              <span style="color:#F8FAFC;font-size:20px;line-height:1;">‹</span>
+              <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:21px;letter-spacing:-.5px;color:#F8FAFC;">The decode</span>
+            </div>
+            <div style="border-radius:24px;padding:18px;margin-bottom:14px;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));backdrop-filter:blur(30px) saturate(130%);-webkit-backdrop-filter:blur(30px) saturate(130%);border:1px solid rgba(255,255,255,.09);box-shadow:0 18px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.16);">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;">OVERALL VIBE</div>
+              <div style="margin-top:8px;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:24px;letter-spacing:-.6px;color:#F8FAFC;">Leaning interested.</div>
+              <div style="display:flex;gap:5px;margin-top:13px;">
+                <div style="flex:1;height:6px;border-radius:999px;background:rgba(255,255,255,.08);"></div>
+                <div style="flex:1;height:6px;border-radius:999px;background:rgba(255,255,255,.08);"></div>
+                <div style="flex:1;height:6px;border-radius:999px;background:linear-gradient(90deg,#A78BFA,#8B5CF6);box-shadow:0 0 6px rgba(167,139,250,.28);"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:7px;font-size:10.5px;color:#52525B;"><span>Not into it</span><span>Mixed signals</span><span style="color:#C4B5FD;font-weight:600;">Leaning interested</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.15em;color:#86C89D;margin-bottom:8px;"><span style="width:5px;height:5px;border-radius:999px;background:#86C89D;"></span>POSITIVE SIGNS</div>
+            <div style="font-size:13.5px;line-height:20px;color:#A1A1AA;margin-bottom:4px;">✦ She asks follow-up questions — that's real curiosity, not politeness.</div>
+            <div style="font-size:13.5px;line-height:20px;color:#A1A1AA;margin-bottom:14px;">✦ She remembers small details you mentioned days ago.</div>
+            <div style="display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.15em;color:#D6A6B0;margin-bottom:8px;"><span style="width:5px;height:5px;border-radius:999px;background:#D6A6B0;"></span>WATCH-OUTS</div>
+            <div style="font-size:13.5px;line-height:20px;color:#A1A1AA;margin-bottom:14px;">✦ Plans stay vague from her side — she hasn't committed to anything yet.</div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;margin-bottom:8px;">WHAT'S REALLY GOING ON</div>
+            <p style="margin:0 0 14px;font-size:13.5px;line-height:20px;color:#E5E7EB;">She likes the attention and probably likes you — but she's comfortable in the texting stage and isn't going to move it forward herself.</p>
+            <div style="border-radius:20px;padding:16px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.28);">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#C4B5FD;margin-bottom:8px;">YOUR NEXT MOVE</div>
+              <p style="margin:0;font-size:13.5px;line-height:20px;color:#E5E7EB;"><strong style="color:#F8FAFC;">If I were your wingman:</strong> stop matching her vagueness. One clear, low-pressure plan — "chai Sunday, 5pm?" — and you'll know where you stand.</p>
+              <p style="margin:8px 0 0;font-size:12.5px;line-height:18px;color:#A1A1AA;"><strong style="color:#C4B5FD;font-weight:600;">Likely outcome:</strong> she says yes, or she gives you the clarity you actually need.</p>
+            </div>
+            <div style="margin-top:auto;padding-bottom:114px;display:flex;gap:20px;justify-content:center;">
+              <span style="font-size:13px;font-weight:600;color:#A1A1AA;">♡ Save to Memory</span>
+              <span style="font-size:13px;font-weight:600;color:#C4B5FD;">✦ Ask Lovli about this</span>
+            </div>
+            <div style="position:absolute;left:16px;right:16px;bottom:30px;height:68px;border-radius:26px;padding:5px;display:flex;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.06));backdrop-filter:blur(52px) saturate(150%);-webkit-backdrop-filter:blur(52px) saturate(150%);border:1px solid rgba(255,255,255,.10);box-shadow:0 24px 60px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.22);"><div style="position:absolute;top:-1px;left:20px;right:20px;height:1px;overflow:hidden;border-radius:999px;"><div style="width:24%;height:100%;background:linear-gradient(90deg,transparent,rgba(196,181,253,.85),transparent);box-shadow:0 0 8px rgba(167,139,250,.55);animation:lv-laser 3.2s cubic-bezier(.45,.05,.4,.95) .8s infinite;"></div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Reply</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#71717A"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Ask Lovli</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Memory</span></div><div style="flex:1;border-radius:21px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);box-shadow:inset 0 0 12px rgba(167,139,250,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect></svg><span style="font-size:11px;font-weight:700;color:#C4B5FD;">More</span></div></div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 17 MORE TOOLS -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">17</span> More · tools</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:-130px;left:-70px;width:420px;height:420px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.20),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:58px 20px 0;display:flex;flex-direction:column;overflow:hidden;">
+            <h1 style="margin:0 0 4px;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:30px;letter-spacing:-1px;color:#F8FAFC;">More tools</h1>
+            <p style="margin:0 0 18px;font-size:13.5px;color:#A1A1AA;">For when you need more than a reply.</p>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;margin-bottom:9px;">MAKE SENSE OF IT</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px;">
+              <div style="border-radius:18px;padding:14px;background:rgba(17,18,28,.86);border:1px solid #262737;"><div style="width:28px;height:28px;border-radius:9px;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.26);display:flex;align-items:center;justify-content:center;margin-bottom:9px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg></div><div style="font-size:13.5px;font-weight:700;color:#F8FAFC;">Decode the situation</div><div style="font-size:11.5px;color:#71717A;margin-top:3px;">What's really going on?</div></div>
+              <div style="border-radius:18px;padding:14px;background:rgba(17,18,28,.86);border:1px solid #262737;"><div style="width:28px;height:28px;border-radius:9px;background:rgba(110,160,195,.10);border:1px solid rgba(110,160,195,.26);display:flex;align-items:center;justify-content:center;margin-bottom:9px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9EC5DF" stroke-width="2" stroke-linecap="round"><path d="M3 20h18M6 16v-5M12 16V8M18 16v-9"></path></svg></div><div style="font-size:13.5px;font-weight:700;color:#F8FAFC;">Read the signals</div><div style="font-size:11.5px;color:#71717A;margin-top:3px;">Into you, or not?</div></div>
+              <div style="border-radius:18px;padding:14px;background:rgba(17,18,28,.86);border:1px solid #262737;"><div style="width:28px;height:28px;border-radius:9px;background:rgba(217,169,110,.10);border:1px solid rgba(217,169,110,.26);display:flex;align-items:center;justify-content:center;margin-bottom:9px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D9A96E" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18"></path></svg></div><div style="font-size:13.5px;font-weight:700;color:#F8FAFC;">The other side</div><div style="font-size:11.5px;color:#71717A;margin-top:3px;">How they might see it.</div></div>
+              <div style="border-radius:18px;padding:14px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.4);position:relative;"><span style="position:absolute;top:10px;right:10px;padding:3px 8px;border-radius:999px;background:rgba(167,139,250,.2);font-size:9.5px;font-weight:700;letter-spacing:.1em;color:#C4B5FD;">NEW</span><div style="width:28px;height:28px;border-radius:9px;background:rgba(167,139,250,.16);border:1px solid rgba(167,139,250,.32);display:flex;align-items:center;justify-content:center;margin-bottom:9px;"><svg width="13" height="13" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#C4B5FD"></path></svg></div><div style="font-size:13.5px;font-weight:700;color:#F8FAFC;">Practice it</div><div style="font-size:11.5px;color:#A1A1AA;margin-top:3px;">Rehearse the hard convo first.</div></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;margin-bottom:9px;">MAKE A MOVE</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px;">
+              <div style="border-radius:18px;padding:14px;background:rgba(17,18,28,.86);border:1px solid #262737;"><div style="width:28px;height:28px;border-radius:9px;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.26);display:flex;align-items:center;justify-content:center;margin-bottom:9px;"><svg width="13" height="13" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#C4B5FD"></path></svg></div><div style="font-size:13.5px;font-weight:700;color:#F8FAFC;">Glow up my reply</div><div style="font-size:11.5px;color:#71717A;margin-top:3px;">Make my draft land better.</div></div>
+              <div style="border-radius:18px;padding:14px;background:rgba(17,18,28,.86);border:1px solid #262737;"><div style="width:28px;height:28px;border-radius:9px;background:rgba(110,160,195,.10);border:1px solid rgba(110,160,195,.26);display:flex;align-items:center;justify-content:center;margin-bottom:9px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9EC5DF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="m16 8-2.5 5.5L8 16l2.5-5.5z"></path></svg></div><div style="font-size:13.5px;font-weight:700;color:#F8FAFC;">What should I do?</div><div style="font-size:11.5px;color:#71717A;margin-top:3px;">Your next move, mapped.</div></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;margin-bottom:9px;">WORK IT OUT</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
+              <div style="border-radius:18px;padding:14px;background:rgba(17,18,28,.86);border:1px solid #262737;"><div style="width:28px;height:28px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center;margin-bottom:9px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A1A1AA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.5L3 21l2-5.6A8.5 8.5 0 1 1 21 11.5z"></path><path d="M9 12h6"></path></svg></div><div style="font-size:13.5px;font-weight:700;color:#F8FAFC;">Settle the fight</div><div style="font-size:11.5px;color:#71717A;margin-top:3px;">Say it without the sting.</div></div>
+              <div style="border-radius:18px;padding:14px;background:rgba(17,18,28,.86);border:1px solid #262737;"><div style="width:28px;height:28px;border-radius:9px;background:rgba(214,166,176,.10);border:1px solid rgba(214,166,176,.26);display:flex;align-items:center;justify-content:center;margin-bottom:9px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D6A6B0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"></path></svg></div><div style="font-size:13.5px;font-weight:700;color:#D6A6B0;">Red flag check</div><div style="font-size:11.5px;color:#71717A;margin-top:3px;">Spot it early.</div></div>
+              <div style="border-radius:18px;padding:14px;background:rgba(17,18,28,.86);border:1px solid #262737;"><div style="width:28px;height:28px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center;margin-bottom:9px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A1A1AA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 7h14M7 7l-3 6a3 3 0 0 0 6 0zM17 7l-3 6a3 3 0 0 0 6 0z"></path></svg></div><div style="font-size:13.5px;font-weight:700;color:#F8FAFC;">Fair verdict</div><div style="font-size:11.5px;color:#71717A;margin-top:3px;">Who's right? Honestly.</div></div>
+              <div style="border-radius:18px;padding:14px;background:rgba(17,18,28,.86);border:1px solid #262737;"><div style="width:28px;height:28px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center;margin-bottom:9px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A1A1AA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"></path><path d="m12 6-1.5 3 3 3-1.5 3"></path></svg></div><div style="font-size:13.5px;font-weight:700;color:#F8FAFC;">Breakup clarity</div><div style="font-size:11.5px;color:#71717A;margin-top:3px;">Closure, not spiralling.</div></div>
+            </div>
+            <div style="position:absolute;left:16px;right:16px;bottom:30px;height:68px;border-radius:26px;padding:5px;display:flex;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.06));backdrop-filter:blur(52px) saturate(150%);-webkit-backdrop-filter:blur(52px) saturate(150%);border:1px solid rgba(255,255,255,.10);box-shadow:0 24px 60px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.22);">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Reply</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#71717A"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Ask Lovli</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Memory</span></div>
+              <div style="flex:1;border-radius:21px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);box-shadow:inset 0 0 12px rgba(167,139,250,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect></svg><span style="font-size:11px;font-weight:700;color:#C4B5FD;">More</span></div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 18 TIMELINE -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">18</span> Memory · your story so far</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:-120px;right:-70px;width:400px;height:400px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.22),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:60px 20px 0;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+              <span style="color:#F8FAFC;font-size:20px;line-height:1;">‹</span>
+              <div style="width:40px;height:40px;border-radius:999px;background:linear-gradient(135deg,#A78BFA,#8B5CF6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#050509;">A</div>
+              <div style="flex:1;"><div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:19px;letter-spacing:-.4px;color:#F8FAFC;">Aanya</div><div style="font-size:12px;color:#71717A;">Talking · 3 weeks · Hinge · Mumbai</div></div>
+              <span style="font-size:13.5px;font-weight:600;color:#C4B5FD;">Edit</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:11px;padding:13px 15px;border-radius:18px;background:rgba(217,169,110,.08);border:1px solid rgba(217,169,110,.28);margin-bottom:18px;">
+              <span style="width:30px;height:30px;border-radius:10px;background:rgba(217,169,110,.12);border:1px solid rgba(217,169,110,.3);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D9A96E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13M5 12v9h14v-9M12 8a3 3 0 1 0-3-3c0 2 3 3 3 3z"></path></svg></span>
+              <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:#D9A96E;">Her birthday is coming up — Aug 9</div><div style="font-size:12px;color:#A1A1AA;margin-top:2px;">Low-key idea: that filter coffee place.</div></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;margin-bottom:12px;">YOUR STORY SO FAR</div>
+            <div style="display:flex;flex-direction:column;position:relative;padding-left:20px;">
+              <div style="position:absolute;left:5px;top:6px;bottom:6px;width:1.5px;background:linear-gradient(180deg,rgba(167,139,250,.5),rgba(167,139,250,.08));"></div>
+              <div style="position:relative;padding-bottom:16px;"><span style="position:absolute;left:-20px;top:4px;width:11px;height:11px;border-radius:999px;background:#A78BFA;box-shadow:0 0 10px rgba(167,139,250,.7);"></span><div style="font-size:14px;font-weight:700;color:#F8FAFC;">Matched on Hinge</div><div style="font-size:12px;color:#71717A;margin-top:2px;">June 12 — she liked your Goa photo</div></div>
+              <div style="position:relative;padding-bottom:16px;"><span style="position:absolute;left:-20px;top:4px;width:11px;height:11px;border-radius:999px;background:#A78BFA;"></span><div style="font-size:14px;font-weight:700;color:#F8FAFC;">First coffee date</div><div style="font-size:12px;color:#71717A;margin-top:2px;">June 21 — Blue Tokai, went 3 hours</div></div>
+              <div style="position:relative;padding-bottom:16px;"><span style="position:absolute;left:-20px;top:4px;width:11px;height:11px;border-radius:999px;background:#A78BFA;"></span><div style="font-size:14px;font-weight:700;color:#F8FAFC;">Mentioned her dog, Simba</div><div style="font-size:12px;color:#71717A;margin-top:2px;">June 28 — golden retriever, her whole world</div></div>
+              <div style="position:relative;padding-bottom:16px;"><span style="position:absolute;left:-20px;top:4px;width:11px;height:11px;border-radius:999px;background:transparent;border:2px solid #D9A96E;"></span><div style="font-size:14px;font-weight:700;color:#D9A96E;">Her birthday</div><div style="font-size:12px;color:#71717A;margin-top:2px;">Coming up — August 9</div></div>
+              <div style="position:relative;"><span style="position:absolute;left:-20px;top:4px;width:11px;height:11px;border-radius:999px;border:1.5px dashed rgba(255,255,255,.25);"></span><div style="font-size:13.5px;font-weight:600;color:#C4B5FD;">+ Add a moment</div></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;margin:20px 0 10px;">THE LITTLE THINGS</div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap;">
+              <span style="padding:6px 12px;border-radius:999px;background:rgba(217,169,110,.08);border:1px solid rgba(217,169,110,.26);font-size:12px;color:#D9A96E;">Filter coffee over chai</span>
+              <span style="padding:6px 12px;border-radius:999px;background:rgba(110,160,195,.08);border:1px solid rgba(110,160,195,.26);font-size:12px;color:#9EC5DF;">"The biryani incident"</span>
+              <span style="padding:6px 12px;border-radius:999px;background:rgba(214,166,176,.08);border:1px solid rgba(214,166,176,.28);font-size:12px;color:#D6A6B0;">Avoid: one-word texts</span>
+            </div>
+            <div style="position:absolute;left:16px;right:16px;bottom:30px;height:68px;border-radius:26px;padding:5px;display:flex;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.06));backdrop-filter:blur(52px) saturate(150%);-webkit-backdrop-filter:blur(52px) saturate(150%);border:1px solid rgba(255,255,255,.10);box-shadow:0 24px 60px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.22);"><div style="position:absolute;top:-1px;left:20px;right:20px;height:1px;overflow:hidden;border-radius:999px;"><div style="width:24%;height:100%;background:linear-gradient(90deg,transparent,rgba(196,181,253,.85),transparent);box-shadow:0 0 8px rgba(167,139,250,.55);animation:lv-laser 3.2s cubic-bezier(.45,.05,.4,.95) .8s infinite;"></div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Reply</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#71717A"></path></svg><span style="font-size:11px;font-weight:500;color:#71717A;">Ask Lovli</span></div><div style="flex:1;border-radius:21px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.28);box-shadow:inset 0 0 12px rgba(167,139,250,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg><span style="font-size:11px;font-weight:700;color:#C4B5FD;">Memory</span></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect></svg><span style="font-size:11px;font-weight:500;color:#71717A;">More</span></div></div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 19 PREMIUM -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">19</span> Premium</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#0A0918,#120B2E);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:520px;height:460px;border-radius:999px;background:radial-gradient(closest-side,rgba(139,92,246,.4),transparent 72%);filter:blur(80px);"></div>
+          <div style="position:relative;height:100%;padding:58px 22px 36px;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+              <span style="width:32px;height:32px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);color:#A1A1AA;font-size:15px;display:flex;align-items:center;justify-content:center;">✕</span>
+              <span style="display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:999px;background:rgba(167,139,250,.16);border:1px solid rgba(167,139,250,.36);font-size:11.5px;font-weight:700;letter-spacing:.1em;color:#C4B5FD;">✦ LOVLI PREMIUM</span>
+            </div>
+            <div style="font-size:15px;color:#71717A;text-decoration:line-through;">Overthinking every text.</div>
+            <h1 style="margin:6px 0 0;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:36px;line-height:41px;letter-spacing:-1.3px;color:#F8FAFC;">Always know<br>what to say.</h1>
+            <div style="display:flex;flex-direction:column;gap:11px;margin-top:22px;">
+              <div style="display:flex;gap:11px;align-items:center;"><span style="width:22px;height:22px;border-radius:999px;background:rgba(134,200,157,.14);border:1px solid rgba(134,200,157,.34);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#86C89D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="font-size:14px;color:#E5E7EB;">Unlimited replies, any situation</span></div>
+              <div style="display:flex;gap:11px;align-items:center;"><span style="width:22px;height:22px;border-radius:999px;background:rgba(134,200,157,.14);border:1px solid rgba(134,200,157,.34);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#86C89D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="font-size:14px;color:#E5E7EB;">Relationship memory for everyone you're talking to</span></div>
+              <div style="display:flex;gap:11px;align-items:center;"><span style="width:22px;height:22px;border-radius:999px;background:rgba(134,200,157,.14);border:1px solid rgba(134,200,157,.34);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#86C89D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="font-size:14px;color:#E5E7EB;">Deeper message decoding</span></div>
+              <div style="display:flex;gap:11px;align-items:center;"><span style="width:22px;height:22px;border-radius:999px;background:rgba(134,200,157,.14);border:1px solid rgba(134,200,157,.34);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#86C89D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="font-size:14px;color:#E5E7EB;">Ask Lovli anytime — no limits</span></div>
+              <div style="display:flex;gap:11px;align-items:center;"><span style="width:22px;height:22px;border-radius:999px;background:rgba(134,200,157,.14);border:1px solid rgba(134,200,157,.34);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#86C89D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="font-size:14px;color:#E5E7EB;">Priority AI — faster, sharper answers</span></div>
+            </div>
+            <div style="margin-top:auto;">
+              <div style="position:relative;border-radius:20px;padding:16px 18px;background:rgba(167,139,250,.12);border:1.5px solid rgba(167,139,250,.6);box-shadow:inset 0 0 18px rgba(167,139,250,.16);margin-bottom:10px;">
+                <span style="position:absolute;top:-9px;right:16px;padding:3px 10px;border-radius:999px;background:linear-gradient(135deg,#A78BFA,#8B5CF6);font-size:10px;font-weight:800;letter-spacing:.08em;color:#050509;">BEST VALUE</span>
+                <div style="display:flex;align-items:baseline;justify-content:space-between;"><div><span style="font-size:15px;font-weight:700;color:#F8FAFC;">Yearly</span><span style="margin-left:9px;font-size:12px;color:#86C89D;font-weight:600;">2 months free</span></div><div><span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:19px;color:#F8FAFC;">₹291</span><span style="font-size:12px;color:#71717A;">/mo</span></div></div>
+                <div style="font-size:11.5px;color:#71717A;margin-top:3px;">₹3,499 billed yearly</div>
+              </div>
+              <div style="border-radius:20px;padding:16px 18px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.10);margin-bottom:16px;display:flex;align-items:baseline;justify-content:space-between;">
+                <span style="font-size:15px;font-weight:600;color:#E5E7EB;">Monthly</span>
+                <div><span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:17px;color:#E5E7EB;">₹399</span><span style="font-size:12px;color:#71717A;">/mo</span></div>
+              </div>
+              <button style="width:100%;height:56px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-family:'Outfit',sans-serif;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;box-shadow:0 10px 28px rgba(167,139,250,.24);"><svg width="15" height="15" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#8B5CF6"></path></svg>Start 7 days free</button>
+              <div style="text-align:center;font-size:11.5px;color:#52525B;margin-top:11px;">Then ₹3,499/year · Restore · Terms</div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- 20 SETTINGS -->
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;"><span style="color:#52525B;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;">20</span> Settings</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0A0918);overflow:hidden;font-family:'Outfit',sans-serif;">
+          <div style="position:absolute;top:-110px;right:-60px;width:380px;height:380px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.18),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:60px 20px 0;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
+              <span style="color:#F8FAFC;font-size:20px;line-height:1;">‹</span>
+              <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:22px;letter-spacing:-.5px;color:#F8FAFC;">Settings</span>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;margin-bottom:9px;">ACCOUNT</div>
+            <div style="border-radius:18px;background:rgba(17,18,28,.86);border:1px solid #262737;overflow:hidden;margin-bottom:18px;">
+              <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;"><div style="width:36px;height:36px;border-radius:999px;background:linear-gradient(135deg,#A78BFA,#8B5CF6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#050509;flex:none;">R</div><span style="flex:1;font-size:14.5px;color:#E5E7EB;">rahul.m@gmail.com</span><span style="padding:5px 11px;border-radius:999px;background:rgba(217,169,110,.12);border:1px solid rgba(217,169,110,.32);font-size:10.5px;font-weight:700;letter-spacing:.08em;color:#D9A96E;">✦ PREMIUM</span></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;margin-bottom:9px;">PREFERENCES</div>
+            <div style="border-radius:18px;background:rgba(17,18,28,.86);border:1px solid #262737;overflow:hidden;margin-bottom:18px;">
+              <div style="display:flex;align-items:center;padding:14px 16px;"><span style="flex:1;font-size:14.5px;color:#E5E7EB;">Default language</span><span style="font-size:13.5px;color:#C4B5FD;font-weight:600;margin-right:8px;">Hinglish</span><span style="color:#52525B;">›</span></div>
+              <div style="height:1px;background:#1B1C29;"></div>
+              <div style="display:flex;align-items:center;padding:14px 16px;"><span style="flex:1;font-size:14.5px;color:#E5E7EB;">Default vibe</span><span style="font-size:13.5px;color:#D9A96E;font-weight:600;margin-right:8px;">Playful</span><span style="color:#52525B;">›</span></div>
+              <div style="height:1px;background:#1B1C29;"></div>
+              <div style="display:flex;align-items:center;padding:14px 16px;"><span style="flex:1;font-size:14.5px;color:#E5E7EB;">I'm dating</span><span style="font-size:13.5px;color:#A1A1AA;margin-right:8px;">Women</span><span style="color:#52525B;">›</span></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;margin-bottom:9px;">NOTIFICATIONS</div>
+            <div style="border-radius:18px;background:rgba(17,18,28,.86);border:1px solid #262737;overflow:hidden;margin-bottom:18px;">
+              <div style="display:flex;align-items:center;padding:14px 16px;"><span style="flex:1;font-size:14.5px;color:#E5E7EB;">Date &amp; birthday reminders</span><div style="width:46px;height:28px;border-radius:999px;background:rgba(167,139,250,.35);border:1px solid rgba(167,139,250,.5);position:relative;"><div style="position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:999px;background:#F8FAFC;"></div></div></div>
+              <div style="height:1px;background:#1B1C29;"></div>
+              <div style="display:flex;align-items:center;padding:14px 16px;"><span style="flex:1;font-size:14.5px;color:#E5E7EB;">Weekly check-in from Lovli</span><div style="width:46px;height:28px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid #262737;position:relative;"><div style="position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:999px;background:#52525B;"></div></div></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#71717A;margin-bottom:9px;">PRIVACY</div>
+            <div style="border-radius:18px;background:rgba(17,18,28,.86);border:1px solid #262737;overflow:hidden;">
+              <div style="display:flex;align-items:center;padding:14px 16px;"><span style="flex:1;font-size:14.5px;color:#E5E7EB;">Lock with Face ID</span><div style="width:46px;height:28px;border-radius:999px;background:rgba(167,139,250,.35);border:1px solid rgba(167,139,250,.5);position:relative;"><div style="position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:999px;background:#F8FAFC;"></div></div></div>
+              <div style="height:1px;background:#1B1C29;"></div>
+              <div style="display:flex;align-items:center;padding:14px 16px;"><span style="flex:1;font-size:14.5px;color:#D6A6B0;">Delete my memories</span><span style="color:#52525B;">›</span></div>
+            </div>
+            <div style="margin-top:auto;padding-bottom:36px;display:flex;justify-content:center;gap:22px;">
+              <span style="font-size:13.5px;font-weight:600;color:#A1A1AA;">Restore purchases</span>
+              <span style="font-size:13.5px;font-weight:600;color:#71717A;">Log out</span>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+  </div>
+
+  <div style="margin-top:64px;padding-top:26px;border-top:1px solid #1B1C29;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:11px;">
+      <div style="width:28px;height:28px;border-radius:8px;overflow:hidden;flex:none;"><img src="assets/lovli-app-icon.png" alt="" style="width:110%;height:110%;margin:-5% 0 0 -5%;display:block;object-fit:cover;"></div>
+      <span style="font-size:13px;color:#52525B;">Lovli · UI mockup kit · V3 · <a href="Lovli App v2.dc.html">live prototype</a> · <a href="Lovli Glass System.dc.html">design system</a></span>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:#0D0E17;border:1px solid #1B1C29;font-size:11.5px;color:#D9A96E;"><span style="width:6px;height:6px;border-radius:999px;background:#D9A96E;"></span>amber · warmth</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:#0D0E17;border:1px solid #1B1C29;font-size:11.5px;color:#D6A6B0;"><span style="width:6px;height:6px;border-radius:999px;background:#D6A6B0;"></span>pink · flirt / avoid</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:#0D0E17;border:1px solid #1B1C29;font-size:11.5px;color:#9EC5DF;"><span style="width:6px;height:6px;border-radius:999px;background:#9EC5DF;"></span>sky · info</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:#0D0E17;border:1px solid #1B1C29;font-size:11.5px;color:#86C89D;"><span style="width:6px;height:6px;border-radius:999px;background:#86C89D;"></span>green · good signs</span>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

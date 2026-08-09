@@ -1,6 +1,6 @@
 // Memory form — used by both Add Memory and Edit Memory.
 import React, { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Screen } from "@/src/components/Screen";
@@ -13,14 +13,24 @@ import { useToast } from "@/src/context/ToastContext";
 import {
   MemoryCard,
   MemoryCardInput,
+  MemoryFact,
   createMemoryCard,
+  deleteMemoryCard,
   listMemoryCards,
   updateMemoryCard,
 } from "@/src/api/endpoints";
 import { extractErrorMessage } from "@/src/api/client";
+import { storage } from "@/src/utils/storage";
+import { ASK_PENDING_KEY } from "@/src/config/storage-keys";
+import { resyncNotificationsFromStorage } from "@/src/utils/notifications";
 import { colors, fontSize, space } from "@/src/theme/colors";
 
 const STAGES = ["Not connected yet", "Texting", "Talking", "Dating", "Complicated"];
+const FACT_KINDS: { kind: MemoryFact["kind"]; label: string }[] = [
+  { kind: "like", label: "Like" },
+  { kind: "avoid", label: "Avoid" },
+  { kind: "date", label: "Date" },
+];
 
 const EMPTY: MemoryCardInput = {
   nickname: "",
@@ -49,37 +59,92 @@ export const MemoryForm: React.FC<Props> = ({ mode, id }) => {
   const [form, setForm] = useState<MemoryCardInput>(EMPTY);
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
+  // Facts editing (edit mode): the little things — chips with add/remove.
+  const [facts, setFacts] = useState<MemoryFact[]>([]);
+  const [factText, setFactText] = useState("");
+  const [factKind, setFactKind] = useState<MemoryFact["kind"]>("like");
+  // Per-person delete (edit mode): typed confirm flow.
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (mode !== "edit" || !id) return;
+    let cancelled = false;
     (async () => {
       try {
         const cards = await listMemoryCards();
         const target = cards.find((c) => c.id === id);
+        if (cancelled) return;
         if (target) {
           // map MemoryCard → MemoryCardInput (strip id, replace null with "")
           const { id: _omit, ...rest } = target as MemoryCard;
           const next: MemoryCardInput = { ...EMPTY };
           for (const key of Object.keys(EMPTY) as (keyof MemoryCardInput)[]) {
             const v = (rest as Partial<MemoryCard>)[key];
-            (next as Record<string, string>)[key as string] = typeof v === "string" ? v : "";
+            (next as unknown as Record<string, string>)[key as string] = typeof v === "string" ? v : "";
           }
           setForm(next);
+          setFacts(Array.isArray(target.facts) ? target.facts : []);
         } else {
           toast.error("Memory not found.");
           router.back();
         }
       } catch {
-        toast.error("Could not load memory.");
-        router.back();
+        if (!cancelled) {
+          toast.error("Could not load memory.");
+          router.back();
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
-  }, [mode, id, router, toast]);
+    return () => {
+      cancelled = true;
+    };
+    // load once per card — router/toast identities change on navigation and
+    // re-running after delete caused a bogus "Memory not found." + back().
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, id]);
 
   const set = <K extends keyof MemoryCardInput>(key: K, value: MemoryCardInput[K]) =>
     setForm((p) => ({ ...p, [key]: value }));
+
+  const addFact = () => {
+    const text = factText.trim();
+    if (!text) return;
+    setFacts((p) => [...p, { text, kind: factKind }]);
+    setFactText("");
+  };
+
+  const removeFact = (index: number) =>
+    setFacts((p) => p.filter((_, i) => i !== index));
+
+  const onDeletePerson = async () => {
+    if (!id || confirmText.trim().toUpperCase() !== "DELETE") return;
+    setDeleting(true);
+    try {
+      await deleteMemoryCard(id);
+      // Clear local references so nothing points at a deleted person.
+      try {
+        const raw = await storage.getItem<string>(ASK_PENDING_KEY, "");
+        if (raw && JSON.parse(raw)?.personId === id) {
+          await storage.removeItem(ASK_PENDING_KEY);
+        }
+      } catch {
+        // pending context unreadable — drop it
+        await storage.removeItem(ASK_PENDING_KEY);
+      }
+      resyncNotificationsFromStorage(); // their reminders cancel too
+      setConfirmOpen(false);
+      toast.success("Deleted — they're out of your Memory.");
+      router.replace("/(tabs)/memory");
+    } catch (err) {
+      toast.error(extractErrorMessage(err, "Could not delete right now."));
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const onSave = async () => {
     if (!form.nickname?.trim()) {
@@ -89,7 +154,7 @@ export const MemoryForm: React.FC<Props> = ({ mode, id }) => {
     try {
       setSaving(true);
       if (mode === "edit" && id) {
-        await updateMemoryCard(id, form);
+        await updateMemoryCard(id, { ...form, facts });
         toast.success("Memory updated.");
       } else {
         await createMemoryCard(form);
@@ -253,6 +318,69 @@ export const MemoryForm: React.FC<Props> = ({ mode, id }) => {
         </View>
       </GlassCard>
 
+      {/* Section 4 — The little things (facts) — edit mode only */}
+      {mode === "edit" ? (
+        <GlassCard padded variant="solid">
+          <Text style={styles.section}>The little things</Text>
+          <Text style={styles.factHint}>Quick facts Lovli weaves into replies.</Text>
+          {facts.length > 0 ? (
+            <View style={[styles.chipsRow, { marginTop: space.m }]}>
+              {facts.map((f, i) => (
+                <View
+                  key={`${f.text}-${i}`}
+                  style={[styles.factChip, f.kind === "avoid" && styles.factChipAvoid]}
+                >
+                  <Text
+                    style={[styles.factChipText, f.kind === "avoid" && styles.factChipTextAvoid]}
+                    numberOfLines={1}
+                  >
+                    {f.kind === "date" ? "📅 " : ""}{f.text}
+                  </Text>
+                  <Pressable onPress={() => removeFact(i)} hitSlop={8} testID={`fact-remove-${i}`}>
+                    <Ionicons name="close" size={13} color={f.kind === "avoid" ? colors.pink : colors.lavenderText} />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          ) : null}
+          <View style={{ gap: space.s, marginTop: space.m }}>
+            <TextInput
+              value={factText}
+              onChangeText={setFactText}
+              placeholder="e.g. Loves filter coffee"
+              placeholderTextColor={colors.textFaint}
+              style={styles.factInput}
+              onSubmitEditing={addFact}
+              returnKeyType="done"
+              testID="fact-text-input"
+            />
+            <View style={styles.factAddRow}>
+              <View style={[styles.chipsRow, { flex: 1 }]}>
+                {FACT_KINDS.map((k) => (
+                  <Chip
+                    key={k.kind}
+                    label={k.label}
+                    size="sm"
+                    selected={factKind === k.kind}
+                    onPress={() => setFactKind(k.kind)}
+                    testID={`fact-kind-${k.kind}`}
+                  />
+                ))}
+              </View>
+              <Pressable
+                onPress={addFact}
+                disabled={!factText.trim()}
+                style={[styles.factAddBtn, !factText.trim() && { opacity: 0.4 }]}
+                testID="fact-add-button"
+              >
+                <Ionicons name="add" size={16} color="#050509" />
+                <Text style={styles.factAddText}>Add</Text>
+              </Pressable>
+            </View>
+          </View>
+        </GlassCard>
+      ) : null}
+
       <View style={{ gap: space.m, marginBottom: space.xl }}>
         <PrimaryButton
           label={
@@ -272,7 +400,53 @@ export const MemoryForm: React.FC<Props> = ({ mode, id }) => {
           variant="ghost"
           testID="memory-cancel-button"
         />
+        {mode === "edit" ? (
+          <Pressable
+            onPress={() => setConfirmOpen(true)}
+            style={styles.deleteRow}
+            testID="memory-delete-person"
+          >
+            <Ionicons name="trash-outline" size={15} color={colors.pink} />
+            <Text style={styles.deleteText}>Delete this person</Text>
+          </Pressable>
+        ) : null}
       </View>
+
+      {/* Delete-person confirm sheet (typed flow). animationType="fade": the
+          RN-web "slide" animation can stick offscreen inside this screen. */}
+      <Modal visible={confirmOpen} transparent animationType="fade" onRequestClose={() => setConfirmOpen(false)}>
+        <Pressable style={styles.scrim} onPress={() => setConfirmOpen(false)} />
+        <View style={styles.sheet} testID="delete-person-sheet">
+          <Text style={styles.sheetTitle}>{`Delete ${form.nickname || "this person"}?`}</Text>
+          <Text style={styles.sheetSub}>
+            Their card, timeline, and facts — gone for good. Type DELETE to confirm.
+          </Text>
+          <TextInput
+            value={confirmText}
+            onChangeText={setConfirmText}
+            placeholder="Type DELETE"
+            placeholderTextColor={colors.textFaint}
+            autoCapitalize="characters"
+            style={styles.sheetInput}
+            testID="delete-person-confirm-input"
+          />
+          <Pressable
+            onPress={onDeletePerson}
+            disabled={confirmText.trim().toUpperCase() !== "DELETE" || deleting}
+            accessibilityState={{ disabled: confirmText.trim().toUpperCase() !== "DELETE" || deleting }}
+            style={[
+              styles.sheetDeleteBtn,
+              (confirmText.trim().toUpperCase() !== "DELETE" || deleting) && { opacity: 0.45 },
+            ]}
+            testID="delete-person-confirm-button"
+          >
+            <Text style={styles.sheetDeleteText}>{deleting ? "Deleting…" : "Delete them"}</Text>
+          </Pressable>
+          <Pressable onPress={() => { setConfirmOpen(false); setConfirmText(""); }} style={styles.sheetCancel} testID="delete-person-cancel">
+            <Text style={styles.sheetCancelText}>Keep them</Text>
+          </Pressable>
+        </View>
+      </Modal>
     </Screen>
   );
 };
@@ -294,4 +468,79 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  factHint: { color: colors.textMuted, fontSize: fontSize.sm, marginTop: 4 },
+  factChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(167,139,250,0.12)",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    maxWidth: 260,
+  },
+  factChipAvoid: { backgroundColor: "rgba(224,102,122,0.12)" },
+  factChipText: { color: colors.violet, fontSize: fontSize.sm, flexShrink: 1 },
+  factChipTextAvoid: { color: colors.pink },
+  factInput: {
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
+    color: colors.text,
+    fontSize: fontSize.base,
+  },
+  factAddRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  factAddBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  factAddText: { color: "#050509", fontSize: fontSize.sm, fontWeight: "700" },
+  deleteRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 12,
+  },
+  deleteText: { color: colors.pink, fontSize: fontSize.base, fontWeight: "600" },
+  scrim: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)" },
+  sheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 22,
+    paddingBottom: 34,
+    gap: 12,
+  },
+  sheetTitle: { color: colors.text, fontSize: fontSize.xl, fontWeight: "700" },
+  sheetSub: { color: colors.textMuted, fontSize: fontSize.base, lineHeight: 20 },
+  sheetInput: {
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    paddingVertical: 13,
+    paddingHorizontal: 15,
+    color: colors.text,
+    fontSize: fontSize.base,
+  },
+  sheetDeleteBtn: {
+    backgroundColor: colors.pink,
+    borderRadius: 999,
+    alignItems: "center",
+    paddingVertical: 14,
+  },
+  sheetDeleteText: { color: "#FFFFFF", fontSize: fontSize.base, fontWeight: "700" },
+  sheetCancel: { alignItems: "center", paddingVertical: 8 },
+  sheetCancelText: { color: colors.textMuted, fontSize: fontSize.base, fontWeight: "600" },
 });

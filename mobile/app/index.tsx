@@ -13,13 +13,15 @@ export default function Splash() {
   useEffect(() => {
     if (isChecking) return;
     if (!isAuthed) {
-      router.replace("/login");
+      router.replace("/welcome");
       return;
     }
-    // Authed — decide onboarding vs main
+    // Authed — decide onboarding vs main.
+    // Dev auto-login bypasses onboarding entirely so the tester lands on Reply.
+    const devAutoLogin = process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN === "true";
     const hasDefaults =
       !!user?.preferred_platform || !!user?.onboarding_complete;
-    if (!hasDefaults) {
+    if (!hasDefaults && !devAutoLogin) {
       router.replace("/onboarding");
     } else {
       router.replace("/(tabs)/reply");

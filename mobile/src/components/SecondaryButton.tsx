@@ -1,7 +1,8 @@
-// Dark glass secondary button — for non-primary actions.
+// Secondary / ghost button — light variant.
+// White or transparent fill, hairline border, textPrimary label. Danger uses redFlag.
 import React from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
-import { colors, fontSize, radii, space } from "@/src/theme/colors";
+import { colors, radii, space, typography } from "@/src/theme";
 
 type Props = {
   label: string;
@@ -42,14 +43,14 @@ export const SecondaryButton: React.FC<Props> = ({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={colors.text} size="small" />
+        <ActivityIndicator color={colors.textPrimary} size="small" />
       ) : (
         <View style={styles.inner}>
           {iconLeft ? <View style={{ marginRight: 8 }}>{iconLeft}</View> : null}
           <Text
             style={[
               styles.label,
-              variant === "danger" && { color: colors.dangerSoft },
+              variant === "danger" && { color: colors.redFlag },
             ]}
           >
             {label}
@@ -63,10 +64,10 @@ export const SecondaryButton: React.FC<Props> = ({
 
 const styles = StyleSheet.create({
   btn: {
-    minHeight: 48,
+    minHeight: 50,
     borderRadius: radii.pill,
-    backgroundColor: colors.card,
-    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    borderColor: colors.hairline,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -78,15 +79,15 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   danger: {
-    backgroundColor: "rgba(248, 113, 113, 0.08)",
-    borderColor: "rgba(248, 113, 113, 0.25)",
+    backgroundColor: "rgba(220, 38, 38, 0.06)",
+    borderColor: "rgba(220, 38, 38, 0.22)",
   },
   inner: { flexDirection: "row", alignItems: "center" },
   label: {
-    color: colors.text,
-    fontWeight: "600",
-    fontSize: fontSize.base,
+    ...typography.body.bodySemibold,
+    color: colors.textPrimary,
+    fontSize: 15,
   },
   disabled: { opacity: 0.5 },
-  pressed: { transform: [{ scale: 0.985 }], opacity: 0.9 },
+  pressed: { transform: [{ scale: 0.97 }], opacity: 0.92 },
 });

@@ -9,13 +9,16 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
+      "bundleIdentifier": "in.lovli.app",
       "supportsTablet": true,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Upload chat screenshots for reply suggestions.",
+        "NSFaceIDUsageDescription": "Unlock Lovli quickly and privately",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
+      "package": "in.lovli.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#050509"
@@ -23,7 +26,10 @@
       "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.READ_MEDIA_IMAGES",
-        "android.permission.READ_EXTERNAL_STORAGE"
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
       ]
     },
     "web": {
@@ -42,13 +48,14 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/splash-image.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#050509"
         }
       ],
-      "expo-font"
+      "expo-font",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
