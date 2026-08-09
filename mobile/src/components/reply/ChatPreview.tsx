@@ -30,7 +30,7 @@ export const ChatPreview: React.FC<Props> = ({ messages, imageUri }) => {
         <>
           <Image source={{ uri: imageUri }} style={styles.thumb} resizeMode="cover" />
           <Text style={styles.thumbCaption}>
-            Your screenshot — I'll read every line while I write.
+            Your screenshot — I’ll read every line while I write.
           </Text>
         </>
       ) : null}
