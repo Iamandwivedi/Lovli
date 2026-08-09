@@ -1,0 +1,15 @@
+# Railway / Nixpacks build config for the Lovli FastAPI backend.
+# Railway service Root Directory MUST be `backend` so this file is picked up.
+#
+# The Python provider auto-installs requirements.txt into a venv; we only pin
+# the interpreter here so Railway can't drift to a different minor version than
+# local dev (3.12).
+
+[phases.setup]
+nixPkgs = ["python312", "gcc"]
+
+[start]
+# WEB_CONCURRENCY defaults to 1. See docs/DATABASE.md — the memory-context cache
+# is in-process, so >1 worker makes cache invalidation best-effort (bounded by
+# its 10-minute TTL). Raise it only after moving that cache to Mongo/Redis.
+cmd = "uvicorn server:app --host 0.0.0.0 --port $PORT --workers ${WEB_CONCURRENCY:-1}"

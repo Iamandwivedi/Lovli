@@ -13,7 +13,13 @@ from __future__ import annotations
 import os
 import time
 import pytest
-import requests
+
+# Live suite: needs a reachable deployment AND the seeded tester account, so it
+# is deselected by default (see pytest.ini). Run explicitly with:
+#   EXPO_PUBLIC_BACKEND_URL=https://api.lovli.in pytest -m live
+pytestmark = pytest.mark.live
+
+requests = pytest.importorskip("requests", reason="live suite dependency")
 
 BASE_URL = os.environ.get("EXPO_PUBLIC_BACKEND_URL", "https://reply-on-the-go.preview.emergentagent.com").rstrip("/")
 

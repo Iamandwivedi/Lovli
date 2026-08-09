@@ -1,0 +1,98 @@
+name: CI
+
+# Gate for the Railway deploy: Railway builds on push to the default branch,
+# so anything red here should block the merge that triggers it.
+on:
+  push:
+    branches: [main, Lovli-v2-mobile]
+  pull_request:
+    branches: [main, Lovli-v2-mobile]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run tests
+        # Suites are fully offline (stub db, stub auth, stub LLM) — no Mongo or
+        # Anthropic key needed. MONGO_URL only satisfies server.py import.
+        env:
+          MONGO_URL: mongodb://localhost:27017
+          DB_NAME: lovli_ci
+          JWT_SECRET: ci-secret-not-used-for-real-tokens
+          ENVIRONMENT: test
+        run: pytest tests/ -q
+
+      - name: Verify production safety rails
+        env:
+          MONGO_URL: mongodb://localhost:27017
+          DB_NAME: lovli_ci
+          JWT_SECRET: ci-secret-not-used-for-real-tokens
+          ENVIRONMENT: production
+          ALLOW_TEST_LOGIN: "true"
+        # server.py refuses to boot with ALLOW_TEST_LOGIN=true in production.
+        # A clean import here would mean that guard regressed.
+        run: |
+          if python -c "import server" 2>/dev/null; then
+            echo "::error::ALLOW_TEST_LOGIN=true booted under ENVIRONMENT=production"
+            exit 1
+          fi
+          echo "OK: test-login bypass is blocked in production"
+
+  mobile:
+    name: Mobile (typecheck)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: yarn
+          cache-dependency-path: mobile/yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+  hygiene:
+    name: Repo hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: No secrets or build caches committed
+        run: |
+          fail=0
+          if git ls-files | grep -E '(^|/)\.env$'; then
+            echo "::error::a real .env file is tracked in git"; fail=1
+          fi
+          if git ls-files | grep -qE '\.metro-cache/|node_modules/'; then
+            echo "::error::build cache or node_modules is tracked in git"; fail=1
+          fi
+          exit $fail

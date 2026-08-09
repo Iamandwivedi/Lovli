@@ -21,6 +21,8 @@ lovli/
 | Topic | Doc |
 |---|---|
 | Project overview & flow | [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md) |
+| **Deploy runbook (GitHub → Railway → Atlas)** | [`docs/RUNBOOK_DEPLOY.md`](docs/RUNBOOK_DEPLOY.md) |
+| **Master database design** | [`docs/DATABASE.md`](docs/DATABASE.md) |
 | Backend setup | [`docs/BACKEND_SETUP.md`](docs/BACKEND_SETUP.md) |
 | Frontend setup | [`docs/WEB_SETUP.md`](docs/WEB_SETUP.md) |
 | Mobile (Claude Fable) | [`docs/MOBILE_SETUP.md`](docs/MOBILE_SETUP.md) |
