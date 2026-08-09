@@ -1,4 +1,4 @@
-// Screen scaffold: dark background + safe area + scrollable content.
+// Screen scaffold: V3 dark iOS canvas + safe area + scrollable content.
 import React from "react";
 import {
   KeyboardAvoidingView,
@@ -26,7 +26,7 @@ type Props = {
   testID?: string;
 };
 
-const TAB_BAR_SPACE = 132; // bottom tab bar height + safe area + breathing room
+const TAB_BAR_SPACE = 126; // floating glass tab bar + safe area + breathing room
 
 export const Screen: React.FC<Props> = ({
   children,
@@ -47,7 +47,7 @@ export const Screen: React.FC<Props> = ({
       keyboardShouldPersistTaps="handled"
       contentContainerStyle={[
         styles.content,
-        { paddingTop: insets.top + space.s, paddingBottom: bottomPad },
+        { paddingTop: insets.top + 10, paddingBottom: bottomPad },
         contentStyle,
       ]}
       refreshControl={
@@ -69,7 +69,7 @@ export const Screen: React.FC<Props> = ({
     <View
       style={[
         styles.content,
-        { paddingTop: insets.top + space.s, paddingBottom: bottomPad, flex: 1 },
+        { paddingTop: insets.top + 10, paddingBottom: bottomPad, flex: 1 },
         contentStyle,
       ]}
     >
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   content: {
-    paddingHorizontal: space.l,
+    paddingHorizontal: 20,
     gap: space.l,
   },
 });

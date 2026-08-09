@@ -1,24 +1,29 @@
-// Lovli design tokens — V2 DARK ("Coach" redesign, PR-V2-1).
-// Supersedes the PR2.x light theme. Source of truth: docs/DESIGN_SYSTEM_V2_DARK.md.
-// All prior token names are preserved as aliases pointing at V2 dark values.
+// Lovli design tokens — V3 dark glass.
+// Source of truth: lovli-design-system/project/Lovli UI Kit.dc.html.
+// Legacy names are preserved as aliases so older screens keep compiling.
 
 export const colors = {
-  // -- Base surfaces (V2 dark) --
+  // -- Base surfaces (V3 dark) --
   bg: "#050509",              // Screen gradient top
-  bgBottom: "#090A14",        // Screen gradient bottom
-  heroBgBottom: "#0B0918",    // Hero/emotional screens gradient bottom
-  surface: "#11121C",         // Card
-  surfaceRaised: "#171827",   // Elevated/glass "insight" card
-  hairline: "#2A2B3A",        // 1px card border
-  border: "#2A2B3A",          // alias
+  bgBottom: "#0A0918",        // Screen gradient bottom
+  heroBgBottom: "#0A0918",    // Hero/emotional screens gradient bottom
+  surface: "rgba(17,18,28,0.86)",         // Standard dark material
+  surfaceRaised: "rgba(255,255,255,0.10)", // Elevated translucent material
+  surfaceSoft: "rgba(255,255,255,0.045)",
+  glassFill: "rgba(255,255,255,0.10)",
+  glassFillLow: "rgba(255,255,255,0.06)",
+  glassStroke: "rgba(255,255,255,0.10)",
+  glassStrokeStrong: "rgba(255,255,255,0.16)",
+  hairline: "#262737",        // 1px card border
+  border: "#262737",          // alias
   divider: "#1B1C29",         // inner row divider
 
   // -- Primary CTA (white pill) --
   ctaBg: "#FFFFFF",
   ctaBorder: "#E5E7EB",
   ctaText: "#050509",
-  ctaShadow: "rgba(167,139,250,0.35)",
-  // Legacy glossy-black CTA tokens → white CTA equivalents (no gloss on V2)
+  ctaShadow: "rgba(167,139,250,0.22)",
+  // Legacy glossy-black CTA tokens -> white CTA equivalents
   ctaBase: "#FFFFFF",
   ctaGlossMid: "#FFFFFF",
   ctaGlossTop: "#FFFFFF",
@@ -51,27 +56,28 @@ export const colors = {
 
   // -- Semantic --
   greenFlag: "#4ADE80",
-  amber: "#FFB259",           // warm temperature
-  pink: "#F0A5B2",            // watch-outs, destructive text
-  redFlag: "#E0667A",         // rose — red-flag icon
-  roseTint: "rgba(224,102,122,0.12)",
+  amber: "#D9A96E",           // warmth / free count / interested
+  pink: "#D6A6B0",            // flirt, watch-outs, destructive text
+  sky: "#9EC5DF",             // info
+  green: "#86C89D",           // good signs
+  redFlag: "#D6A6B0",         // rose/pink — red-flag icon
+  roseTint: "rgba(214,166,176,0.12)",
 
   // -- Shadows --
   shadowCard: "rgba(0,0,0,0.55)",
-  shadowCta: "rgba(167,139,250,0.35)",
+  shadowCta: "rgba(167,139,250,0.22)",
 
   // -- Legacy aliases (kept so earlier callers don't break) --
-  rose: "#E0667A",
-  coral: "#E0667A",
+  rose: "#D6A6B0",
+  coral: "#D6A6B0",
   card: "#11121C",
   cardGlass: "#171827",
   cardElevated: "#171827",
-  borderStrong: "rgba(167,139,250,0.3)",
-  sky: "#38BDF8",
+  borderStrong: "rgba(167,139,250,0.30)",
   blue: "#60A5FA",
-  danger: "#F0A5B2",
-  dangerSoft: "#F0A5B2",
-  success: "#4ADE80",
+  danger: "#D6A6B0",
+  dangerSoft: "#D6A6B0",
+  success: "#86C89D",
   lavenderGlow: "rgba(167,139,250,0.16)",
   lavenderGlowSoft: "rgba(167,139,250,0.08)",
   overlayDark: "rgba(5,5,9,0.65)",
@@ -111,15 +117,15 @@ export const fontSize = {
   xxxl: 30,
 } as const;
 
-// V2 gradient stacks.
+// V3 gradient stacks.
 export const gradients = {
   // Avatar / accent gradient (135deg)
   primary: ["#A78BFA", "#8B5CF6"] as const,
   primaryAngled: { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
   // Default screen background (vertical)
-  screen: ["#050509", "#090A14"] as const,
+  screen: ["#050509", "#0A0918"] as const,
   // Hero/emotional screens (Welcome, Generating, Premium)
-  hero: ["#050509", "#0B0918"] as const,
+  hero: ["#050509", "#0A0918"] as const,
   // Progress track fill
   progress: ["#A78BFA", "#8B5CF6"] as const,
   glow: ["rgba(167,139,250,0.24)", "rgba(56,189,248,0.05)"] as const,

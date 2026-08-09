@@ -1,13 +1,11 @@
-// Welcome — V2 · Coach hero screen. First thing unauthenticated users see.
-// Hero gradient bg + pulsing ambient glow, big ✦, serif headline, white CTA.
+// Welcome — V3 glass hero. First thing unauthenticated users see.
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AmbientGlow } from "@/src/components/AmbientGlow";
-import { Sparkle } from "@/src/components/Sparkle";
 import { PrimaryButton } from "@/src/components/PrimaryButton";
 import { colors, gradients, typography } from "@/src/theme";
 
@@ -31,23 +29,30 @@ export default function WelcomeScreen() {
         ]}
       >
         <View style={styles.center}>
-          <Sparkle size={58} color={colors.lavender} glow animated />
-          <Text style={styles.wordmark}>Lovli</Text>
+          <Image source={require("../assets/images/icon.png")} style={styles.icon} />
           <Text style={styles.headline}>
-            Your wingman for every text, talk & situationship.
+            {"Before you send it, let's read it together."}
           </Text>
-          <Text style={styles.sub}>Hinglish-first advice that actually gets you.</Text>
+          <Text style={styles.sub}>
+            {"Paste any chat. Lovli reads what's really going on and writes you three replies - in Hinglish, if that's how you talk."}
+          </Text>
+          <View style={styles.tags}>
+            <Text style={[styles.tag, styles.tagSky]}>Instagram</Text>
+            <Text style={[styles.tag, styles.tagGreen]}>WhatsApp</Text>
+            <Text style={[styles.tag, styles.tagPink]}>Dating apps</Text>
+          </View>
         </View>
 
         <View>
           <PrimaryButton
-            label="Get started"
+            label={"Let's go"}
             onPress={() => router.push("/login")}
             testID="welcome-get-started"
+            withSparkle={false}
           />
           <View style={styles.privacyRow}>
             <Ionicons name="lock-closed" size={13} color={colors.textFaint} />
-            <Text style={styles.privacy}>Private by default — your chats stay yours.</Text>
+            <Text style={styles.privacy}>Your chats stay yours. Read once, never stored.</Text>
           </View>
         </View>
       </View>
@@ -72,30 +77,61 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  wordmark: {
-    fontFamily: typography.fonts.displaySemibold,
-    fontSize: 26,
-    color: colors.text,
-    marginTop: 22,
-    letterSpacing: -0.4,
+  icon: {
+    width: 72,
+    height: 72,
+    borderRadius: 18,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 24 },
+    shadowOpacity: 0.85,
+    shadowRadius: 50,
   },
   headline: {
-    fontFamily: typography.fonts.displaySemibold,
-    fontSize: 33,
-    lineHeight: 37,
-    letterSpacing: -0.7,
+    fontFamily: typography.fonts.displayBold,
+    fontSize: 34,
+    lineHeight: 39,
+    letterSpacing: 0,
     color: colors.text,
     textAlign: "center",
-    marginTop: 30,
-    maxWidth: 330,
+    marginTop: 32,
+    maxWidth: 300,
   },
   sub: {
     ...typography.body.base,
     fontSize: 15,
     color: colors.textMuted,
     textAlign: "center",
-    marginTop: 14,
+    marginTop: 16,
     maxWidth: 280,
+  },
+  tags: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 22,
+  },
+  tag: {
+    overflow: "hidden",
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    fontFamily: typography.fonts.bodySemibold,
+    fontSize: 12,
+  },
+  tagSky: {
+    backgroundColor: "rgba(110,160,195,0.10)",
+    borderColor: "rgba(110,160,195,0.28)",
+    color: colors.sky,
+  },
+  tagGreen: {
+    backgroundColor: "rgba(134,200,157,0.10)",
+    borderColor: "rgba(134,200,157,0.26)",
+    color: colors.green,
+  },
+  tagPink: {
+    backgroundColor: "rgba(214,166,176,0.10)",
+    borderColor: "rgba(214,166,176,0.28)",
+    color: colors.pink,
   },
   privacyRow: {
     flexDirection: "row",

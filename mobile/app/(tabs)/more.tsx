@@ -1,4 +1,4 @@
-// More · Tools — "V2 · Coach — More · Tools". 9 tools in 3 labeled sections.
+// More · Tools — V3 dark glass. 9 tools in 3 labeled sections.
 // Ask Lovli is NOT in the grid (it's a tab). Decode + Read the signals use
 // /decode; everything else routes to the shared /feature/[id] screen (PR4b —
 // zero placeholders remain).
@@ -100,7 +100,7 @@ export default function MoreScreen() {
     <Screen testID="more-page" bottomTabSpacing>
       <AppHeader />
       <View style={{ marginTop: space.s }}>
-        <Text style={styles.h1} testID="more-heading">More tools</Text>
+        <Text style={styles.h1} testID="more-heading">More</Text>
         <Text style={styles.sub}>For when you need more than a reply.</Text>
       </View>
 
@@ -182,9 +182,9 @@ export default function MoreScreen() {
 
 const styles = StyleSheet.create({
   h1: {
-    fontFamily: typography.fonts.displaySemibold,
+    fontFamily: typography.fonts.displayBold,
     fontSize: 26,
-    letterSpacing: -0.4,
+    letterSpacing: 0,
     color: colors.text,
   },
   sub: { ...typography.body.base, fontSize: 13.5, color: colors.textMuted, marginTop: 6 },
@@ -200,8 +200,8 @@ const styles = StyleSheet.create({
   card: {
     width: "48%",
     flexGrow: 1,
-    backgroundColor: colors.surface,
-    borderColor: colors.hairline,
+    backgroundColor: colors.surfaceSoft,
+    borderColor: "rgba(255,255,255,0.09)",
     borderWidth: 1,
     borderRadius: 18,
     padding: 12,

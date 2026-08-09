@@ -1,9 +1,9 @@
-// Reply tab — V2 "Coach" flow as a phase machine:
+// Reply tab — V3 glass flow as a phase machine:
 //   home → intent → generating → results
-// home:      "What's happening?" + feeling check-in + compact upload/paste + ✦ Get replies
+// home:      "Kya scene hai?" + feeling check-in + compact upload/paste + ✦ Get replies
 // intent:    "Got it. I read the chat." + chat preview + WHAT DO YOU WANT? / HOW SHOULD IT LAND?
 // generating: staged 5-step loader timed to the real request
-// results:   insight + reply cards (full "Generated" restyle lands in PR-V2-3)
+// results:   insight + reply cards
 // NOTE (PR-V2-2): feeling/intent/outcome are stored client-side ONLY — they are
 // sent to the backend (with the onboarding goal from AsyncStorage `lovli_goal`)
 // in PR-V2-3. Language/platform/vibe defaults are sent unchanged.
@@ -62,13 +62,13 @@ type Phase = "home" | "intent" | "generating" | "results";
 type Pick = ImagePicker.ImagePickerAsset;
 
 const FEELINGS = [
-  "😊 Excited",
-  "😔 Confused",
-  "😰 Overthinking",
-  "❤️ Falling for someone",
-  "💔 Healing",
-  "😎 Just curious",
-];
+  { label: "Excited", color: colors.amber },
+  { label: "Confused", color: colors.sky },
+  { label: "Overthinking", color: colors.lavenderText },
+  { label: "Falling for someone", color: colors.pink },
+  { label: "Healing", color: colors.green },
+  { label: "Just curious", color: colors.textFaint },
+] as const;
 const INTENTS = ["Reply", "Understand", "Flirt", "Set boundaries", "End it", "Save the vibe"];
 const OUTCOMES = [
   "Make them smile",
@@ -387,6 +387,7 @@ export default function ReplyScreen() {
           onPickImage={pickImage}
           onRemoveImage={() => setImage(null)}
           onContinue={goToIntent}
+          creditsText={usage.plan === "pro" ? "Pro" : `${remaining} free left`}
         />
       ) : null}
 
@@ -460,7 +461,7 @@ export default function ReplyScreen() {
       {phase === "results" && result ? (
         <>
           <BackHeader
-            title="Your reply"
+            title="Three ways to say it"
             onBack={() => {
               // New flow starts fresh: person selection resets to "No one".
               setMemoryId(null);
@@ -481,6 +482,7 @@ export default function ReplyScreen() {
                     <PrimaryReplyCard
                       key={result.generation_id}
                       text={result.replies[0] ?? ""}
+                      toneLabel={(result.reply_labels?.[0] || "Smooth").trim()}
                       onCopy={(t) => onCopy(t, 0)}
                       onEditCommitted={onEditCommitted}
                       onRegenerate={() => {
@@ -488,6 +490,16 @@ export default function ReplyScreen() {
                         startGeneration();
                       }}
                     />
+                    {result.replies.slice(1, 3).map((reply, offset) => (
+                      <ReplyResultCard
+                        key={`${result.generation_id}-alt-${offset + 1}`}
+                        text={reply}
+                        toneLabel={(result.reply_labels?.[offset + 1] || "Smooth").trim()}
+                        index={offset + 1}
+                        onCopy={() => onCopy(reply, offset + 1)}
+                        onRegenerate={() => startGeneration()}
+                      />
+                    ))}
                     {flags.MEMORY_UI_ENABLED ? (
                       <FeedbackChipsRow
                         key={`fb-${result.generation_id}`}
@@ -555,6 +567,7 @@ const HomePhase: React.FC<{
   onPickImage: () => void;
   onRemoveImage: () => void;
   onContinue: () => void;
+  creditsText: string;
 }> = ({
   image,
   manual,
@@ -568,13 +581,14 @@ const HomePhase: React.FC<{
   onPickImage,
   onRemoveImage,
   onContinue,
+  creditsText,
 }) => (
   <>
-    <AppHeader />
+    <AppHeader credits={{ text: creditsText, tone: creditsText === "Pro" ? "pro" : "default" }} />
 
     <View style={{ marginTop: space.s }}>
       <Text style={styles.h1} testID="reply-heading">
-        {"What's happening?"}
+        Kya scene hai?
       </Text>
       <Text style={styles.sub}>
         Tell me what happened — or just show me the conversation.
@@ -591,12 +605,13 @@ const HomePhase: React.FC<{
       </View>
       <View style={styles.chipsRow}>
         {FEELINGS.map((f) => (
-          <Chip
-            key={f}
-            label={f}
-            selected={feeling === f}
-            onPress={() => onToggleFeeling(f)}
-            testID={`feeling-${f.split(" ").slice(1).join(" ")}`}
+          <FeelingChip
+            key={f.label}
+            label={f.label}
+            color={f.color}
+            selected={feeling === f.label}
+            onPress={() => onToggleFeeling(f.label)}
+            testID={`feeling-${f.label}`}
           />
         ))}
       </View>
@@ -673,6 +688,29 @@ const HomePhase: React.FC<{
   </>
 );
 
+const FeelingChip: React.FC<{
+  label: string;
+  color: string;
+  selected: boolean;
+  onPress: () => void;
+  testID?: string;
+}> = ({ label, color, selected, onPress, testID }) => (
+  <Pressable
+    onPress={onPress}
+    testID={testID}
+    style={({ pressed }) => [
+      styles.feelingChip,
+      selected && styles.feelingChipSelected,
+      pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+    ]}
+  >
+    <View style={[styles.feelingDot, { backgroundColor: color }]} />
+    <Text style={[styles.feelingText, selected && styles.feelingTextSelected]}>
+      {label}
+    </Text>
+  </Pressable>
+);
+
 // --- Back header (recurring sub-screen pattern) ---
 const BackHeader: React.FC<{ title: string; onBack: () => void }> = ({ title, onBack }) => (
   <View style={styles.backHeader}>
@@ -730,9 +768,9 @@ function safeInsight(value: ReplyInsight | null | undefined): ReplyInsight | nul
 
 // Spec: dot-pills, not emoji. Warm = amber #FFB259.
 const INSIGHT_TEMP: Record<ReplyInsight["temperature"], { label: string; color: string }> = {
-  warm: { label: "Warm", color: "#FFB259" },
-  mixed: { label: "Mixed", color: colors.lavender },
-  cold: { label: "Cold", color: "#7FA6C9" },
+  warm: { label: "Leaning interested", color: colors.amber },
+  mixed: { label: "Mixed signals", color: colors.lavenderText },
+  cold: { label: "Not into it", color: colors.sky },
 };
 
 const InsightCard: React.FC<{ insight: ReplyInsight }> = ({ insight }) => {
@@ -740,7 +778,7 @@ const InsightCard: React.FC<{ insight: ReplyInsight }> = ({ insight }) => {
   return (
     <GlassCard padded variant="elevated" testID="insight-card">
       <View style={styles.insightHeader}>
-        <Text style={styles.readEyebrow}>{"HERE'S WHAT I'M NOTICING"}</Text>
+        <Text style={styles.readEyebrow}>{"WHAT'S GOING ON"}</Text>
         <View style={[styles.tempPill, { backgroundColor: `${temp.color}1F`, borderColor: `${temp.color}55` }]} testID="insight-temp-pill">
           <View style={[styles.tempDot, { backgroundColor: temp.color }]} />
           <Text style={[styles.tempPillText, { color: temp.color }]}>{temp.label}</Text>
@@ -766,10 +804,11 @@ const InsightCard: React.FC<{ insight: ReplyInsight }> = ({ insight }) => {
 
 const PrimaryReplyCard: React.FC<{
   text: string;
+  toneLabel: string;
   onCopy: (text: string) => void;
   onEditCommitted?: (original: string, edited: string) => void;
   onRegenerate: () => void;
-}> = ({ text, onCopy, onEditCommitted, onRegenerate }) => {
+}> = ({ text, toneLabel, onCopy, onEditCommitted, onRegenerate }) => {
   const [value, setValue] = useState(text);
   const [editing, setEditing] = useState(false);
   // PR-M2: commit an edit at most once per distinct edited value.
@@ -784,8 +823,13 @@ const PrimaryReplyCard: React.FC<{
 
   return (
     <View>
-      <Text style={styles.sectionLabel}>{"I'D SEND THIS 👇"}</Text>
       <View style={styles.primaryCard} testID="primary-reply-card">
+        <View style={styles.toneRow}>
+          <View style={[styles.toneDot, { backgroundColor: colors.pink }]} />
+          <Text style={[styles.toneLabel, { color: colors.pink }]} testID="primary-tone-label">
+            {toneLabel || "Smooth"}
+          </Text>
+        </View>
         {editing ? (
           <TextInput
             value={value}
@@ -999,10 +1043,10 @@ const ReplyResultCard: React.FC<{
 
 const styles = StyleSheet.create({
   h1: {
-    fontFamily: typography.fonts.displaySemibold,
-    fontSize: 34,
-    lineHeight: 38,
-    letterSpacing: -0.7,
+    fontFamily: typography.fonts.displayBold,
+    fontSize: 33,
+    lineHeight: 37,
+    letterSpacing: 0,
     color: colors.text,
   },
   sub: {
@@ -1012,7 +1056,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     maxWidth: 290,
   },
-  // Recurring V2 section label: 12px 700 .1em uppercase #71717A
+  // Recurring V3 section label.
   sectionLabel: {
     fontFamily: typography.fonts.bodyBold,
     fontSize: 12,
@@ -1028,10 +1072,45 @@ const styles = StyleSheet.create({
   },
   skipText: {
     fontFamily: typography.fonts.bodySemibold,
-    fontSize: 12.5,
+    fontSize: 12,
     color: colors.textDim,
   },
   chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  feelingChip: {
+    minHeight: 36,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingHorizontal: 13,
+    paddingVertical: 8,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.09)",
+    backgroundColor: colors.surfaceSoft,
+  },
+  feelingChipSelected: {
+    backgroundColor: "rgba(167,139,250,0.11)",
+    borderColor: "rgba(167,139,250,0.36)",
+    shadowColor: "#A78BFA",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  feelingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 999,
+  },
+  feelingText: {
+    fontFamily: typography.fonts.bodyMedium,
+    fontSize: 12.5,
+    color: colors.textMuted,
+  },
+  feelingTextSelected: {
+    fontFamily: typography.fonts.bodyBold,
+    color: colors.lavenderText,
+  },
   // Compact dashed upload row
   upload: {
     flexDirection: "row",
@@ -1040,10 +1119,10 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: "rgba(167,139,250,0.4)",
     borderStyle: "dashed",
-    borderRadius: 18,
+    borderRadius: 20,
     paddingHorizontal: 18,
     paddingVertical: 15,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceSoft,
   },
   uploadPressed: {
     borderColor: colors.lavender,
@@ -1052,7 +1131,7 @@ const styles = StyleSheet.create({
   uploadIcon: {
     width: 38,
     height: 38,
-    borderRadius: 12,
+    borderRadius: 13,
     backgroundColor: colors.violetTint,
     alignItems: "center",
     justifyContent: "center",
@@ -1095,9 +1174,9 @@ const styles = StyleSheet.create({
     marginTop: space.s,
   },
   backTitle: {
-    fontFamily: typography.fonts.displaySemibold,
+    fontFamily: typography.fonts.displayBold,
     fontSize: 20,
-    letterSpacing: -0.3,
+    letterSpacing: 0,
     color: colors.text,
   },
   // --- results (interim until PR-V2-3) ---
@@ -1105,7 +1184,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderColor: colors.hairline,
     borderWidth: 1,
-    borderRadius: radii.card,
+    borderRadius: 24,
     padding: space.l + 2,
   },
   toneRow: { flexDirection: "row", alignItems: "center", gap: 8 },
@@ -1113,8 +1192,8 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 999,
-    backgroundColor: colors.lavender,
-    shadowColor: colors.lavender,
+    backgroundColor: colors.pink,
+    shadowColor: colors.pink,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
     shadowRadius: 6,
@@ -1128,7 +1207,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   replyText: {
-    fontFamily: typography.fonts.displayMedium,
+    fontFamily: typography.fonts.displaySemibold,
     color: colors.text,
     fontSize: 17,
     lineHeight: 26,
@@ -1206,31 +1285,32 @@ const styles = StyleSheet.create({
   },
   insightLabel: { ...typography.body.bodySemibold, color: colors.text },
   primaryCard: {
-    backgroundColor: colors.surfaceRaised,
+    backgroundColor: colors.glassFill,
     borderWidth: 1,
-    borderColor: colors.violetTintBorder,
-    borderRadius: 20,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
+    borderColor: colors.glassStroke,
+    borderRadius: 24,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.45,
-    shadowRadius: 22,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.55,
+    shadowRadius: 44,
+    elevation: 8,
   },
   primaryText: {
-    fontFamily: typography.fonts.displayMedium,
+    fontFamily: typography.fonts.displaySemibold,
     fontSize: 17,
     lineHeight: 24,
-    letterSpacing: -0.2,
+    letterSpacing: 0,
     color: colors.text,
+    marginTop: 12,
   },
   primaryInput: { padding: 0, minHeight: 48, textAlignVertical: "top" },
   primaryActions: {
     flexDirection: "row",
     alignItems: "center",
     gap: 22,
-    marginTop: 14,
+    marginTop: 16,
   },
   primaryAction: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4 },
   primaryActionText: { ...typography.body.bodySemibold, fontSize: 13, color: colors.lavenderText },

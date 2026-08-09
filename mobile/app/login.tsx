@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 24,
     fontWeight: "700",
-    letterSpacing: -0.4,
+    letterSpacing: 0,
   },
   sub: {
     color: colors.textMuted,

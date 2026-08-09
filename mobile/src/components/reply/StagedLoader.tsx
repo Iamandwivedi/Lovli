@@ -1,12 +1,8 @@
-// Staged generating loader — "V2 · Coach — Reply · Generating".
-// Centered pulsing ✦ over an ambient glow + sequential 5-stage checklist.
-// Done: lavender-tint circle w/ check. Active: ringed glowing circle + serif text.
-// Pending: hairline ring + disabled text.
+// Staged generating loader — V3 app-icon spinner + sequential checklist.
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AmbientGlow } from "@/src/components/AmbientGlow";
-import { Sparkle } from "@/src/components/Sparkle";
 import { colors, typography } from "@/src/theme";
 
 export const GENERATION_STAGES = [
@@ -27,7 +23,10 @@ export const StagedLoader: React.FC<Props> = ({ activeIndex, stages = GENERATION
     <View style={styles.root} testID="staged-loader">
       <View style={styles.heroArea}>
         <AmbientGlow size={420} style={styles.glow} />
-        <Sparkle size={48} color={colors.lavender} glow animated />
+        <View style={styles.spinner}>
+          <Image source={require("../../../assets/images/icon.png")} style={styles.icon} />
+        </View>
+        <Text style={styles.title}>Catching the tone...</Text>
       </View>
 
       <View style={styles.list}>
@@ -37,7 +36,7 @@ export const StagedLoader: React.FC<Props> = ({ activeIndex, stages = GENERATION
             <View key={label} style={styles.row} testID={`loader-stage-${state}`}>
               {state === "done" ? (
                 <View style={[styles.circle, styles.circleDone]}>
-                  <Ionicons name="checkmark" size={12} color={colors.lavender} />
+                  <Ionicons name="checkmark" size={12} color={colors.green} />
                 </View>
               ) : state === "active" ? (
                 <View style={[styles.circle, styles.circleActive]} />
@@ -77,8 +76,36 @@ const styles = StyleSheet.create({
     position: "absolute",
     alignSelf: "center",
   },
+  spinner: {
+    width: 120,
+    height: 120,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(5,5,9,0.42)",
+    borderWidth: 1,
+    borderColor: "rgba(167,139,250,0.18)",
+    shadowColor: "#A78BFA",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.38,
+    shadowRadius: 28,
+    elevation: 8,
+  },
+  icon: {
+    width: 66,
+    height: 66,
+    borderRadius: 16,
+  },
+  title: {
+    fontFamily: typography.fonts.displayBold,
+    fontSize: 22,
+    lineHeight: 27,
+    letterSpacing: 0,
+    color: colors.text,
+    marginTop: 24,
+  },
   list: {
-    marginTop: 44,
+    marginTop: 28,
     paddingHorizontal: 40,
     gap: 15,
   },
@@ -95,7 +122,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   circleDone: {
-    backgroundColor: "rgba(167,139,250,0.18)",
+    backgroundColor: "rgba(134,200,157,0.16)",
+    borderWidth: 1,
+    borderColor: "rgba(134,200,157,0.40)",
   },
   circleActive: {
     borderWidth: 2,

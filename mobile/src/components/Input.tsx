@@ -1,6 +1,4 @@
-// Input — light variant (PR2.2 polish).
-// Resting border slightly stronger so the field is defined inside white cards.
-// Focus border violet #7C5CFF (unchanged).
+// Input — V3 dark glass field.
 import React, { forwardRef, useState } from "react";
 import {
   StyleSheet,
@@ -10,7 +8,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { colors, radii, space, typography } from "@/src/theme";
+import { colors, space, typography } from "@/src/theme";
 
 type Props = TextInputProps & {
   label?: string;
@@ -65,10 +63,10 @@ const styles = StyleSheet.create({
     marginLeft: 2,
   },
   input: {
-    backgroundColor: colors.surface,
-    borderColor: colors.hairline,
+    backgroundColor: colors.surfaceSoft,
+    borderColor: "rgba(255,255,255,0.09)",
     borderWidth: 1,
-    borderRadius: radii.input,
+    borderRadius: 20,
     paddingHorizontal: space.l,
     paddingVertical: 14,
     ...typography.body.base,
@@ -81,7 +79,7 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   focused: {
-    borderColor: colors.violet,
+    borderColor: "rgba(167,139,250,0.42)",
     shadowColor: colors.violet,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.18,

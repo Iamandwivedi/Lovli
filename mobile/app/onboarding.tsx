@@ -1,5 +1,5 @@
-// Onboarding — V2 dark, 3 steps: Goal → Platform → Language.
-// Template per "V2 · Coach — Onboarding · Goal": back chevron + gradient progress
+// Onboarding — V3 dark glass.
+// Template: back chevron + gradient progress
 // track + "N of 3", serif H1, radio option list, white Continue CTA (no ✦).
 // Goal is stored locally (lovli_goal) and fed into generation prompts in a later PR.
 import React, { useState } from "react";
@@ -12,7 +12,6 @@ import { PrimaryButton } from "@/src/components/PrimaryButton";
 import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
 import { extractErrorMessage } from "@/src/api/client";
-import { storage } from "@/src/utils/storage";
 import {
   Language,
   PlatformLabel,
@@ -76,8 +75,8 @@ export default function OnboardingScreen() {
       onSelect: (v: string) => setPlatform(v as PlatformLabel),
     },
     {
-      title: "How do you like to text?",
-      sub: "I'll write replies the way you actually talk.",
+      title: "How do you actually text?",
+      sub: "Pick by ear — replies come back in this by default.",
       options: LANGUAGES as string[],
       value: language as string,
       onSelect: (v: string) => setLanguage(v as Language),
@@ -254,10 +253,10 @@ const styles = StyleSheet.create({
     color: colors.textFaint,
   },
   h1: {
-    fontFamily: typography.fonts.displaySemibold,
+    fontFamily: typography.fonts.displayBold,
     fontSize: 30,
     lineHeight: 35,
-    letterSpacing: -0.6,
+    letterSpacing: 0,
     color: colors.text,
     marginTop: 22,
     paddingHorizontal: 4,
@@ -274,17 +273,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceSoft,
     borderWidth: 1,
-    borderColor: colors.hairline,
-    borderRadius: 16,
+    borderColor: "rgba(255,255,255,0.09)",
+    borderRadius: 18,
     paddingVertical: 15,
     paddingHorizontal: 17,
   },
   optionSelected: {
-    backgroundColor: colors.surfaceRaised,
+    backgroundColor: "rgba(167,139,250,0.09)",
     borderWidth: 1.5,
-    borderColor: colors.lavender,
+    borderColor: "rgba(167,139,250,0.34)",
     shadowColor: "#A78BFA",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.15,

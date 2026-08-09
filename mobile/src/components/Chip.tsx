@@ -1,7 +1,4 @@
-// Chip — vibe / language / platform selection.
-// Light variant per PR2.1:
-//   unselected: white fill, hairline border, textSecondary label
-//   selected:   violetTint fill, violet border, violetDeep label
+// Chip — V3 glass selection pill.
 import React from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 import { colors, radii, space, typography } from "@/src/theme";
@@ -51,18 +48,17 @@ const styles = StyleSheet.create({
   },
   small: { minHeight: 32, paddingHorizontal: 12, paddingVertical: 6 },
   unselected: {
-    backgroundColor: colors.surface,
-    borderColor: colors.hairline,
+    backgroundColor: colors.surfaceSoft,
+    borderColor: "rgba(255,255,255,0.09)",
   },
   selected: {
-    // V2 dark: solid lavender fill, dark label, soft lavender shadow, no border
-    backgroundColor: colors.lavender,
-    borderColor: colors.lavender,
+    backgroundColor: "rgba(167,139,250,0.11)",
+    borderColor: "rgba(167,139,250,0.36)",
     shadowColor: "#A78BFA",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 14,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 2,
   },
   pressed: { opacity: 0.85, transform: [{ scale: 0.97 }] },
   label: {
@@ -73,7 +69,7 @@ const styles = StyleSheet.create({
   labelSmall: { fontSize: 13 },
   labelSelected: {
     ...typography.body.bodyBold,
-    color: "#050509",
+    color: colors.lavenderText,
     fontSize: 13,
   },
 });

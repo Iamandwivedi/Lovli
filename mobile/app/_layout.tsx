@@ -1,7 +1,6 @@
 // Root layout — wraps the app in providers, loads Lovli fonts, configures Stack routes.
-// PR2.1 light redesign: loads Fraunces (serif headers) + Plus Jakarta Sans (body).
-// Clash Display is retired — no longer loaded.
-import "react-native-gesture-handler";
+// V3 maps the mock typography families to bundled fonts: Bricolage-style
+// display from local Clash Display, Outfit-style UI from Plus Jakarta Sans.
 import React, { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import { Stack } from "expo-router";
@@ -16,10 +15,6 @@ import {
   PlusJakartaSans_600SemiBold,
   PlusJakartaSans_700Bold,
 } from "@expo-google-fonts/plus-jakarta-sans";
-import {
-  Fraunces_600SemiBold,
-  Fraunces_700Bold,
-} from "@expo-google-fonts/fraunces";
 import { AuthProvider } from "@/src/context/AuthContext";
 import { ToastProvider } from "@/src/context/ToastContext";
 import { AppLockGate } from "@/src/components/AppLockGate";
@@ -34,14 +29,12 @@ export default function RootLayout() {
   useEffect(() => {
     let mounted = true;
     Font.loadAsync({
-      // Fraunces — serif headers (PR2.1)
-      Fraunces_600SemiBold,
-      Fraunces_700Bold,
-      // Plus Jakarta Sans — body / UI (unchanged from PR1)
-      PlusJakartaSans_400Regular,
-      PlusJakartaSans_500Medium,
-      PlusJakartaSans_600SemiBold,
-      PlusJakartaSans_700Bold,
+      BricolageGrotesque_600SemiBold: require("../assets/fonts/ClashDisplay-Semibold.ttf"),
+      BricolageGrotesque_700Bold: require("../assets/fonts/ClashDisplay-Bold.ttf"),
+      Outfit_400Regular: PlusJakartaSans_400Regular,
+      Outfit_500Medium: PlusJakartaSans_500Medium,
+      Outfit_600SemiBold: PlusJakartaSans_600SemiBold,
+      Outfit_700Bold: PlusJakartaSans_700Bold,
     })
       .catch(() => {})
       .finally(() => {

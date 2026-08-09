@@ -1,7 +1,6 @@
-// Memory · List — "V2 · Coach — Memory · List".
+// Memory · List — V3 dark glass.
 import React, { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Screen } from "@/src/components/Screen";
@@ -138,16 +137,16 @@ const PersonCard: React.FC<{ card: MemoryCard; primary: boolean; onPress: () => 
 
 const styles = StyleSheet.create({
   h1: {
-    fontFamily: typography.fonts.displaySemibold,
+    fontFamily: typography.fonts.displayBold,
     fontSize: 32,
-    letterSpacing: -0.6,
+    letterSpacing: 0,
     color: colors.text,
   },
   intro: {
-    fontFamily: typography.fonts.displayMedium,
+    fontFamily: typography.fonts.displayBold,
     fontSize: 24,
     lineHeight: 30,
-    letterSpacing: -0.4,
+    letterSpacing: 0,
     color: colors.text,
     marginTop: 14,
     maxWidth: 300,
@@ -169,15 +168,15 @@ const styles = StyleSheet.create({
   },
   person: { borderRadius: 20, padding: 17, borderWidth: 1 },
   personPrimary: {
-    backgroundColor: colors.surfaceRaised,
-    borderColor: colors.hairline,
+    backgroundColor: colors.glassFill,
+    borderColor: colors.glassStroke,
     shadowColor: "#A78BFA",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.14,
     shadowRadius: 22,
     elevation: 5,
   },
-  personFlat: { backgroundColor: colors.surface, borderColor: colors.hairline },
+  personFlat: { backgroundColor: colors.surfaceSoft, borderColor: "rgba(255,255,255,0.09)" },
   personRow: { flexDirection: "row", alignItems: "center", gap: 13 },
   avatar: {
     width: 44,
@@ -192,7 +191,7 @@ const styles = StyleSheet.create({
   name: {
     fontFamily: typography.fonts.displaySemibold,
     fontSize: 18,
-    letterSpacing: -0.2,
+    letterSpacing: 0,
     color: colors.text,
   },
   meta: { ...typography.body.caption, fontSize: 12.5, color: colors.textFaint, marginTop: 3 },

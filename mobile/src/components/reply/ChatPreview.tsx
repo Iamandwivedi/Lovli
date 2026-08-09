@@ -1,4 +1,4 @@
-// Chat preview card — "V2 · Coach — Reply · Intent".
+// Chat preview card — V3 intent/context surface.
 // Renders parsed conversation bubbles: theirs left (#171827), user's right (lavender tint).
 // Falls back to the screenshot thumbnail when only an image was provided.
 import React from "react";
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.hairline,
-    borderRadius: 18,
+    borderRadius: 20,
     paddingVertical: 14,
     paddingHorizontal: 16,
     gap: 8,
@@ -55,9 +55,9 @@ const styles = StyleSheet.create({
   },
   them: {
     alignSelf: "flex-start",
-    backgroundColor: colors.surfaceRaised,
+    backgroundColor: "rgba(255,255,255,0.05)",
     borderWidth: 1,
-    borderColor: colors.hairline,
+    borderColor: "rgba(255,255,255,0.07)",
     borderTopLeftRadius: 14,
     borderTopRightRadius: 14,
     borderBottomRightRadius: 14,

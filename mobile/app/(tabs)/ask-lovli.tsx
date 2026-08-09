@@ -1,4 +1,4 @@
-// Ask Lovli — V2 coach chat tab (LIVE since PR-V2-4).
+// Ask Lovli — V3 glass chat tab.
 // Lovli bubbles left (✦ avatar w/ glow), user bubbles right (lavender tint).
 // Starter chips send as user messages and hide once the thread starts.
 // Typing indicator while waiting; failed sends get a retry affordance.
@@ -298,9 +298,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   headerTitle: {
-    fontFamily: typography.fonts.displaySemibold,
+    fontFamily: typography.fonts.displayBold,
     fontSize: 26,
-    letterSpacing: -0.4,
+    letterSpacing: 0,
     color: colors.text,
   },
   thread: {
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 999,
-    backgroundColor: colors.surfaceRaised,
+    backgroundColor: colors.surfaceSoft,
     borderWidth: 1,
     borderColor: "rgba(167,139,250,0.35)",
     alignItems: "center",
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   lovliBubble: {
-    backgroundColor: colors.surfaceRaised,
+    backgroundColor: colors.surfaceSoft,
     borderWidth: 1,
     borderColor: colors.hairline,
     borderTopLeftRadius: 20,
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   },
   inputField: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceSoft,
     borderWidth: 1,
     borderColor: colors.hairline,
     borderRadius: radii.pill,

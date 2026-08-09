@@ -1,11 +1,10 @@
-// Top header — Lovli wordmark + sparkle on left, profile avatar on right.
-// CreditsChip ("3 free left" / "Pro") slots between wordmark and avatar.
-// PR-DA1: replaces the settings gear with a round user-initial avatar.
+// Top header — V3 spark squircle, amber credits chip, profile avatar.
 import React from "react";
 import { Pressable, StyleSheet, View, Text } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { LovliLogo } from "@/src/components/LovliLogo";
+import { Sparkle } from "@/src/components/Sparkle";
 import { useAuth } from "@/src/context/AuthContext";
 import { colors, radii, space, typography } from "@/src/theme";
 
@@ -27,7 +26,7 @@ export const AppHeader: React.FC<Props> = ({ showSettings = true, rightElement, 
   const initial = initialOf(user?.name, user?.email);
   return (
     <View style={styles.row} testID="app-header">
-      <LovliLogo size={32} />
+      <LovliLogo size={32} showName={false} />
       <View style={styles.right}>
         {credits ? (
           <View
@@ -36,6 +35,7 @@ export const AppHeader: React.FC<Props> = ({ showSettings = true, rightElement, 
               credits.tone === "pro" && styles.creditsChipPro,
             ]}
           >
+            {credits.tone !== "pro" ? <Sparkle size={10} color={colors.amber} /> : null}
             <Text
               style={[
                 styles.creditsText,
@@ -97,21 +97,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: radii.pill,
-    backgroundColor: colors.surface,
-    borderColor: colors.hairline,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(217,169,110,0.10)",
+    borderColor: "rgba(217,169,110,0.28)",
     borderWidth: 1,
   },
   creditsChipPro: {
     backgroundColor: colors.violetTint,
-    borderColor: colors.violet,
+    borderColor: "rgba(167,139,250,0.36)",
   },
   creditsText: {
-    ...typography.body.caption,
-    color: colors.textSecondary,
+    fontFamily: typography.fonts.bodySemibold,
+    fontSize: 11.5,
+    lineHeight: 15,
+    color: colors.amber,
   },
   creditsTextPro: {
     ...typography.body.bodySemibold,
-    color: colors.violetDeep,
-    fontSize: 12,
+    color: colors.lavenderText,
+    fontSize: 11.5,
   },
 });

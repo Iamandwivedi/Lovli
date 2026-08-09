@@ -1,7 +1,7 @@
 // Violet ✦ four-point sparkle — Lovli's AI signature mark.
 // Used on the logo, on Generate CTAs, in loading states, on AI message bubbles.
 // SVG for crisp rendering at any size.
-import React from "react";
+import React, { useEffect } from "react";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -11,7 +11,6 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Path, Defs, RadialGradient, Stop, Circle } from "react-native-svg";
 import { colors } from "@/src/theme";
-import { useEffect } from "react";
 
 interface SparkleProps {
   size?: number;

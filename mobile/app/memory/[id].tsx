@@ -1,4 +1,4 @@
-// Memory · Timeline / person detail — "V2 · Coach — Memory · Timeline".
+// Memory · Timeline / person detail — V3 dark glass.
 import React, { useCallback, useMemo, useState } from "react";
 import { Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -14,7 +14,6 @@ import {
   patchMemoryCard,
 } from "@/src/api/endpoints";
 import { resyncNotificationsFromStorage } from "@/src/utils/notifications";
-import { personMeta } from "@/app/(tabs)/memory";
 import { colors, radii, typography } from "@/src/theme";
 
 const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -247,9 +246,9 @@ const styles = StyleSheet.create({
     shadowColor: "#A78BFA", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.3, shadowRadius: 26, elevation: 6,
   },
   avatarText: { fontFamily: typography.fonts.bodyBold, fontSize: 21, color: "#050509" },
-  name: { fontFamily: typography.fonts.displaySemibold, fontSize: 24, letterSpacing: -0.4, color: colors.text, marginTop: 12 },
+  name: { fontFamily: typography.fonts.displayBold, fontSize: 24, letterSpacing: 0, color: colors.text, marginTop: 12 },
   metaRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 8 },
-  stagePill: { backgroundColor: colors.violetTint, borderRadius: radii.pill, paddingHorizontal: 11, paddingVertical: 4 },
+  stagePill: { backgroundColor: colors.violetTint, borderWidth: 1, borderColor: colors.violetTintBorder, borderRadius: radii.pill, paddingHorizontal: 11, paddingVertical: 4 },
   stagePillText: { fontFamily: typography.fonts.bodyBold, fontSize: 11.5, color: colors.lavenderText },
   meta: { ...typography.body.caption, fontSize: 12, color: colors.textFaint },
   sectionLabel: {

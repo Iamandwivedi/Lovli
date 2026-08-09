@@ -112,8 +112,7 @@ export default function LearnedScreen() {
           <View style={styles.card} testID="learned-empty">
             <Text style={styles.emptyTitle}>Nothing learned yet</Text>
             <Text style={styles.emptyText}>
-              Generate a few replies, copy the ones you like, edit the ones you
-              don't — I pick up your style as you go.
+              {"Generate a few replies, copy the ones you like, edit the ones you don't — I pick up your style as you go."}
             </Text>
           </View>
         ) : (
@@ -204,7 +203,7 @@ export default function LearnedScreen() {
 
 const styles = StyleSheet.create({
   backHeader: { flexDirection: "row", alignItems: "center", gap: 14, marginTop: 8, marginBottom: 6 },
-  backTitle: { fontFamily: typography.fonts.displaySemibold, fontSize: 20, letterSpacing: -0.3, color: colors.text },
+  backTitle: { fontFamily: typography.fonts.displayBold, fontSize: 22, letterSpacing: 0, color: colors.text },
   heroRow: { flexDirection: "row", alignItems: "flex-start", gap: 8, paddingHorizontal: 2, marginBottom: 4 },
   heroText: { ...typography.body.base, fontSize: 13, lineHeight: 19, color: colors.textMuted, flex: 1 },
   sectionLabel: {
@@ -215,7 +214,7 @@ const styles = StyleSheet.create({
     ...typography.body.caption, fontSize: 12, color: colors.textFaint,
     marginTop: -2, paddingHorizontal: 4,
   },
-  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairline, borderRadius: 18, paddingHorizontal: 17, paddingVertical: 4 },
+  card: { backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: "rgba(255,255,255,0.09)", borderRadius: 18, paddingHorizontal: 17, paddingVertical: 4 },
   learnedRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingVertical: 13 },
   learnedLabel: { ...typography.body.bodySemibold, fontSize: 14, color: colors.textSoft, flex: 1 },
   removeText: { ...typography.body.bodySemibold, fontSize: 13, color: colors.pink },

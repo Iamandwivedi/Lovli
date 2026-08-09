@@ -1,4 +1,4 @@
-// Settings — "V2 · Coach — Settings". Reached from the Reply Home avatar.
+// Settings — V3 dark glass. Reached from the Reply Home avatar.
 // Face ID + notification toggles are PREFERENCE-ONLY for now (stored locally,
 // wired to native auth / push in a later build).
 import React, { useEffect, useState } from "react";
@@ -7,7 +7,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Screen } from "@/src/components/Screen";
-import { Sparkle } from "@/src/components/Sparkle";
 import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
 import { extractErrorMessage } from "@/src/api/client";
@@ -293,7 +292,7 @@ const ValueRow: React.FC<{ label: string; value: string; onPress: () => void; te
   </Pressable>
 );
 
-// V2 toggle: 42×25 pill — on: lavender + glow, white knob right; off: hairline, faint knob left.
+// V3 toggle: glass pill, lavender on, faint off.
 const ToggleRow: React.FC<{ label: string; value: boolean; onToggle: () => void; testID?: string }> = ({ label, value, onToggle, testID }) => (
   <Pressable style={styles.valueRow} onPress={onToggle} testID={testID} accessibilityRole="switch" accessibilityState={{ checked: value }}>
     <Text style={styles.rowLabel}>{label}</Text>
@@ -305,7 +304,7 @@ const ToggleRow: React.FC<{ label: string; value: boolean; onToggle: () => void;
 
 const styles = StyleSheet.create({
   backHeader: { flexDirection: "row", alignItems: "center", gap: 14, marginTop: 8, marginBottom: 6 },
-  backTitle: { fontFamily: typography.fonts.displaySemibold, fontSize: 20, letterSpacing: -0.3, color: colors.text },
+  backTitle: { fontFamily: typography.fonts.displayBold, fontSize: 22, letterSpacing: 0, color: colors.text },
   sectionLabel: {
     fontFamily: typography.fonts.bodyBold, fontSize: 12, letterSpacing: 1.2,
     textTransform: "uppercase", color: colors.textFaint, marginTop: 8,
@@ -314,13 +313,13 @@ const styles = StyleSheet.create({
     ...typography.body.caption, fontSize: 12, color: colors.textFaint,
     marginTop: -6, paddingHorizontal: 4,
   },
-  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairline, borderRadius: 18, paddingHorizontal: 17 },
+  card: { backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: "rgba(255,255,255,0.09)", borderRadius: 18, paddingHorizontal: 17 },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 13 },
   avatar: { width: 32, height: 32, borderRadius: 999, alignItems: "center", justifyContent: "center" },
   avatarText: { fontFamily: typography.fonts.bodyBold, fontSize: 13, color: "#050509" },
   email: { ...typography.body.bodySemibold, fontSize: 14, color: colors.text, flex: 1 },
-  proBadge: { backgroundColor: colors.lavender, borderRadius: radii.pill, paddingHorizontal: 9, paddingVertical: 3 },
-  proBadgeText: { fontFamily: typography.fonts.bodyBold, fontSize: 10.5, color: "#050509" },
+  proBadge: { backgroundColor: "rgba(217,169,110,0.12)", borderWidth: 1, borderColor: "rgba(217,169,110,0.32)", borderRadius: radii.pill, paddingHorizontal: 9, paddingVertical: 3 },
+  proBadgeText: { fontFamily: typography.fonts.bodyBold, fontSize: 10.5, color: colors.amber },
   valueRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 13 },
   rowLabel: { ...typography.body.bodySemibold, fontSize: 14, color: colors.textSoft },
   valueRight: { flexDirection: "row", alignItems: "center", gap: 8 },
@@ -329,10 +328,12 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: colors.divider },
   toggle: { width: 42, height: 25, borderRadius: 999, justifyContent: "center", paddingHorizontal: 3 },
   toggleOn: {
-    backgroundColor: colors.lavender,
+    backgroundColor: "rgba(167,139,250,0.35)",
+    borderWidth: 1,
+    borderColor: "rgba(167,139,250,0.50)",
     shadowColor: "#A78BFA", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 3,
   },
-  toggleOff: { backgroundColor: colors.hairline },
+  toggleOff: { backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: colors.hairline },
   knob: { width: 19, height: 19, borderRadius: 999 },
   knobOn: { backgroundColor: "#FFFFFF", alignSelf: "flex-end" },
   knobOff: { backgroundColor: colors.textFaint, alignSelf: "flex-start" },
@@ -341,17 +342,17 @@ const styles = StyleSheet.create({
   logoutText: { ...typography.body.bodySemibold, fontSize: 14, color: colors.pink },
   scrim: { flex: 1, backgroundColor: colors.scrim },
   sheet: {
-    backgroundColor: colors.surfaceRaised, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     borderWidth: 1, borderColor: colors.hairline, padding: 22, paddingBottom: 34, gap: 10,
   },
   sheetTitle: { fontFamily: typography.fonts.displaySemibold, fontSize: 20, color: colors.text },
   sheetSub: { ...typography.body.base, fontSize: 13.5, lineHeight: 19, color: colors.textMuted, marginBottom: 4 },
   option: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairline,
+    backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: "rgba(255,255,255,0.09)",
     borderRadius: 16, paddingVertical: 14, paddingHorizontal: 17,
   },
-  optionSelected: { backgroundColor: colors.surfaceRaised, borderWidth: 1.5, borderColor: colors.lavender },
+  optionSelected: { backgroundColor: "rgba(167,139,250,0.09)", borderWidth: 1.5, borderColor: "rgba(167,139,250,0.34)" },
   optionText: { ...typography.body.bodySemibold, fontSize: 14.5, color: colors.textSoft },
   optionTextSelected: { ...typography.body.bodyBold, color: colors.text },
   check: { width: 21, height: 21, borderRadius: 999, backgroundColor: colors.lavender, alignItems: "center", justifyContent: "center" },

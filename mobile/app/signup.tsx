@@ -106,7 +106,7 @@ export default function SignupScreen() {
 }
 
 const styles = StyleSheet.create({
-  h1: { color: colors.text, fontSize: 24, fontWeight: "700", letterSpacing: -0.4 },
+  h1: { color: colors.text, fontSize: 24, fontWeight: "700", letterSpacing: 0 },
   sub: {
     color: colors.textMuted,
     fontSize: fontSize.base,

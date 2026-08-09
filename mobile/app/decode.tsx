@@ -1,4 +1,4 @@
-// Decode — "V2 · Coach — Decode". Entry from More ("Decode the situation" /
+// Decode — V3 dark glass. Entry from More ("Decode the situation" /
 // "Read the signals"). Phases: input → generating → result.
 import React, { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -25,7 +25,7 @@ import {
 import { extractErrorMessage } from "@/src/api/client";
 import { storage } from "@/src/utils/storage";
 import { ASK_PENDING_KEY } from "@/src/config/storage-keys";
-import { colors, radii, space, typography } from "@/src/theme";
+import { colors, space, typography } from "@/src/theme";
 
 const DECODE_STAGES = [
   "Reading the chat…",
@@ -352,9 +352,9 @@ export default function DecodeScreen() {
 const styles = StyleSheet.create({
   backHeader: { flexDirection: "row", alignItems: "center", gap: 14, marginTop: 8, marginBottom: 16 },
   backTitle: {
-    fontFamily: typography.fonts.displaySemibold,
+    fontFamily: typography.fonts.displayBold,
     fontSize: 20,
-    letterSpacing: -0.3,
+    letterSpacing: 0,
     color: colors.text,
   },
   sub: { ...typography.body.base, fontSize: 14.5, color: colors.textMuted },
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     paddingHorizontal: 18,
     paddingVertical: 15,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceSoft,
   },
   uploadIcon: {
     width: 38,
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   uploadTitle: { ...typography.body.bodySemibold, fontSize: 14.5, color: colors.text },
   uploadHint: { ...typography.body.caption, fontSize: 12.5, color: colors.textFaint, marginTop: 3 },
   vibeCard: {
-    backgroundColor: colors.surfaceRaised,
+    backgroundColor: colors.glassFill,
     borderWidth: 1,
     borderColor: colors.borderStrong,
     borderRadius: 22,
@@ -402,10 +402,10 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   vibeHeadline: {
-    fontFamily: typography.fonts.displayMedium,
+    fontFamily: typography.fonts.displayBold,
     fontSize: 23,
     lineHeight: 28,
-    letterSpacing: -0.4,
+    letterSpacing: 0,
     color: colors.text,
     marginBottom: 14,
   },
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
   bulletText: { ...typography.body.base, fontSize: 13.5, lineHeight: 19, color: colors.textMuted, flex: 1 },
   paragraph: { ...typography.body.base, fontSize: 13.5, lineHeight: 20, color: colors.textMuted },
   moveCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceSoft,
     borderWidth: 1,
     borderColor: colors.hairline,
     borderRadius: 20,

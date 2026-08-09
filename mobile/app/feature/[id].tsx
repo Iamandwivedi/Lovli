@@ -1,4 +1,4 @@
-// Shared feature screen — "V2 · Coach — Tools" (PR4). One config-driven phase
+// Shared feature screen — V3 glass tools. One config-driven phase
 // machine (input → generating → result) for every More-grid tool, powered by
 // POST /api/feature. Contract: /app/docs/FEATURE_API_AND_PROMPTS.md
 import React, { useEffect, useState } from "react";
@@ -444,9 +444,9 @@ export default function FeatureScreen() {
 const styles = StyleSheet.create({
   backHeader: { flexDirection: "row", alignItems: "center", gap: 14, marginTop: 8, marginBottom: 16 },
   backTitle: {
-    fontFamily: typography.fonts.displaySemibold,
+    fontFamily: typography.fonts.displayBold,
     fontSize: 20,
-    letterSpacing: -0.3,
+    letterSpacing: 0,
     color: colors.text,
   },
   sub: { ...typography.body.base, fontSize: 14.5, color: colors.textMuted },
@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     paddingHorizontal: 18,
     paddingVertical: 15,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceSoft,
   },
   uploadIcon: {
     width: 38,
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
   uploadTitle: { ...typography.body.bodySemibold, fontSize: 14.5, color: colors.text },
   uploadHint: { ...typography.body.caption, fontSize: 12.5, color: colors.textFaint, marginTop: 3 },
   verdictCard: {
-    backgroundColor: colors.surfaceRaised,
+    backgroundColor: colors.glassFill,
     borderWidth: 1,
     borderColor: colors.borderStrong,
     borderRadius: 22,
@@ -495,16 +495,16 @@ const styles = StyleSheet.create({
   },
   verdictCardRose: { borderColor: "rgba(224,102,122,0.35)" },
   verdict: {
-    fontFamily: typography.fonts.displayMedium,
+    fontFamily: typography.fonts.displayBold,
     fontSize: 23,
     lineHeight: 28,
-    letterSpacing: -0.4,
+    letterSpacing: 0,
     color: colors.text,
   },
   bulletRow: { flexDirection: "row", alignItems: "flex-start", gap: 9, paddingVertical: 3 },
   bulletText: { ...typography.body.base, fontSize: 13.5, lineHeight: 19, color: colors.textMuted, flex: 1 },
   moveCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceSoft,
     borderWidth: 1,
     borderColor: colors.hairline,
     borderRadius: 20,

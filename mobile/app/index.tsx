@@ -1,10 +1,11 @@
 // Splash / loading — decides where to send the user.
 import React, { useEffect } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Image, StyleSheet, Text } from "react-native";
 import { useRouter } from "expo-router";
-import { LovliLogo } from "@/src/components/LovliLogo";
+import { LinearGradient } from "expo-linear-gradient";
+import { AmbientGlow } from "@/src/components/AmbientGlow";
 import { useAuth } from "@/src/context/AuthContext";
-import { colors, space } from "@/src/theme/colors";
+import { colors, gradients, space, typography } from "@/src/theme";
 
 export default function Splash() {
   const { isChecking, isAuthed, user } = useAuth();
@@ -29,18 +30,38 @@ export default function Splash() {
   }, [isChecking, isAuthed, user, router]);
 
   return (
-    <View style={styles.root} testID="splash-screen">
-      <LovliLogo size={56} />
+    <LinearGradient colors={gradients.hero} style={styles.root} testID="splash-screen">
+      <AmbientGlow size={420} style={styles.glow} />
+      <Image source={require("../assets/images/icon.png")} style={styles.icon} />
+      <Text style={styles.tagline}>Never fumble the text that matters.</Text>
       <ActivityIndicator color={colors.lavender} style={{ marginTop: space.xl }} />
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.bg,
     alignItems: "center",
     justifyContent: "center",
+  },
+  glow: {
+    position: "absolute",
+    alignSelf: "center",
+  },
+  icon: {
+    width: 108,
+    height: 108,
+    borderRadius: 26,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 34 },
+    shadowOpacity: 0.9,
+    shadowRadius: 70,
+  },
+  tagline: {
+    ...typography.body.base,
+    color: colors.textMuted,
+    fontSize: 14.5,
+    marginTop: 30,
   },
 });

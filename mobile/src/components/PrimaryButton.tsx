@@ -1,4 +1,4 @@
-// Primary CTA — V2 white pill (dark "Coach" redesign).
+// Primary CTA — V3 white iOS pill.
 // White fill, 1px #E5E7EB border, dark label, lavender halo shadow.
 // Leading ✦ glyph in deep violet #8B5CF6 (withSparkle, default true).
 // Press → scale 0.96 spring + Haptics.Medium + shadow tightens.
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.ctaBg,
     borderWidth: 1,
     borderColor: colors.ctaBorder,
-    // Lavender halo per V2 spec: 0 8px 28px rgba(167,139,250,.35)
+    // Lavender halo per V3 spec.
     shadowColor: "#A78BFA",
     elevation: 8,
   },

@@ -1,4 +1,4 @@
-// Premium — "V2 · Coach — Premium". VISUAL ONLY (PAYMENTS_ENABLED=false):
+// Premium — V3 glass paywall. VISUAL ONLY (PAYMENTS_ENABLED=false):
 // CTA joins the pro waitlist via POST /api/waitlist {type:'pro', source:'premium_v2'}.
 // Modal screen — no tab bar.
 import React, { useState } from "react";
@@ -79,7 +79,7 @@ export default function PremiumScreen() {
           {OUTCOMES.map((o) => (
             <View key={o} style={styles.checkRow}>
               <View style={styles.checkCircle}>
-                <Ionicons name="checkmark" size={15} color={colors.lavender} />
+                <Ionicons name="checkmark" size={15} color={colors.green} />
               </View>
               <Text style={styles.checkText}>{o}</Text>
             </View>
@@ -160,13 +160,14 @@ const styles = StyleSheet.create({
     textDecorationLine: "line-through", textDecorationColor: "rgba(224,102,122,0.6)",
   },
   h1: {
-    fontFamily: typography.fonts.displaySemibold, fontSize: 34, lineHeight: 39,
-    letterSpacing: -0.7, color: colors.text, marginTop: 8,
+    fontFamily: typography.fonts.displayBold, fontSize: 36, lineHeight: 41,
+    letterSpacing: 0, color: colors.text, marginTop: 8,
   },
   checklist: { gap: 14, marginTop: 26 },
   checkRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   checkCircle: {
-    width: 28, height: 28, borderRadius: 999, backgroundColor: colors.violetTint,
+    width: 22, height: 22, borderRadius: 999, backgroundColor: "rgba(134,200,157,0.14)",
+    borderWidth: 1, borderColor: "rgba(134,200,157,0.34)",
     alignItems: "center", justifyContent: "center",
   },
   checkText: { ...typography.body.bodyMedium, fontSize: 15, color: colors.textSoft, flex: 1 },
@@ -175,11 +176,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18, paddingVertical: 16, marginTop: 28,
   },
   planSelected: {
-    backgroundColor: colors.surfaceRaised, borderWidth: 1.5, borderColor: colors.lavender,
+    backgroundColor: "rgba(167,139,250,0.09)", borderWidth: 1.5, borderColor: "rgba(167,139,250,0.34)",
     shadowColor: "#A78BFA", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.25,
     shadowRadius: 24, elevation: 6,
   },
-  planFlat: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairline },
+  planFlat: { backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: "rgba(255,255,255,0.09)" },
   bestValue: {
     position: "absolute", top: -10, right: 14, backgroundColor: colors.lavender,
     borderRadius: radii.pill, paddingHorizontal: 9, paddingVertical: 3,
