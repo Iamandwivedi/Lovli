@@ -1,8 +1,11 @@
 // Bottom tab layout — V3 iOS Liquid Glass, 4 tabs:
 // Reply · Ask Lovli · Memory · More.
+//
+// Backed by a swipe pager (see src/navigation/swipe-tabs.ts) so the tabs move
+// left/right like Instagram or WhatsApp. The glass bar below is unchanged — it
+// is still a custom tabBar, just driven by a navigator that has a pager.
 import React, { useEffect, useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
-import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -13,7 +16,9 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import type { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SwipeTabs } from "@/src/navigation/swipe-tabs";
 import { initNotifications, resyncNotificationsFromStorage } from "@/src/utils/notifications";
 import { colors, typography } from "@/src/theme";
 
@@ -42,7 +47,10 @@ function GlassBackground() {
   return <View style={[StyleSheet.absoluteFill, styles.glassTintFallback]} />;
 }
 
-function LiquidTabBar({ state, descriptors, navigation, insets }: BottomTabBarProps) {
+function LiquidTabBar({ state, descriptors, navigation }: MaterialTopTabBarProps) {
+  // The pager navigator does not hand the tab bar safe-area insets the way
+  // bottom-tabs did, so read them directly.
+  const insets = useSafeAreaInsets();
   const bottom = Math.max(insets.bottom, 10);
   const [barWidth, setBarWidth] = useState(0);
   const laserX = useSharedValue(0);
@@ -196,13 +204,20 @@ export default function TabsLayout() {
   }, []);
 
   return (
-    <Tabs
+    <SwipeTabs
       tabBar={(props) => <LiquidTabBar {...props} />}
+      // The glass bar is absolutely positioned and floats over the content, so
+      // "bottom" only settles where the navigator considers it to live.
+      tabBarPosition="bottom"
       screenOptions={{
-        headerShown: false,
+        // Render neighbours lazily: four screens that each fetch on focus
+        // should not all mount at launch just because they are swipeable.
+        lazy: true,
+        swipeEnabled: true,
+        animationEnabled: true,
       }}
     >
-      <Tabs.Screen
+      <SwipeTabs.Screen
         name="reply"
         options={{
           title: "Reply",
@@ -210,7 +225,7 @@ export default function TabsLayout() {
           tabBarAccessibilityLabel: "Reply tab",
         }}
       />
-      <Tabs.Screen
+      <SwipeTabs.Screen
         name="ask-lovli"
         options={{
           title: "Ask Lovli",
@@ -218,7 +233,7 @@ export default function TabsLayout() {
           tabBarAccessibilityLabel: "Ask Lovli tab",
         }}
       />
-      <Tabs.Screen
+      <SwipeTabs.Screen
         name="memory"
         options={{
           title: "Memory",
@@ -226,7 +241,7 @@ export default function TabsLayout() {
           tabBarAccessibilityLabel: "Memory tab",
         }}
       />
-      <Tabs.Screen
+      <SwipeTabs.Screen
         name="more"
         options={{
           title: "More",
@@ -234,7 +249,7 @@ export default function TabsLayout() {
           tabBarAccessibilityLabel: "More tab",
         }}
       />
-    </Tabs>
+    </SwipeTabs>
   );
 }
 
