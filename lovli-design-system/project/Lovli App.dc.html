@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#08080D;}
+body{font-family:"Plus Jakarta Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+*{box-sizing:border-box;}
+a{color:#C4B5FD;text-decoration:none;}
+a:hover{color:#A78BFA;}
+@keyframes lv-breathe{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+@keyframes lv-shimmer{0%{background-position:-260% 0}100%{background-position:260% 0}}
+@keyframes lv-pulse{0%,100%{opacity:.5;transform:scale(.96)}50%{opacity:1;transform:scale(1.04)}}
+@keyframes lv-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes lv-screen{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes lv-drift{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(34px,-26px,0) scale(1.12)}100%{transform:translate3d(0,0,0) scale(1)}}
+@keyframes lv-drift2{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(-30px,24px,0) scale(1.1)}100%{transform:translate3d(0,0,0) scale(1)}}
+@keyframes lv-shine{0%{transform:translateX(-150%) skewX(-18deg)}55%,100%{transform:translateX(300%) skewX(-18deg)}}
+@keyframes lv-ring{0%{box-shadow:0 0 0 0 rgba(167,139,250,.45)}100%{box-shadow:0 0 0 14px rgba(167,139,250,0)}}
+@keyframes lv-tabin{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:radial-gradient(1200px 700px at 20% -5%,rgba(167,139,250,.10),transparent 65%),#08080D;padding:64px 56px 120px;">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;padding-bottom:26px;border-bottom:1px solid #1B1C29;max-width:1600px;">
+    <div>
+      <div style="display:flex;align-items:center;gap:11px;margin-bottom:22px;">
+        <div style="width:32px;height:32px;border-radius:9px;overflow:hidden;flex:none;box-shadow:0 4px 16px rgba(0,0,0,.5);"><img src="assets/lovli-app-icon.png" alt="Lovli" style="width:110%;height:110%;margin:-5% 0 0 -5%;display:block;object-fit:cover;"></div>
+        <span style="font-weight:700;font-size:16px;letter-spacing:-.4px;color:#F8FAFC;">Lovli</span>
+      </div>
+      <h1 style="margin:0;font-family:Fraunces,serif;font-weight:600;font-size:46px;line-height:50px;letter-spacing:-1.2px;color:#F8FAFC;">The app, screen by screen.</h1>
+      <p style="margin:16px 0 0;font-size:15.5px;line-height:25px;color:#A1A1AA;max-width:70ch;">Every screen at 402×874, dark glass throughout. The first frame is live — paste or tap through the real Reply → Results loop. Everything else is a state you'd otherwise only see once.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;flex:none;">
+      <div style="padding:7px 14px;border-radius:999px;background:rgba(167,139,250,.14);border:1px solid rgba(167,139,250,.30);font-size:12px;font-weight:600;color:#C4B5FD;">V2 Dark · Coach</div>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#52525B;">02 · APP SCREENS</div>
+    </div>
+  </div>
+
+  <div style="margin-top:56px;display:flex;align-items:baseline;gap:14px;">
+    <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#52525B;">A</span>
+    <h2 style="margin:0;font-family:Fraunces,serif;font-weight:600;font-size:26px;letter-spacing:-.5px;color:#F8FAFC;">The core loop, live</h2>
+    <span style="font-size:13px;color:#71717A;">paste → read → three replies → copy</span>
+  </div>
+
+  <div style="margin-top:26px;display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:center;gap:9px;"><span style="width:7px;height:7px;border-radius:999px;background:#4ADE80;box-shadow:0 0 8px rgba(74,222,128,.8);"></span><span style="font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4ADE80;">Live</span><span style="font-size:12.5px;color:#71717A;">tap through it</span></div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#090A14);overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;">
+          <div style="position:absolute;top:-150px;left:-90px;width:460px;height:460px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.26),transparent 70%);filter:blur(70px);animation:lv-drift 18s ease-in-out infinite;"></div>
+          <div style="position:absolute;bottom:-140px;right:-110px;width:420px;height:420px;border-radius:999px;background:radial-gradient(closest-side,rgba(139,92,246,.20),transparent 70%);filter:blur(80px);animation:lv-drift2 22s ease-in-out infinite;"></div>
+          <div style="position:absolute;inset:0;pointer-events:none;opacity:.04;mix-blend-mode:overlay;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E&quot;);"></div>
+          {{ liveScreen }}
+        </div>
+      </x-import>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;max-width:402px;line-height:17px;">A1 · Reply → Generating → Results. Vibe and language persist; Copy fires the toast.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;max-width:420px;">
+      <div style="padding:24px 26px;border-radius:22px;background:#0D0E17;border:1px solid #1B1C29;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#71717A;margin-bottom:14px;">What the flow protects</div>
+        <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:21px;color:#A1A1AA;">
+          <li><strong style="color:#E5E7EB;font-weight:600;">Two taps to a reply.</strong> Language and vibe carry over from last time; platform and memory stay tucked behind one row.</li>
+          <li><strong style="color:#E5E7EB;font-weight:600;">The wait has a personality.</strong> Three phases of microcopy over a skeleton shaped like the card that's coming — never a spinner.</li>
+          <li><strong style="color:#E5E7EB;font-weight:600;">The read is words.</strong> One of three: Not into it · Mixed signals · Leaning interested. No gauge to screenshot and argue about.</li>
+          <li><strong style="color:#E5E7EB;font-weight:600;">Editing is the point.</strong> Every card says so, and the tap target is the text itself.</li>
+        </ul>
+      </div>
+      <div style="padding:24px 26px;border-radius:22px;background:#0D0E17;border:1px solid #1B1C29;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#71717A;margin-bottom:14px;">Glass budget on this screen</div>
+        <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px;line-height:20px;color:#A1A1AA;">
+          <div style="display:flex;gap:12px;"><span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#C4B5FD;width:34px;flex:none;">E3</span><span>Tab bar — live blur, always mounted</span></div>
+          <div style="display:flex;gap:12px;"><span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#C4B5FD;width:34px;flex:none;">E2</span><span>Insight card + lead reply card — the only other blur</span></div>
+          <div style="display:flex;gap:12px;"><span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#C4B5FD;width:34px;flex:none;">E1</span><span>Input, chips, secondary cards — solid, zero cost</span></div>
+          <div style="display:flex;gap:12px;"><span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#C4B5FD;width:34px;flex:none;">E0</span><span>Two orbs + grain, static on Android</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:80px;display:flex;align-items:baseline;gap:14px;">
+    <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#52525B;">B</span>
+    <h2 style="margin:0;font-family:Fraunces,serif;font-weight:600;font-size:26px;letter-spacing:-.5px;color:#F8FAFC;">First run</h2>
+    <span style="font-size:13px;color:#71717A;">four screens between install and a first reply · all skippable</span>
+  </div>
+
+  <div style="margin-top:26px;display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;">
+
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;">B1 · Splash</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0B0918);overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;display:flex;align-items:center;justify-content:center;">
+          <div style="position:absolute;bottom:-160px;left:50%;transform:translateX(-50%);width:520px;height:420px;background:radial-gradient(closest-side,rgba(109,59,245,.45),transparent 72%);filter:blur(80px);"></div>
+          <div style="position:relative;width:104px;height:104px;border-radius:24%;overflow:hidden;box-shadow:0 30px 60px -18px rgba(0,0,0,.85);animation:lv-up 600ms cubic-bezier(.2,.8,.2,1) both;"><img src="assets/lovli-app-icon.png" alt="" style="width:110%;height:110%;margin:-5% 0 0 -5%;display:block;object-fit:cover;"></div>
+        </div>
+      </x-import>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;max-width:402px;line-height:16px;">Tile on the stage, one violet orb rising. 900ms, then push. No wordmark, no tagline.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;">B2 · Welcome</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0B0918);overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;">
+          <div style="position:absolute;top:60px;left:50%;transform:translateX(-50%);width:460px;height:460px;border-radius:999px;background:radial-gradient(closest-side,rgba(139,92,246,.30),rgba(56,189,248,.05) 72%,transparent);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:70px 32px 44px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">
+            <div style="width:78px;height:78px;border-radius:24%;overflow:hidden;box-shadow:0 24px 50px -14px rgba(0,0,0,.85);margin-bottom:34px;"><img src="assets/lovli-app-icon.png" alt="" style="width:110%;height:110%;margin:-5% 0 0 -5%;display:block;object-fit:cover;"></div>
+            <h1 style="margin:0;font-family:Fraunces,serif;font-weight:600;font-size:33px;line-height:38px;letter-spacing:-.8px;color:#F8FAFC;max-width:300px;">Before you send it, let's read it together.</h1>
+            <p style="margin:16px 0 0;font-size:15px;line-height:23px;color:#A1A1AA;max-width:270px;">Paste any chat. Lovli tells you what's going on and gives you three ways to reply — in Hinglish, if that's how you talk.</p>
+            <div style="margin-top:auto;width:100%;">
+              <button style="width:100%;height:56px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 8px 28px rgba(167,139,250,.35);">Get started</button>
+              <div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:14px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span style="font-size:12.5px;color:#71717A;">Your chats stay yours.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;max-width:402px;line-height:16px;">One promise, one button. The trust line sits under the CTA, not in a modal.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;">B3 · Onboarding — what brings you here</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#090A14);overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;">
+          <div style="position:absolute;top:-140px;left:-80px;width:420px;height:420px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.22),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:66px 20px 40px;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:30px;">
+              <div style="display:flex;gap:6px;">
+                <span style="width:26px;height:3px;border-radius:999px;background:#A78BFA;"></span>
+                <span style="width:26px;height:3px;border-radius:999px;background:#2A2B3A;"></span>
+                <span style="width:26px;height:3px;border-radius:999px;background:#2A2B3A;"></span>
+              </div>
+              <span style="font-size:13px;font-weight:600;color:#52525B;">Skip</span>
+            </div>
+            <h1 style="margin:0;font-family:Fraunces,serif;font-weight:700;font-size:30px;line-height:35px;letter-spacing:-.6px;color:#F8FAFC;max-width:290px;">What brings you here?</h1>
+            <p style="margin:12px 0 26px;font-size:14.5px;line-height:22px;color:#A1A1AA;max-width:280px;">Just so the first reply lands closer. You can change this any time.</p>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:16px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.45);box-shadow:inset 0 0 16px rgba(167,139,250,.14);"><span style="font-size:15px;font-weight:600;color:#F8FAFC;flex:1;">Someone new I'm talking to</span><span style="width:20px;height:20px;border-radius:999px;background:#A78BFA;display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#050509" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span></div>
+              <div style="display:flex;align-items:center;padding:16px 18px;border-radius:16px;background:#11121C;border:1px solid #2A2B3A;"><span style="font-size:15px;font-weight:500;color:#E5E7EB;">A situationship I can't read</span></div>
+              <div style="display:flex;align-items:center;padding:16px 18px;border-radius:16px;background:#11121C;border:1px solid #2A2B3A;"><span style="font-size:15px;font-weight:500;color:#E5E7EB;">Someone I've been with a while</span></div>
+              <div style="display:flex;align-items:center;padding:16px 18px;border-radius:16px;background:#11121C;border:1px solid #2A2B3A;"><span style="font-size:15px;font-weight:500;color:#E5E7EB;">Getting back out there</span></div>
+              <div style="display:flex;align-items:center;padding:16px 18px;border-radius:16px;background:#11121C;border:1px solid #2A2B3A;"><span style="font-size:15px;font-weight:500;color:#E5E7EB;">Just curious</span></div>
+            </div>
+            <div style="margin-top:auto;">
+              <button style="width:100%;height:56px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 8px 28px rgba(167,139,250,.35);">Continue</button>
+            </div>
+          </div>
+        </div>
+      </x-import>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;max-width:402px;line-height:16px;">Selection rows, not chips — one-handed, 52px tall, thumb-reachable. Skip is always visible.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;">B4 · Onboarding — reply language</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#090A14);overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;">
+          <div style="position:absolute;top:-140px;right:-80px;width:420px;height:420px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.22),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:66px 20px 40px;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:30px;">
+              <div style="display:flex;gap:6px;">
+                <span style="width:26px;height:3px;border-radius:999px;background:#A78BFA;"></span>
+                <span style="width:26px;height:3px;border-radius:999px;background:#A78BFA;"></span>
+                <span style="width:26px;height:3px;border-radius:999px;background:#2A2B3A;"></span>
+              </div>
+              <span style="font-size:13px;font-weight:600;color:#52525B;">Skip</span>
+            </div>
+            <h1 style="margin:0;font-family:Fraunces,serif;font-weight:700;font-size:30px;line-height:35px;letter-spacing:-.6px;color:#F8FAFC;max-width:290px;">How do you actually text?</h1>
+            <p style="margin:12px 0 26px;font-size:14.5px;line-height:22px;color:#A1A1AA;max-width:285px;">Replies come back in this by default. You can switch before any generation.</p>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="padding:16px 18px;border-radius:16px;background:#11121C;border:1px solid #2A2B3A;"><div style="font-size:15px;font-weight:600;color:#E5E7EB;">English</div><div style="font-size:13px;color:#71717A;margin-top:5px;">Sorry, this week ran away from me.</div></div>
+              <div style="padding:16px 18px;border-radius:16px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.45);box-shadow:inset 0 0 16px rgba(167,139,250,.14);"><div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:15px;font-weight:700;color:#F8FAFC;">Hinglish</span><span style="width:20px;height:20px;border-radius:999px;background:#A78BFA;display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#050509" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span></div><div style="font-size:13px;color:#C4B5FD;margin-top:5px;">Arre sorry yaar, week hi aisa tha.</div></div>
+              <div style="padding:16px 18px;border-radius:16px;background:#11121C;border:1px solid #2A2B3A;"><div style="font-size:15px;font-weight:600;color:#E5E7EB;">Hindi + English mixed</div><div style="font-size:13px;color:#71717A;margin-top:5px;">माफ़ करना, this week was mad.</div></div>
+            </div>
+            <div style="margin-top:auto;">
+              <button style="width:100%;height:56px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 8px 28px rgba(167,139,250,.35);">Continue</button>
+            </div>
+          </div>
+        </div>
+      </x-import>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;max-width:402px;line-height:16px;">Each option shows the same sentence in that language — you pick by ear, not by label.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;">B5 · Sign in</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0B0918);overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;">
+          <div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);width:440px;height:400px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.24),transparent 72%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:78px 20px 40px;display:flex;flex-direction:column;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:32px;">
+              <div style="width:48px;height:48px;border-radius:24%;overflow:hidden;box-shadow:0 16px 34px -10px rgba(0,0,0,.8);"><img src="assets/lovli-app-icon.png" alt="" style="width:110%;height:110%;margin:-5% 0 0 -5%;display:block;object-fit:cover;"></div>
+              <h1 style="margin:0;font-family:Fraunces,serif;font-weight:600;font-size:26px;letter-spacing:-.5px;color:#F8FAFC;">Welcome back</h1>
+            </div>
+            <div style="border-radius:24px;padding:22px;background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));backdrop-filter:blur(28px) saturate(120%);-webkit-backdrop-filter:blur(28px) saturate(120%);border:1px solid rgba(255,255,255,.07);box-shadow:0 16px 40px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -1px 0 rgba(0,0,0,.35);">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#71717A;margin-bottom:9px;">Email</div>
+              <div style="height:50px;border-radius:16px;padding:0 16px;background:#11121C;border:1px solid #2A2B3A;display:flex;align-items:center;font-size:15px;color:#F8FAFC;">rohan@gmail.com</div>
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#71717A;margin:18px 0 9px;">Password</div>
+              <div style="height:50px;border-radius:16px;padding:0 16px;background:#11121C;border:1px solid rgba(167,139,250,.55);box-shadow:0 0 0 3px rgba(167,139,250,.18);display:flex;align-items:center;font-size:15px;color:#F8FAFC;letter-spacing:3px;">••••••••</div>
+              <button style="width:100%;height:52px;margin-top:22px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15.5px;cursor:pointer;box-shadow:0 8px 28px rgba(167,139,250,.35);">Sign in</button>
+              <div style="display:flex;align-items:center;gap:12px;margin:20px 0;"><span style="flex:1;height:1px;background:rgba(255,255,255,.08);"></span><span style="font-size:12px;color:#52525B;">or</span><span style="flex:1;height:1px;background:rgba(255,255,255,.08);"></span></div>
+              <button style="width:100%;height:50px;border-radius:999px;background:transparent;border:1px solid rgba(255,255,255,.12);color:#E5E7EB;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:14.5px;cursor:pointer;">Continue with Google</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:20px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span style="font-size:12.5px;color:#71717A;">Your chats stay yours.</span>
+            </div>
+            <div style="margin-top:auto;text-align:center;font-size:13.5px;color:#71717A;">New here? <span style="color:#C4B5FD;font-weight:600;">Create an account</span></div>
+          </div>
+        </div>
+      </x-import>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;max-width:402px;line-height:16px;">The one E2 panel on the screen. Focus ring is 3px lavender at 18%, never a system outline.</div>
+    </div>
+
+  </div>
+
+  <div style="margin-top:80px;display:flex;align-items:baseline;gap:14px;">
+    <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#52525B;">C</span>
+    <h2 style="margin:0;font-family:Fraunces,serif;font-weight:600;font-size:26px;letter-spacing:-.5px;color:#F8FAFC;">Ask Lovli &amp; Memory</h2>
+    <span style="font-size:13px;color:#71717A;">a calm 1:1 thread, and a diary that never feels like a database</span>
+  </div>
+
+  <div style="margin-top:26px;display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;">
+
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;">C1 · Ask Lovli — empty</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#090A14);overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;">
+          <div style="position:absolute;top:-130px;left:-70px;width:420px;height:420px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.20),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:58px 20px 0;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:26px;">
+              <svg width="19" height="19" viewBox="0 0 24 24" style="filter:drop-shadow(0 0 10px rgba(167,139,250,.7))"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#A78BFA"></path></svg>
+              <span style="font-family:Fraunces,serif;font-weight:600;font-size:20px;letter-spacing:-.3px;color:#F8FAFC;">Ask Lovli</span>
+            </div>
+            <div style="display:flex;gap:9px;align-items:flex-start;margin-bottom:18px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" style="margin-top:10px;flex:none;"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#A78BFA"></path></svg>
+              <div style="max-width:80%;padding:14px 17px;border-radius:20px 20px 20px 6px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04));backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.07);box-shadow:inset 0 1px 0 rgba(255,255,255,.12);font-size:15px;line-height:23px;color:#E5E7EB;">Hey — what's on your mind? Tell me the situation, or ask me anything. No judgement, promise.</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:9px;padding-left:25px;">
+              <div style="align-self:flex-start;padding:11px 16px;border-radius:999px;background:#11121C;border:1px solid #2A2B3A;font-size:13.5px;font-weight:500;color:#A1A1AA;">Help me respond to a message</div>
+              <div style="align-self:flex-start;padding:11px 16px;border-radius:999px;background:#11121C;border:1px solid #2A2B3A;font-size:13.5px;font-weight:500;color:#A1A1AA;">Is this a red flag?</div>
+              <div style="align-self:flex-start;padding:11px 16px;border-radius:999px;background:#11121C;border:1px solid #2A2B3A;font-size:13.5px;font-weight:500;color:#A1A1AA;">How do I restart a dead convo?</div>
+            </div>
+            <div style="margin-top:auto;padding-bottom:112px;">
+              <div style="display:flex;align-items:center;gap:10px;height:54px;border-radius:999px;padding:0 8px 0 20px;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));backdrop-filter:blur(40px) saturate(140%);-webkit-backdrop-filter:blur(40px) saturate(140%);border:1px solid rgba(255,255,255,.09);box-shadow:0 16px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.16);">
+                <span style="flex:1;font-size:15px;color:#71717A;">Tell me what happened…</span>
+                <span style="width:38px;height:38px;border-radius:999px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(167,139,250,.35);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#050509" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;max-width:402px;line-height:16px;">Starters sit under the greeting and disappear once the thread starts. Composer is E3 glass.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;">C2 · Ask Lovli — thinking</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#090A14);overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;">
+          <div style="position:absolute;top:-130px;right:-70px;width:420px;height:420px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.20),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:58px 20px 0;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;">
+              <svg width="19" height="19" viewBox="0 0 24 24" style="filter:drop-shadow(0 0 10px rgba(167,139,250,.7))"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#A78BFA"></path></svg>
+              <span style="font-family:Fraunces,serif;font-weight:600;font-size:20px;letter-spacing:-.3px;color:#F8FAFC;">Ask Lovli</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div style="display:flex;justify-content:flex-end;"><div style="max-width:80%;padding:13px 17px;border-radius:20px 20px 6px 20px;background:rgba(167,139,250,.14);border:1px solid rgba(167,139,250,.28);font-size:15px;line-height:23px;color:#F8FAFC;">She left me on read for 2 days and now she's replying like nothing happened 😭</div></div>
+              <div style="display:flex;gap:9px;align-items:flex-start;">
+                <svg width="16" height="16" viewBox="0 0 24 24" style="margin-top:10px;flex:none;"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#A78BFA"></path></svg>
+                <div style="max-width:80%;padding:14px 17px;border-radius:20px 20px 20px 6px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04));backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.07);box-shadow:inset 0 1px 0 rgba(255,255,255,.12);font-size:15px;line-height:23px;color:#E5E7EB;">That sting is real. Two days of silence rewrites the whole conversation in your head — and then she shows up like it's Tuesday.</div>
+              </div>
+              <div style="display:flex;justify-content:flex-end;"><div style="max-width:80%;padding:13px 17px;border-radius:20px 20px 6px 20px;background:rgba(167,139,250,.14);border:1px solid rgba(167,139,250,.28);font-size:15px;line-height:23px;color:#F8FAFC;">Do I bring it up or just let it go?</div></div>
+              <div style="display:flex;gap:9px;align-items:center;">
+                <svg width="16" height="16" viewBox="0 0 24 24" style="flex:none;"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#A78BFA"></path></svg>
+                <div style="display:flex;gap:6px;padding:15px 18px;border-radius:20px 20px 20px 6px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04));backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.07);">
+                  <span style="width:7px;height:7px;border-radius:999px;background:#A78BFA;animation:lv-breathe 1.6s ease-in-out infinite;"></span>
+                  <span style="width:7px;height:7px;border-radius:999px;background:#A78BFA;animation:lv-breathe 1.6s ease-in-out .2s infinite;"></span>
+                  <span style="width:7px;height:7px;border-radius:999px;background:#A78BFA;animation:lv-breathe 1.6s ease-in-out .4s infinite;"></span>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:auto;padding-bottom:112px;">
+              <div style="display:flex;align-items:center;gap:10px;height:54px;border-radius:999px;padding:0 8px 0 20px;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));backdrop-filter:blur(40px) saturate(140%);-webkit-backdrop-filter:blur(40px) saturate(140%);border:1px solid rgba(255,255,255,.09);box-shadow:0 16px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.16);">
+                <span style="flex:1;font-size:15px;color:#71717A;">Message</span>
+                <span style="width:38px;height:38px;border-radius:999px;background:rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52525B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;max-width:402px;line-height:16px;">Lovli bubbles are glass, yours are lavender tint. Send button greys out while Lovli is mid-thought.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;">C3 · Memory — empty</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#090A14);overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;">
+          <div style="position:absolute;top:-120px;left:-60px;width:400px;height:400px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.18),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:58px 20px 0;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+              <div style="display:flex;align-items:center;gap:9px;">
+                <div style="width:28px;height:28px;border-radius:8px;overflow:hidden;flex:none;"><img src="assets/lovli-app-icon.png" alt="" style="width:110%;height:110%;margin:-5% 0 0 -5%;display:block;object-fit:cover;"></div>
+                <span style="font-weight:700;font-size:16px;letter-spacing:-.4px;color:#F8FAFC;">Lovli</span>
+              </div>
+              <div style="width:34px;height:34px;border-radius:999px;background:linear-gradient(135deg,#A78BFA,#8B5CF6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#050509;">R</div>
+            </div>
+            <h1 style="margin:0;font-family:Fraunces,serif;font-weight:700;font-size:32px;letter-spacing:-.6px;color:#F8FAFC;">Memory</h1>
+            <p style="margin:14px 0 0;font-family:Fraunces,serif;font-weight:600;font-size:23px;line-height:30px;letter-spacing:-.4px;color:#F8FAFC;max-width:290px;">I remember the little things — so you never fumble them.</p>
+            <p style="margin:12px 0 26px;font-size:14.5px;line-height:22px;color:#A1A1AA;max-width:285px;">Save someone here and your replies start sounding like you were actually listening.</p>
+            <div style="border-radius:22px;padding:22px;background:#11121C;border:1px dashed #2A2B3A;opacity:.7;">
+              <div style="display:flex;align-items:center;gap:13px;">
+                <div style="width:44px;height:44px;border-radius:999px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.22);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;color:#52525B;flex:none;">A</div>
+                <div><div style="font-family:Fraunces,serif;font-weight:600;font-size:17px;color:#52525B;">Nickname</div><div style="font-size:12.5px;color:#3F3F46;margin-top:3px;">Instagram · talking 3 weeks</div></div>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:14px;">
+                <span style="padding:5px 10px;border-radius:999px;background:#0D0E17;border:1px solid #1B1C29;font-size:11.5px;color:#3F3F46;">Loves filter coffee</span>
+                <span style="padding:5px 10px;border-radius:999px;background:#0D0E17;border:1px solid #1B1C29;font-size:11.5px;color:#3F3F46;">Hates voice notes</span>
+              </div>
+              <div style="margin-top:14px;font-size:11px;font-weight:700;letter-spacing:.14em;color:#3F3F46;">EXAMPLE</div>
+            </div>
+            <div style="margin-top:auto;padding-bottom:118px;">
+              <button style="width:100%;height:56px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 8px 28px rgba(167,139,250,.35);">Add someone</button>
+              <div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span style="font-size:12.5px;color:#71717A;">Private by default. You control what gets saved.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;max-width:402px;line-height:16px;">A ghost EXAMPLE card instead of an illustration — it shows the shape of the thing you'd make.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;">C4 · Memory — person</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#090A14);overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;">
+          <div style="position:absolute;top:-110px;right:-70px;width:400px;height:400px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.20),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:58px 20px 0;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
+              <span style="color:#F8FAFC;font-size:22px;line-height:1;">‹</span>
+              <span style="font-family:Fraunces,serif;font-weight:600;font-size:20px;letter-spacing:-.3px;color:#F8FAFC;flex:1;">Ananya</span>
+              <span style="font-size:13.5px;font-weight:600;color:#C4B5FD;">Edit</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:15px;margin-bottom:26px;">
+              <div style="width:60px;height:60px;border-radius:999px;background:linear-gradient(135deg,#A78BFA,#8B5CF6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;color:#050509;flex:none;box-shadow:0 8px 24px rgba(167,139,250,.30);">A</div>
+              <div>
+                <div style="font-family:Fraunces,serif;font-weight:600;font-size:22px;letter-spacing:-.3px;color:#F8FAFC;">Ananya</div>
+                <div style="font-size:13px;color:#71717A;margin-top:4px;">Instagram · talking 3 weeks</div>
+              </div>
+            </div>
+            <div style="border-radius:22px;padding:20px;background:#11121C;border:1px solid #2A2B3A;box-shadow:inset 0 1px 0 rgba(248,250,252,.05);display:flex;flex-direction:column;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;color:#71717A;">GOOD TO REMEMBER</div>
+              <p style="margin:9px 0 0;font-size:15px;line-height:23px;color:#E5E7EB;">Filter coffee over anything else. Reads a lot — currently on something by Perumal Murugan. Her dog is called Idli.</p>
+              <div style="height:1px;background:#1B1C29;margin:18px 0;"></div>
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;color:#71717A;">THINGS TO AVOID</div>
+              <p style="margin:9px 0 0;font-size:15px;line-height:23px;color:#E5E7EB;">Voice notes. Anything about her ex.</p>
+              <div style="height:1px;background:#1B1C29;margin:18px 0;"></div>
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;color:#71717A;">HOW THEY USUALLY TALK</div>
+              <p style="margin:9px 0 0;font-size:15px;line-height:23px;color:#E5E7EB;">Short, dry, lots of lowercase. Sends memes instead of answering questions.</p>
+              <div style="height:1px;background:#1B1C29;margin:18px 0;"></div>
+              <div style="font-size:11px;font-weight:700;letter-spacing:.14em;color:#71717A;">INSIDE JOKES</div>
+              <p style="margin:9px 0 0;font-size:15px;line-height:23px;color:#E5E7EB;">The auto guy who took us to the wrong Koramangala.</p>
+            </div>
+            <div style="margin-top:16px;display:flex;align-items:center;gap:7px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span style="font-size:12.5px;color:#71717A;">Only on this device unless you sign in elsewhere.</span>
+            </div>
+            <div style="margin-top:auto;padding-bottom:118px;">
+              <button style="width:100%;height:46px;border-radius:999px;background:rgba(224,102,122,.10);border:1px solid rgba(224,102,122,.22);color:#F0A5B2;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:14.5px;cursor:pointer;">Delete</button>
+            </div>
+          </div>
+        </div>
+      </x-import>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;max-width:402px;line-height:16px;">Soft labels in prose with hairlines between — a diary page, not a CRM record. Empty fields never render.</div>
+    </div>
+
+  </div>
+
+  <div style="margin-top:80px;display:flex;align-items:baseline;gap:14px;">
+    <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#52525B;">D</span>
+    <h2 style="margin:0;font-family:Fraunces,serif;font-weight:600;font-size:26px;letter-spacing:-.5px;color:#F8FAFC;">Pro, settings &amp; the states nobody designs</h2>
+    <span style="font-size:13px;color:#71717A;">every one of these is somebody's worst moment with the app</span>
+  </div>
+
+  <div style="margin-top:26px;display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;">
+
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;">D1 · Pro — waitlist</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0B0918);overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;">
+          <div style="position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:480px;height:440px;border-radius:999px;background:radial-gradient(closest-side,rgba(139,92,246,.30),rgba(56,189,248,.05) 72%,transparent);filter:blur(76px);"></div>
+          <div style="position:relative;height:100%;padding:58px 20px 0;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
+              <span style="color:#F8FAFC;font-size:22px;line-height:1;">‹</span>
+              <span style="font-family:Fraunces,serif;font-weight:600;font-size:20px;letter-spacing:-.3px;color:#F8FAFC;">Lovli Pro</span>
+            </div>
+            <span style="align-self:flex-start;padding:6px 13px;border-radius:999px;background:rgba(167,139,250,.14);border:1px solid rgba(167,139,250,.30);font-size:11.5px;font-weight:700;color:#C4B5FD;margin-bottom:18px;">Coming soon</span>
+            <h1 style="margin:0;font-family:Fraunces,serif;font-weight:700;font-size:30px;line-height:35px;letter-spacing:-.6px;color:#F8FAFC;max-width:290px;">More replies. Replies that know the person.</h1>
+            <p style="margin:12px 0 26px;font-size:14.5px;line-height:22px;color:#A1A1AA;max-width:285px;">Free stays free. Pro is for the weeks where eight isn't enough.</p>
+            <div style="display:flex;flex-direction:column;gap:11px;">
+              <div style="display:flex;align-items:flex-start;gap:13px;padding:15px 17px;border-radius:16px;background:#11121C;border:1px solid #2A2B3A;"><span style="width:30px;height:30px;border-radius:10px;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.26);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#A78BFA"></path></svg></span><div><div style="font-size:15px;font-weight:600;color:#F8FAFC;">Replies whenever you need them</div><div style="font-size:13px;line-height:19px;color:#71717A;margin-top:4px;">No daily count to watch.</div></div></div>
+              <div style="display:flex;align-items:flex-start;gap:13px;padding:15px 17px;border-radius:16px;background:#11121C;border:1px solid #2A2B3A;"><span style="width:30px;height:30px;border-radius:10px;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.26);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg></span><div><div style="font-size:15px;font-weight:600;color:#F8FAFC;">Deeper memory</div><div style="font-size:13px;line-height:19px;color:#71717A;margin-top:4px;">More people, more detail, longer history.</div></div></div>
+              <div style="display:flex;align-items:flex-start;gap:13px;padding:15px 17px;border-radius:16px;background:#11121C;border:1px solid #2A2B3A;"><span style="width:30px;height:30px;border-radius:10px;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.26);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M4 4h16M8 8h8M8 12h8M8 16h4"></path></svg></span><div><div style="font-size:15px;font-weight:600;color:#F8FAFC;">More ways to sound like you</div><div style="font-size:13px;line-height:19px;color:#71717A;margin-top:4px;">Extra vibes and finer control over tone.</div></div></div>
+            </div>
+            <div style="margin-top:auto;padding-bottom:34px;">
+              <div style="height:52px;border-radius:16px;padding:0 16px;background:#11121C;border:1px solid #2A2B3A;display:flex;align-items:center;font-size:15px;color:#71717A;margin-bottom:12px;">you@email.com</div>
+              <button style="width:100%;height:56px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 8px 28px rgba(167,139,250,.35);">Get Early Access</button>
+              <p style="margin:12px 0 0;text-align:center;font-size:12.5px;color:#71717A;">We'll only email you about Pro early access.</p>
+            </div>
+          </div>
+        </div>
+      </x-import>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;max-width:402px;line-height:16px;">No price, no plan table, no urgency. Four rows and one honest button.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;">D2 · Daily limit reached</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#0B0918);overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;">
+          <div style="position:absolute;top:120px;left:50%;transform:translateX(-50%);width:440px;height:400px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.22),transparent 72%);filter:blur(76px);"></div>
+          <div style="position:relative;height:100%;padding:58px 26px 40px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">
+            <div style="margin-bottom:26px;filter:drop-shadow(0 0 20px rgba(167,139,250,.55));"><svg width="40" height="40" viewBox="0 0 24 24"><path d="M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z" fill="#A78BFA"></path></svg></div>
+            <h1 style="margin:0;font-family:Fraunces,serif;font-weight:600;font-size:29px;line-height:34px;letter-spacing:-.6px;color:#F8FAFC;max-width:270px;">That's your eight for today.</h1>
+            <p style="margin:14px 0 0;font-size:15px;line-height:23px;color:#A1A1AA;max-width:265px;">Resets at midnight. Honestly — sometimes the better move is to sit with the draft a while anyway.</p>
+            <div style="margin-top:auto;width:100%;">
+              <button style="width:100%;height:56px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 8px 28px rgba(167,139,250,.35);">Get Early Access</button>
+              <button style="width:100%;height:50px;margin-top:11px;border-radius:999px;background:transparent;border:1px solid #2A2B3A;color:#A1A1AA;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:14.5px;cursor:pointer;">Back to Reply</button>
+            </div>
+          </div>
+        </div>
+      </x-import>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;max-width:402px;line-height:16px;">No shame, no countdown timer, no "upgrade now." The second line gives them permission to stop.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;">D3 · Locked with Face ID</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:#050509;overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;">
+          <div style="position:absolute;inset:0;padding:100px 20px;display:flex;flex-direction:column;gap:14px;opacity:.5;">
+            <div style="height:36px;width:60%;border-radius:10px;background:#171827;"></div>
+            <div style="height:104px;border-radius:16px;background:#11121C;"></div>
+            <div style="display:flex;gap:8px;"><div style="height:38px;width:88px;border-radius:999px;background:#11121C;"></div><div style="height:38px;width:96px;border-radius:999px;background:#11121C;"></div><div style="height:38px;width:120px;border-radius:999px;background:#11121C;"></div></div>
+            <div style="height:180px;border-radius:22px;background:#171827;"></div>
+          </div>
+          <div style="position:absolute;inset:0;background:rgba(5,5,9,.72);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);"></div>
+          <div style="position:relative;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 34px;">
+            <div style="width:64px;height:64px;border-radius:20px;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.28);display:flex;align-items:center;justify-content:center;margin-bottom:24px;">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"></path><path d="M9 10v1M15 10v1M9 15c1.5 1.2 4.5 1.2 6 0"></path></svg>
+            </div>
+            <div style="font-family:Fraunces,serif;font-weight:600;font-size:24px;letter-spacing:-.4px;color:#F8FAFC;">Lovli is locked</div>
+            <p style="margin:12px 0 0;font-size:14.5px;line-height:22px;color:#A1A1AA;">Your chats stay yours.</p>
+            <button style="margin-top:30px;height:48px;padding:0 28px;border-radius:999px;background:transparent;border:1px solid rgba(255,255,255,.14);color:#E5E7EB;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:14.5px;cursor:pointer;">Unlock with Face ID</button>
+          </div>
+        </div>
+      </x-import>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;max-width:402px;line-height:16px;">E4 scrim over the real screen — the blur is the privacy feature, visibly doing its job.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;">D4 · Offline</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#090A14);overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;">
+          <div style="position:absolute;top:-120px;left:-60px;width:400px;height:400px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.14),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:58px 20px 0;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+              <div style="display:flex;align-items:center;gap:9px;">
+                <div style="width:28px;height:28px;border-radius:8px;overflow:hidden;flex:none;"><img src="assets/lovli-app-icon.png" alt="" style="width:110%;height:110%;margin:-5% 0 0 -5%;display:block;object-fit:cover;"></div>
+                <span style="font-weight:700;font-size:16px;letter-spacing:-.4px;color:#F8FAFC;">Lovli</span>
+              </div>
+              <div style="width:34px;height:34px;border-radius:999px;background:linear-gradient(135deg,#A78BFA,#8B5CF6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#050509;">R</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:11px;padding:14px 16px;border-radius:16px;background:rgba(255,178,89,.09);border:1px solid rgba(255,178,89,.26);margin-bottom:22px;">
+              <span style="width:7px;height:7px;border-radius:999px;background:#FFB259;flex:none;"></span>
+              <div style="flex:1;"><div style="font-size:14px;font-weight:600;color:#FFB259;">You're offline</div><div style="font-size:12.5px;color:#A1A1AA;margin-top:3px;">Your draft is saved. I'll pick it up the second you're back.</div></div>
+            </div>
+            <h1 style="margin:0;font-family:Fraunces,serif;font-weight:700;font-size:32px;line-height:36px;letter-spacing:-.5px;color:#F8FAFC;">What's happening?</h1>
+            <p style="margin:10px 0 22px;font-size:15px;line-height:22px;color:#A1A1AA;max-width:280px;">Tell me what happened — or just show me the chat.</p>
+            <div style="min-height:104px;border-radius:16px;padding:14px 16px;background:#11121C;border:1px solid #2A2B3A;font-size:15px;line-height:22px;color:#E5E7EB;">her: sorry yaar was so caught up this week 😭<br>her: kya kar raha hai?</div>
+            <div style="margin-top:auto;padding-bottom:118px;">
+              <button style="width:100%;height:56px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;opacity:.45;">Read &amp; reply</button>
+              <p style="margin:12px 0 0;text-align:center;font-size:12.5px;color:#71717A;">Waiting for a connection…</p>
+            </div>
+          </div>
+        </div>
+      </x-import>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;max-width:402px;line-height:16px;">Amber banner, disabled CTA, draft explicitly preserved. Same banner pattern serves backend-unreachable.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;">D5 · Settings</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#090A14);overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;">
+          <div style="position:absolute;top:-110px;right:-60px;width:380px;height:380px;border-radius:999px;background:radial-gradient(closest-side,rgba(167,139,250,.16),transparent 70%);filter:blur(70px);"></div>
+          <div style="position:relative;height:100%;padding:58px 20px 0;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:26px;">
+              <span style="color:#F8FAFC;font-size:22px;line-height:1;">‹</span>
+              <span style="font-family:Fraunces,serif;font-weight:600;font-size:22px;letter-spacing:-.3px;color:#F8FAFC;">Settings</span>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.14em;color:#71717A;margin-bottom:10px;">ACCOUNT</div>
+            <div style="border-radius:16px;background:#11121C;border:1px solid #2A2B3A;overflow:hidden;margin-bottom:24px;">
+              <div style="display:flex;align-items:center;gap:13px;padding:15px 17px;"><div style="width:38px;height:38px;border-radius:999px;background:linear-gradient(135deg,#A78BFA,#8B5CF6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#050509;flex:none;">R</div><div style="flex:1;"><div style="font-size:15px;font-weight:600;color:#F8FAFC;">Rohan</div><div style="font-size:12.5px;color:#71717A;margin-top:2px;">rohan@gmail.com</div></div><span style="padding:5px 11px;border-radius:999px;background:#0D0E17;border:1px solid #2A2B3A;font-size:11.5px;color:#A1A1AA;">Free</span></div>
+              <div style="height:1px;background:#1B1C29;"></div>
+              <div style="display:flex;align-items:center;padding:15px 17px;"><span style="flex:1;font-size:15px;color:#E5E7EB;">5 of 8 replies left today</span><span style="color:#52525B;font-size:19px;">›</span></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.14em;color:#71717A;margin-bottom:10px;">PREFERENCES</div>
+            <div style="border-radius:16px;background:#11121C;border:1px solid #2A2B3A;overflow:hidden;margin-bottom:24px;">
+              <div style="display:flex;align-items:center;padding:15px 17px;"><span style="flex:1;font-size:15px;color:#E5E7EB;">Default language</span><span style="font-size:14px;color:#71717A;margin-right:8px;">Hinglish</span><span style="color:#52525B;font-size:19px;">›</span></div>
+              <div style="height:1px;background:#1B1C29;"></div>
+              <div style="display:flex;align-items:center;padding:15px 17px;"><span style="flex:1;font-size:15px;color:#E5E7EB;">Default platform</span><span style="font-size:14px;color:#71717A;margin-right:8px;">Instagram</span><span style="color:#52525B;font-size:19px;">›</span></div>
+              <div style="height:1px;background:#1B1C29;"></div>
+              <div style="display:flex;align-items:center;padding:15px 17px;"><span style="flex:1;font-size:15px;color:#E5E7EB;">Notifications</span><div style="width:50px;height:30px;border-radius:999px;background:#0D0E17;border:1px solid #2A2B3A;position:relative;"><div style="position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:999px;background:#52525B;"></div></div></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.14em;color:#71717A;margin-bottom:10px;">PRIVACY</div>
+            <div style="border-radius:16px;background:#11121C;border:1px solid #2A2B3A;overflow:hidden;">
+              <div style="display:flex;align-items:center;padding:15px 17px;"><span style="flex:1;font-size:15px;color:#E5E7EB;">Lock with Face ID</span><div style="width:50px;height:30px;border-radius:999px;background:rgba(167,139,250,.30);border:1px solid rgba(167,139,250,.5);position:relative;"><div style="position:absolute;top:2px;right:2px;width:24px;height:24px;border-radius:999px;background:#F8FAFC;box-shadow:0 2px 8px rgba(0,0,0,.5);"></div></div></div>
+              <div style="height:1px;background:#1B1C29;"></div>
+              <div style="padding:15px 17px;"><div style="font-size:14px;color:#A1A1AA;line-height:21px;">Screenshots are read once and never stored. Private by design — you control what gets saved.</div></div>
+            </div>
+            <div style="margin-top:auto;padding-bottom:34px;">
+              <button style="width:100%;height:48px;border-radius:999px;background:transparent;border:1px solid #2A2B3A;color:#A1A1AA;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:14.5px;cursor:pointer;">Sign out</button>
+            </div>
+          </div>
+        </div>
+      </x-import>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;max-width:402px;line-height:16px;">Grouped iOS lists, all E1. Reached from the header avatar — never a fourth tab.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div style="font-size:12.5px;font-weight:600;color:#E5E7EB;">D6 · Customize sheet</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="position:relative;height:100%;background:linear-gradient(180deg,#050509,#090A14);overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;">
+          <div style="position:absolute;inset:0;padding:70px 20px;display:flex;flex-direction:column;gap:14px;">
+            <div style="height:36px;width:70%;border-radius:10px;background:#171827;"></div>
+            <div style="height:104px;border-radius:16px;background:#11121C;"></div>
+            <div style="display:flex;gap:8px;"><div style="height:38px;width:88px;border-radius:999px;background:#11121C;"></div><div style="height:38px;width:96px;border-radius:999px;background:#11121C;"></div></div>
+          </div>
+          <div style="position:absolute;inset:0;background:rgba(5,5,9,.65);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);"></div>
+          <div style="position:absolute;left:0;right:0;bottom:0;border-radius:28px 28px 0 0;padding:14px 20px 40px;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.055));backdrop-filter:blur(52px) saturate(140%);-webkit-backdrop-filter:blur(52px) saturate(140%);border-top:1px solid rgba(255,255,255,.16);box-shadow:0 -24px 60px rgba(0,0,0,.62);">
+            <div style="width:38px;height:4px;border-radius:999px;background:rgba(255,255,255,.20);margin:0 auto 22px;"></div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.14em;color:#71717A;margin-bottom:10px;">WHERE IS THIS FROM?</div>
+            <div style="display:flex;padding:4px;border-radius:999px;background:rgba(0,0,0,.30);border:1px solid rgba(255,255,255,.07);gap:2px;margin-bottom:22px;">
+              <span style="flex:1;text-align:center;padding:10px 4px;border-radius:999px;background:rgba(167,139,250,.18);border:1px solid rgba(167,139,250,.45);font-size:12.5px;font-weight:700;color:#C4B5FD;">Instagram</span>
+              <span style="flex:1.2;text-align:center;padding:10px 4px;font-size:12.5px;font-weight:600;color:#A1A1AA;">Dating platform</span>
+              <span style="flex:.9;text-align:center;padding:10px 4px;font-size:12.5px;font-weight:600;color:#A1A1AA;">WhatsApp</span>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.14em;color:#71717A;margin-bottom:10px;">VIBE</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;">
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);font-size:13px;font-weight:600;color:#A1A1AA;">Playful</span>
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(167,139,250,.18);border:1px solid rgba(167,139,250,.55);font-size:13px;font-weight:700;color:#C4B5FD;box-shadow:inset 0 0 12px rgba(167,139,250,.22);">Flirty</span>
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);font-size:13px;font-weight:600;color:#A1A1AA;">Sincere</span>
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);font-size:13px;font-weight:600;color:#A1A1AA;">Respectful</span>
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);font-size:13px;font-weight:600;color:#A1A1AA;">Confident</span>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.14em;color:#71717A;margin-bottom:10px;">WHO'S THIS ABOUT?</div>
+            <div style="display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:16px;background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.34);margin-bottom:24px;">
+              <div style="width:34px;height:34px;border-radius:999px;background:linear-gradient(135deg,#A78BFA,#8B5CF6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#050509;flex:none;">A</div>
+              <div style="flex:1;"><div style="font-size:14.5px;font-weight:600;color:#F8FAFC;">Ananya</div><div style="font-size:12px;color:#A1A1AA;margin-top:2px;">4 details saved</div></div>
+              <span style="width:20px;height:20px;border-radius:999px;background:#A78BFA;display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#050509" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+            </div>
+            <button style="width:100%;height:54px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E7EB;color:#050509;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 8px 28px rgba(167,139,250,.35);">Done</button>
+          </div>
+        </div>
+      </x-import>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#52525B;max-width:402px;line-height:16px;">Everything optional lives here. Sheet is E3 over an E4 scrim — the only place two blurs stack.</div>
+    </div>
+
+  </div>
+
+  <div style="margin-top:64px;padding-top:26px;border-top:1px solid #1B1C29;display:flex;align-items:center;justify-content:space-between;gap:24px;max-width:1600px;">
+    <div style="display:flex;align-items:center;gap:11px;">
+      <div style="width:28px;height:28px;border-radius:8px;overflow:hidden;flex:none;"><img src="assets/lovli-app-icon.png" alt="" style="width:110%;height:110%;margin:-5% 0 0 -5%;display:block;object-fit:cover;"></div>
+      <span style="font-size:13px;color:#52525B;">Lovli · app screens · 402×874</span>
+    </div>
+    <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#3F3F46;">next: landing site</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const VIBES = ["Playful", "Flirty", "Sincere", "Respectful", "Confident"];
+const TONE = { Playful: "PLAYFUL", Flirty: "SMOOTH", Sincere: "SINCERE", Respectful: "RESPECTFUL", Confident: "CONFIDENT" };
+const LANGS = ["English", "Hinglish", "Hindi + English"];
+const PHASES = ["Reading the chat…", "Catching the tone…", "Writing three ways to say it…"];
+
+const REPLIES = {
+  Flirty: [
+    "Okay but you owe me chai for making me wait this long \u{1F60C}",
+    "Two days? Bold. I'll allow it — but Saturday you're picking the place.",
+    "I was starting to think you'd found a better conversation. Prove me wrong?",
+  ],
+  Playful: [
+    "Wow, two whole days. Should I send a search party or a resume?",
+    "I'll take 'left on read' as 'was busy thinking of a good reply' \u{1F643}",
+    "Okay okay, you're forgiven — but only because Saturday still stands.",
+  ],
+  Sincere: [
+    "Hey — no pressure at all. I liked where we left it, if you're still up for Saturday.",
+    "I get it, things get busy. Just wanted you to know I'm still keen.",
+    "Was hoping to hear from you. Still on for the weekend?",
+  ],
+  Respectful: [
+    "No rush at all — just checking in. Let me know if Saturday still works for you.",
+    "Totally understand if this week got away from you. The offer stands whenever.",
+    "Hey, hope all's well. Happy to pick this up whenever you have a moment.",
+  ],
+  Confident: [
+    "Saturday, 7pm, that filter coffee place you mentioned. I'll be there.",
+    "I don't chase, but I do follow up once. Still keen for the weekend?",
+    "Right — Saturday's still open on my side. Say the word.",
+  ],
+};
+
+const el = React.createElement;
+
+const S = {
+  label: { fontSize: 11, fontWeight: 700, letterSpacing: ".14em", textTransform: "uppercase", color: "#71717A", marginBottom: 10 },
+  glass: {
+    background: "linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.045))",
+    backdropFilter: "blur(28px) saturate(120%)", WebkitBackdropFilter: "blur(28px) saturate(120%)",
+    border: "1px solid rgba(255,255,255,.07)",
+    boxShadow: "0 16px 40px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(0,0,0,.35)",
+  },
+  cta: {
+    height: 56, borderRadius: 999, background: "#FFFFFF", border: "1px solid #E5E7EB", color: "#050509",
+    fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, fontSize: 16, cursor: "pointer",
+    display: "flex", alignItems: "center", justifyContent: "center", gap: 9, width: "100%",
+    boxShadow: "0 8px 28px rgba(167,139,250,.35)", transition: "transform 180ms cubic-bezier(.2,.8,.2,1)",
+    position: "relative", overflow: "hidden",
+  },
+  screen: { animation: "lv-screen 380ms cubic-bezier(.2,.8,.2,1) both" },
+};
+
+function ctaShine() {
+  return el("span", { style: { position: "absolute", top: 0, bottom: 0, width: 56, background: "linear-gradient(90deg,transparent,rgba(167,139,250,.35),transparent)", animation: "lv-shine 3.4s ease-in-out 1.2s infinite", pointerEvents: "none" } });
+}
+
+function spark(size, color) {
+  return el("svg", { width: size, height: size, viewBox: "0 0 24 24", style: { flex: "none" } },
+    el("path", { d: "M12 1.5 C 12.6 6 13.5 8.7 18 9.6 C 22.5 10.5 22.5 13.5 18 14.4 C 13.5 15.3 12.6 18 12 22.5 C 11.4 18 10.5 15.3 6 14.4 C 1.5 13.5 1.5 10.5 6 9.6 C 10.5 8.7 11.4 6 12 1.5 Z", fill: color }));
+}
+
+function chip(text, active, onClick, key) {
+  return el("button", {
+    key, onClick,
+    style: {
+      minHeight: 38, padding: "9px 14px", borderRadius: 999, cursor: "pointer",
+      fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 13,
+      fontWeight: active ? 700 : 600,
+      background: active ? "rgba(167,139,250,.16)" : "#11121C",
+      border: active ? "1px solid rgba(167,139,250,.55)" : "1px solid #2A2B3A",
+      color: active ? "#C4B5FD" : "#A1A1AA",
+      boxShadow: active ? "inset 0 0 12px rgba(167,139,250,.22), 0 4px 14px rgba(167,139,250,.20)" : "none",
+      transform: active ? "scale(1.04)" : "scale(1)",
+      animation: active ? "lv-ring 500ms cubic-bezier(.2,.8,.2,1) 1" : "none",
+      transition: "all 180ms cubic-bezier(.2,.8,.2,1)",
+    },
+  }, text);
+}
+
+class Component extends DCLogic {
+  state = { phase: "home", text: "", vibe: "Flirty", lang: "Hinglish", stage: 0, copied: -1, toast: false };
+
+  componentWillUnmount() { clearInterval(this._t); clearTimeout(this._d); clearTimeout(this._c); }
+
+  generate = () => {
+    const body = this.state.text.trim() ? this.state.text : "her: sorry yaar was so caught up this week \u{1F62D}\nher: kya kar raha hai?";
+    this.setState({ phase: "generating", stage: 0, text: body, copied: -1 });
+    clearInterval(this._t);
+    this._t = setInterval(() => this.setState((s) => ({ stage: Math.min(s.stage + 1, 2) })), 900);
+    this._d = setTimeout(() => { clearInterval(this._t); this.setState({ phase: "results" }); }, 2800);
+  };
+
+  copy = (i) => {
+    this.setState({ copied: i, toast: true });
+    clearTimeout(this._c);
+    this._c = setTimeout(() => this.setState({ toast: false }), 2200);
+  };
+
+  header() {
+    return el("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 } },
+      el("div", { style: { display: "flex", alignItems: "center", gap: 9 } },
+        el("div", { style: { width: 28, height: 28, borderRadius: 8, overflow: "hidden", flex: "none" } },
+          el("img", { src: "assets/lovli-app-icon.png", alt: "", style: { width: "110%", height: "110%", margin: "-5% 0 0 -5%", display: "block", objectFit: "cover" } })),
+        el("span", { style: { fontWeight: 700, fontSize: 16, letterSpacing: "-.4px", color: "#F8FAFC" } }, "Lovli")),
+      el("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
+        el("span", { style: { padding: "6px 11px", borderRadius: 999, background: "#11121C", border: "1px solid #2A2B3A", fontSize: 11.5, color: "#A1A1AA" } }, "5 free left"),
+        el("div", { style: { width: 34, height: 34, borderRadius: 999, background: "linear-gradient(135deg,#A78BFA,#8B5CF6)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, color: "#050509" } }, "R")));
+  }
+
+  tabbar() {
+    const tab = (name, active, icon) => el("div", { key: name, style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 5, position: "relative", flex: 1 } },
+      active ? el("div", { style: { position: "absolute", top: -13, width: 26, height: 3, borderRadius: 999, background: "#A78BFA", boxShadow: "0 0 10px rgba(167,139,250,.9)" } }) : null,
+      icon,
+      el("span", { style: { fontSize: 11, fontWeight: active ? 700 : 600, color: active ? "#A78BFA" : "#71717A" } }, name));
+    const stroke = (c, w, d) => el("svg", { width: 21, height: 21, viewBox: "0 0 24 24", fill: "none", stroke: c, strokeWidth: w, strokeLinecap: "round", strokeLinejoin: "round" }, el("path", { d }));
+    return el("div", {
+      style: {
+        position: "absolute", left: 16, right: 16, bottom: 30, height: 66, display: "flex", alignItems: "center",
+        padding: "0 8px", borderRadius: 24, animation: "lv-tabin 500ms cubic-bezier(.2,.8,.2,1) 150ms both",
+        background: "linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.06))",
+        backdropFilter: "blur(52px) saturate(140%)", WebkitBackdropFilter: "blur(52px) saturate(140%)",
+        border: "1px solid rgba(255,255,255,.09)",
+        boxShadow: "0 24px 60px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,255,255,.20)",
+      },
+    },
+      tab("Reply", true, stroke("#A78BFA", 2.2, "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z")),
+      tab("Ask Lovli", false, spark(19, "#71717A")),
+      tab("Memory", false, stroke("#71717A", 1.7, "M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z")));
+  }
+
+  home() {
+    return el("div", { style: Object.assign({ position: "relative", height: "100%", padding: "58px 20px 0", display: "flex", flexDirection: "column", overflow: "hidden" }, S.screen) },
+      this.header(),
+      el("h1", { style: { margin: 0, fontFamily: "Fraunces,serif", fontWeight: 700, fontSize: 32, lineHeight: "36px", letterSpacing: "-.5px", color: "#F8FAFC" } }, "What's happening?"),
+      el("p", { style: { margin: "10px 0 22px", fontSize: 15, lineHeight: "22px", color: "#A1A1AA", maxWidth: 280 } }, "Tell me what happened — or just show me the chat."),
+
+      el("div", { style: { display: "flex", gap: 10, marginBottom: 12 } },
+        el("button", {
+          onClick: () => this.setState({ text: "her: sorry yaar was so caught up this week \u{1F62D}\nher: kya kar raha hai?" }),
+          style: { flex: 1, height: 52, borderRadius: 16, background: "#11121C", border: "1.5px dashed rgba(167,139,250,.40)", color: "#E5E7EB", fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 600, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 },
+        }, el("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "#A78BFA", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }, el("path", { d: "M12 19V5M5 12l7-7 7 7" })), "Screenshot"),
+        el("button", {
+          onClick: () => this.setState({ text: "her: sorry yaar was so caught up this week \u{1F62D}\nher: kya kar raha hai?" }),
+          style: { flex: 1, height: 52, borderRadius: 16, background: "#11121C", border: "1px solid #2A2B3A", color: "#E5E7EB", fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 600, fontSize: 14, cursor: "pointer" },
+        }, "Try an example")),
+
+      el("textarea", {
+        value: this.state.text,
+        onChange: (e) => this.setState({ text: e.target.value }),
+        placeholder: "Paste the chat here…",
+        style: {
+          width: "100%", minHeight: 104, resize: "none", borderRadius: 16, padding: "14px 16px",
+          background: "#11121C", border: "1px solid #2A2B3A", color: "#F8FAFC",
+          fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 15, lineHeight: "22px", outline: "none",
+        },
+      }),
+
+      el("div", { style: { marginTop: 20 } },
+        el("div", { style: S.label }, "Reply language"),
+        el("div", { style: { display: "flex", flexWrap: "wrap", gap: 8 } },
+          LANGS.map((l) => chip(l, this.state.lang === l, () => this.setState({ lang: l }), l)))),
+
+      el("div", { style: { marginTop: 18 } },
+        el("div", { style: S.label }, "Vibe"),
+        el("div", { style: { display: "flex", flexWrap: "wrap", gap: 8 } },
+          VIBES.map((v) => chip(v, this.state.vibe === v, () => this.setState({ vibe: v }), v)))),
+
+      el("div", { style: { marginTop: "auto", paddingBottom: 120 } },
+        el("button", { onClick: this.generate, style: S.cta }, ctaShine(), spark(15, "#8B5CF6"), "Read & reply"),
+        el("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 7, marginTop: 12 } },
+          el("svg", { width: 12, height: 12, viewBox: "0 0 24 24", fill: "none", stroke: "#71717A", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }, el("rect", { x: 3, y: 11, width: 18, height: 11, rx: 2 }), el("path", { d: "M7 11V7a5 5 0 0 1 10 0v4" })),
+          el("span", { style: { fontSize: 12.5, color: "#71717A" } }, "Only upload chats you're comfortable sharing."))),
+      this.tabbar());
+  }
+
+  generating() {
+    const bar = (w, d) => el("div", { key: d, style: { height: 14, width: w, borderRadius: 7, background: "linear-gradient(90deg,#171827 25%,#22233A 50%,#171827 75%)", backgroundSize: "260% 100%", animation: `lv-shimmer 1.8s linear ${d}s infinite` } });
+    return el("div", { style: Object.assign({ position: "relative", height: "100%", padding: "58px 20px 0", display: "flex", flexDirection: "column", overflow: "hidden" }, S.screen) },
+      this.header(),
+      el("div", { style: { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", paddingBottom: 120 } },
+        el("div", { style: { animation: "lv-pulse 1.6s ease-in-out infinite", filter: "drop-shadow(0 0 22px rgba(167,139,250,.75))", marginBottom: 26 } }, spark(46, "#A78BFA")),
+        el("div", { key: this.state.stage, style: { fontFamily: "Fraunces,serif", fontWeight: 600, fontSize: 22, letterSpacing: "-.3px", color: "#F8FAFC", marginBottom: 30, textAlign: "center", animation: "lv-up 320ms cubic-bezier(.2,.8,.2,1) both" } }, PHASES[this.state.stage]),
+        el("div", { style: Object.assign({ width: "100%", borderRadius: 22, padding: 20, display: "flex", flexDirection: "column", gap: 11 }, S.glass) },
+          bar("40%", 0), bar("100%", 0.15), bar("82%", 0.3))),
+      this.tabbar());
+  }
+
+  results() {
+    const list = REPLIES[this.state.vibe];
+    const card = (text, i) => el("div", {
+      key: i,
+      style: Object.assign({ borderRadius: 22, padding: 20, position: "relative", overflow: "hidden", animation: `lv-up 320ms cubic-bezier(.2,.8,.2,1) ${i * 0.08}s both` },
+        i === 0 ? S.glass : { background: "#11121C", border: "1px solid #2A2B3A", boxShadow: "inset 0 1px 0 rgba(248,250,252,.05)" }),
+    },
+      i === 0 ? el("div", { style: { position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent)" } }) : null,
+      el("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
+        el("span", { style: { width: 6, height: 6, borderRadius: 999, background: "#A78BFA", boxShadow: "0 0 8px rgba(167,139,250,.9)" } }),
+        el("span", { style: { fontSize: 11, fontWeight: 700, letterSpacing: ".14em", color: "#C4B5FD" } }, TONE[this.state.vibe])),
+      el("p", { style: { margin: "12px 0 0", fontFamily: "Fraunces,serif", fontWeight: 600, fontSize: i === 0 ? 17 : 16, lineHeight: i === 0 ? "26px" : "25px", color: "#F8FAFC" } }, text),
+      el("div", { style: { display: "flex", gap: 10, marginTop: 18 } },
+        el("button", {
+          onClick: () => this.copy(i),
+          style: {
+            flex: 1, height: 44, borderRadius: 999, cursor: "pointer", fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, fontSize: 14,
+            background: this.state.copied === i ? "rgba(167,139,250,.16)" : "#FFFFFF",
+            border: this.state.copied === i ? "1px solid rgba(167,139,250,.55)" : "1px solid #E5E7EB",
+            color: this.state.copied === i ? "#C4B5FD" : "#050509",
+            boxShadow: this.state.copied === i ? "none" : "0 6px 20px rgba(167,139,250,.28)",
+            transition: "all 180ms cubic-bezier(.2,.8,.2,1)",
+          },
+        }, this.state.copied === i ? "Copied" : "Copy"),
+        el("button", { style: { height: 44, padding: "0 18px", borderRadius: 999, background: "transparent", border: "1px solid rgba(255,255,255,.10)", color: "#A1A1AA", fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 600, fontSize: 14, cursor: "pointer" } }, "Edit")));
+
+    return el("div", { style: Object.assign({ position: "relative", height: "100%", overflow: "hidden" }, S.screen) },
+      el("div", { style: { position: "absolute", inset: 0, overflowY: "auto", padding: "58px 20px 130px" } },
+        el("div", { style: { display: "flex", alignItems: "center", gap: 14, marginBottom: 20 } },
+          el("button", { onClick: () => this.setState({ phase: "home" }), style: { background: "none", border: "none", color: "#F8FAFC", fontSize: 22, cursor: "pointer", padding: 0, lineHeight: 1 } }, "\u2039"),
+          el("span", { style: { fontFamily: "Fraunces,serif", fontWeight: 600, fontSize: 20, letterSpacing: "-.3px", color: "#F8FAFC" } }, "Three ways to say it")),
+
+        el("div", { style: Object.assign({ borderRadius: 22, padding: 20, marginBottom: 20, animation: "lv-up 380ms cubic-bezier(.2,.8,.2,1) both" }, S.glass) },
+          el("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 } },
+            el("span", { style: { fontSize: 11, fontWeight: 700, letterSpacing: ".14em", color: "#71717A" } }, "WHAT'S GOING ON"),
+            el("span", { style: { display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 12px", borderRadius: 999, background: "rgba(255,178,89,.12)", border: "1px solid rgba(255,178,89,.34)" } },
+              el("span", { style: { width: 6, height: 6, borderRadius: 999, background: "#FFB259" } }),
+              el("span", { style: { fontSize: 11.5, fontWeight: 700, color: "#FFB259" } }, "Leaning interested"))),
+          el("p", { style: { margin: "14px 0 0", fontSize: 15, lineHeight: "23px", color: "#E5E7EB" } }, "She apologised without being asked and turned it straight back to you. That's someone keeping the thread alive, not letting it go."),
+          el("div", { style: { height: 1, background: "rgba(255,255,255,.07)", margin: "16px 0" } }),
+          el("div", { style: { display: "flex", alignItems: "flex-start", gap: 9, marginBottom: 9 } }, spark(12, "#A78BFA"), el("span", { style: { fontSize: 14, lineHeight: "21px", color: "#A1A1AA" } }, "\u201Ckya kar raha hai\u201D is her handing you the next move.")),
+          el("div", { style: { display: "flex", alignItems: "flex-start", gap: 9 } }, spark(12, "#A78BFA"), el("span", { style: { fontSize: 14, lineHeight: "21px", color: "#A1A1AA" } }, "No explanation needed — don't ask for one."))),
+
+        el("div", { style: { display: "flex", flexDirection: "column", gap: 14 } }, list.map(card)),
+
+        el("p", { style: { margin: "18px 0 0", fontSize: 12.5, color: "#71717A", textAlign: "center" } }, "Edit it if you want. Make it yours."),
+
+        el("div", { style: { marginTop: 22 } },
+          el("div", { style: S.label }, "Or make it"),
+          el("div", { style: { display: "flex", flexWrap: "wrap", gap: 8 } },
+            VIBES.map((v) => chip(v, this.state.vibe === v, () => this.setState({ vibe: v, copied: -1 }), v))))),
+
+      this.state.toast ? el("div", {
+        style: {
+          position: "absolute", left: 20, right: 20, bottom: 112, display: "flex", alignItems: "center", gap: 11,
+          padding: "14px 18px", borderRadius: 18, zIndex: 40,
+          background: "linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.06))",
+          backdropFilter: "blur(52px) saturate(140%)", WebkitBackdropFilter: "blur(52px) saturate(140%)",
+          border: "1px solid rgba(255,255,255,.09)",
+          boxShadow: "0 24px 60px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,255,255,.20)",
+          animation: "lv-up 240ms cubic-bezier(.2,.8,.2,1) both",
+        },
+      },
+        el("span", { style: { width: 20, height: 20, borderRadius: 999, background: "rgba(74,222,128,.16)", border: "1px solid rgba(74,222,128,.4)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } },
+          el("svg", { width: 11, height: 11, viewBox: "0 0 24 24", fill: "none", stroke: "#4ADE80", strokeWidth: 3.4, strokeLinecap: "round", strokeLinejoin: "round" }, el("path", { d: "M20 6 9 17l-5-5" }))),
+        el("span", { style: { fontSize: 14, fontWeight: 600, color: "#F8FAFC" } }, "Copied — make it yours.")) : null,
+
+      this.tabbar());
+  }
+
+  renderVals() {
+    const p = this.state.phase;
+    return { liveScreen: p === "home" ? this.home() : p === "generating" ? this.generating() : this.results() };
+  }
+}
+</script>
+</body>
+</html>
