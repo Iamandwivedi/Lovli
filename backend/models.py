@@ -5,11 +5,12 @@ Uses custom `id` (UUID strings). MongoDB's `_id` is excluded with projection.
 """
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import datetime, timezone
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 PLATFORMS = ("instagram", "dating_platform", "whatsapp")
 VIBES = ("Playful", "Flirty", "Sincere", "Respectful", "Confident")
@@ -137,12 +138,68 @@ class Generation(BaseModel):
     # PR4 (additive, nullable): set only for /api/feature generations.
     feature_id: Optional[str] = None
     result: Optional[dict] = None  # {verdict, points[], actions[], replies[]}
+    # PR-M5 (additive, nullable): memory-engine metadata — conversation stage,
+    # which memory produced the plan, and the rerank scores (replies order).
+    stage: Optional[str] = None
+    memory_snapshot: Optional[dict] = None
+    reply_scores: Optional[List[float]] = None
 
 
 class FeedbackRequest(BaseModel):
     generation_id: str
     feedback: Optional[str] = None
     copied_reply_index: Optional[int] = None
+
+
+# -------- Memory engine (PR-M1..M5) -------------------------------------------
+class ConversationEvent(BaseModel):
+    """Append-only behavioral event — the memory engine's source of truth."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str = Field(default_factory=_uuid)
+    user_id: str
+    conversation_id: Optional[str] = None  # = memory_card_id (per-person thread)
+    type: str
+    ts: datetime = Field(default_factory=_now)
+    source: str = "server"  # server | mobile | web | backfill | user
+    payload: dict = Field(default_factory=dict)
+    metadata: dict = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=_now)
+
+
+_MAX_EVENT_PAYLOAD_BYTES = 8192
+
+
+class EventCreateRequest(BaseModel):
+    type: str = Field(min_length=1, max_length=40)
+    payload: dict = Field(default_factory=dict)
+    conversation_id: Optional[str] = None
+    client_ts: Optional[str] = None
+
+    @field_validator("payload")
+    @classmethod
+    def _cap_payload_size(cls, v: dict) -> dict:
+        if len(json.dumps(v, default=str)) > _MAX_EVENT_PAYLOAD_BYTES:
+            raise ValueError("payload too large")
+        return v
+
+
+class EventResponse(BaseModel):
+    id: str
+    status: Literal["recorded"] = "recorded"
+
+
+class MemoryUsed(BaseModel):
+    """Additive response field: whether/how learned memory shaped this output.
+    Signals are honest human-readable strings derived from real atoms only."""
+
+    is_personalized: bool
+    signals: List[str] = []
+
+
+class MemoryPauseRequest(BaseModel):
+    paused: bool
 
 
 # -------- Memory cards --------------------------------------------------------
@@ -293,6 +350,9 @@ class GenerateRepliesResponse(BaseModel):
     read: Optional[ReplyRead] = None
     # PR-V2-3 additive: present only when rich=true and the read validated.
     insight: Optional[ReplyInsight] = None
+    # PR-M5 additive: present only when the memory engine personalized this
+    # response (flag on + enough learned signal). exclude_none hides it otherwise.
+    memory_used: Optional[MemoryUsed] = None
 
 
 class UsageResponse(BaseModel):
@@ -317,6 +377,8 @@ class AskLovliRequest(BaseModel):
 
 class AskLovliResponse(BaseModel):
     reply: str
+    # PR-M5 additive (exclude_none keeps old shape when absent).
+    memory_used: Optional[MemoryUsed] = None
 
 
 # ---- Decode (PR-V2-5) --------------------------------------------------------
@@ -332,6 +394,8 @@ class DecodeResponse(BaseModel):
     watch_outs: List[str]
     whats_really_going_on: str
     next_move: DecodeNextMove
+    # PR-M5 additive (exclude_none keeps old shape when absent).
+    memory_used: Optional[MemoryUsed] = None
 
 
 # ---- Feature engine (PR4) ----------------------------------------------------
@@ -347,3 +411,72 @@ class FeatureResponse(BaseModel):
     points: List[FeaturePoint]
     actions: List[str]
     replies: List[str] = []
+    # PR-M5 additive (exclude_none keeps old shape when absent).
+    memory_used: Optional[MemoryUsed] = None
+
+
+# -------- Cloud-backed user state (PR-DB) -------------------------------------
+# Everything here used to live only in device storage, so it vanished on
+# reinstall or a new phone. It is now keyed to user_id and restored at login.
+class UserPreferences(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    user_id: str
+    goal: Optional[str] = None                 # onboarding "what brings you here"
+    default_vibe: str = "Playful"
+    dating: Optional[str] = None               # Women | Men | Everyone
+    language_preference: str = "Hinglish"
+    preferred_platform: Optional[str] = None
+    notif_reminders: bool = True
+    notif_checkin: bool = False
+    notif_details: bool = False                # discreet lock screen by default
+    app_lock: bool = False                     # Face ID / biometric gate
+    schema_version: int = 2
+    created_at: datetime = Field(default_factory=_now)
+    updated_at: datetime = Field(default_factory=_now)
+
+
+class UserPreferencesUpdate(BaseModel):
+    """Partial update — only supplied fields are written."""
+
+    goal: Optional[str] = None
+    default_vibe: Optional[str] = None
+    dating: Optional[str] = None
+    language_preference: Optional[str] = None
+    preferred_platform: Optional[str] = None
+    notif_reminders: Optional[bool] = None
+    notif_checkin: Optional[bool] = None
+    notif_details: Optional[bool] = None
+    app_lock: Optional[bool] = None
+
+
+MAX_ASK_THREAD_TURNS = 200
+
+
+class AskThreadSync(BaseModel):
+    """Full-thread replace. The client owns ordering; the server caps length."""
+
+    turns: List[AskLovliTurn] = []
+
+    @field_validator("turns")
+    @classmethod
+    def _cap_turns(cls, v: List[AskLovliTurn]) -> List[AskLovliTurn]:
+        return v[-MAX_ASK_THREAD_TURNS:]
+
+
+class BootstrapResponse(BaseModel):
+    """Everything the app needs at login, in ONE round trip.
+
+    Replaces the cold-start fan-out (auth/me + memory-cards + usage +
+    recent-results + memory/summary) and restores state that used to be
+    device-only, so a reinstall or a new phone looks exactly like the old one.
+    """
+
+    user: PublicUser
+    preferences: UserPreferences
+    usage: UsageResponse
+    memory_cards: List[MemoryCard] = []
+    recent_results: List[dict] = []
+    ask_thread: List[AskLovliTurn] = []
+    memory_summary: Optional[dict] = None
+    server: dict = {}

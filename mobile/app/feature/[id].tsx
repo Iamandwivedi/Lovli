@@ -27,6 +27,7 @@ import {
   runFeature,
 } from "@/src/api/endpoints";
 import { extractErrorMessage } from "@/src/api/client";
+import { trackEvent } from "@/src/lib/memory-events";
 import { storage } from "@/src/utils/storage";
 import { ASK_PENDING_KEY } from "@/src/config/storage-keys";
 import { FEATURE_CONFIG } from "@/src/constants/feature-config";
@@ -157,6 +158,19 @@ export default function FeatureScreen() {
       await Clipboard.setStringAsync(text);
       setCopiedIndex(index);
       toast.success("Copied — go send it.");
+      // PR-M2: feature-tool copies teach the memory engine too.
+      if (result?.generation_id) {
+        trackEvent(
+          "reply_copied",
+          {
+            generation_id: result.generation_id,
+            index,
+            text,
+            surface: `feature:${cfg.id}`,
+          },
+          memoryId,
+        );
+      }
     } catch {
       toast.error("Could not copy.");
     }

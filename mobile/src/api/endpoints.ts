@@ -44,6 +44,9 @@ export type ReplyInsight = {
   wingman_advice: string;
 };
 
+// PR-M5: present only when the memory engine personalized the response.
+export type MemoryUsed = { is_personalized: boolean; signals: string[] };
+
 export type Replies = {
   generation_id: string;
   replies: string[];
@@ -56,6 +59,8 @@ export type Replies = {
   read?: ReplyRead | null;
   // PR-V2-3 additive: present when rich=true and the read validated.
   insight?: ReplyInsight | null;
+  // PR-M5 additive: undefined unless the backend personalized this response.
+  memory_used?: MemoryUsed | null;
 };
 
 export type MemoryCard = {
@@ -370,6 +375,137 @@ export const deleteAllGenerations = async () => {
 
 export const postFeedback = async (generation_id: string, copied_reply_index: number) => {
   await api.post("/feedback", { generation_id, copied_reply_index });
+};
+
+// ---- Memory engine (PR-M1..M6) ----------------------------------------------
+// Behavioral learning events. Fire-and-forget from the UI via trackEvent()
+// (src/lib/memory-events.ts) — never await these on a user interaction path.
+export type MemoryEventType =
+  | "reply_copied"
+  | "reply_edited"
+  | "reply_rejected"
+  | "reply_rated"
+  | "tone_selected"
+  | "phrase_disliked"
+  | "boundary_added"
+  | "feedback_chip"
+  | "onboarding_pref"
+  | "preference_removed";
+
+export const postEvent = async (
+  type: MemoryEventType,
+  payload: Record<string, unknown>,
+  conversation_id?: string | null,
+) => {
+  await api.post("/events", {
+    type,
+    payload,
+    conversation_id: conversation_id ?? null,
+    client_ts: new Date().toISOString(),
+  });
+};
+
+export type LearnedItem = {
+  id: string;
+  domain: string;
+  key: string;
+  label: string;
+  confidence: number;
+  support_count: number;
+};
+
+export type MemorySummary = {
+  is_cold_start: boolean;
+  event_count: number;
+  paused: boolean;
+  texting_style: string[];
+  tone_preferences: string[];
+  phrase_rules: string[];
+  boundaries: string[];
+  learned: LearnedItem[];
+};
+
+export const getMemorySummary = async () => {
+  const { data } = await api.get<MemorySummary>("/memory/summary");
+  return data;
+};
+
+/** Wipes ALL learned memory (events + derived) for the signed-in user. */
+export const deleteLearnedMemory = async () => {
+  await api.delete("/memory");
+};
+
+export const removeLearnedPreference = async (atomId: string) => {
+  await api.delete(`/memory/preferences/${atomId}`);
+};
+
+export const pauseLearnedMemory = async (paused: boolean) => {
+  await api.post("/memory/pause", { paused });
+};
+
+// ---- Cloud-backed user state (PR-DB) ----------------------------------------
+// These used to live only in device storage, so they were lost on reinstall or
+// a new phone. They are now keyed to the account and restored at sign-in.
+export type UserPreferences = {
+  user_id: string;
+  goal?: string | null;
+  default_vibe: Vibe;
+  dating?: string | null;
+  language_preference: Language;
+  preferred_platform?: PlatformValue | null;
+  notif_reminders: boolean;
+  notif_checkin: boolean;
+  notif_details: boolean;
+  app_lock: boolean;
+  updated_at?: string;
+};
+
+export type UserPreferencesUpdate = Partial<
+  Omit<UserPreferences, "user_id" | "updated_at">
+>;
+
+export const getPreferences = async () => {
+  const { data } = await api.get<UserPreferences>("/preferences");
+  return data;
+};
+
+export const patchPreferences = async (body: UserPreferencesUpdate) => {
+  const { data } = await api.patch<UserPreferences>("/preferences", body);
+  return data;
+};
+
+export const getAskThread = async () => {
+  const { data } = await api.get<{ turns: AskLovliTurn[]; updated_at?: string }>(
+    "/ask-thread",
+  );
+  return data;
+};
+
+export const putAskThread = async (turns: AskLovliTurn[]) => {
+  await api.put("/ask-thread", { turns });
+};
+
+export const deleteAskThread = async () => {
+  await api.delete("/ask-thread");
+};
+
+/** Everything the app needs after sign-in, in one round trip. */
+export type Bootstrap = {
+  user: User;
+  preferences: UserPreferences;
+  usage: Usage;
+  memory_cards: MemoryCard[];
+  recent_results: RecentResult[];
+  ask_thread: AskLovliTurn[];
+  memory_summary?: { signal_count: number; style_summary: Record<string, string> } | null;
+  server?: { schema_version: number; memory_engine_enabled: boolean };
+};
+
+export const getBootstrap = async () => {
+  const { data } = await api.get<Bootstrap>("/bootstrap", {
+    params: { client_local_date: getClientLocalDate() },
+  });
+  return data;
 };
 
 export const joinWaitlist = async (email: string, source: string, what_you_want?: string) => {

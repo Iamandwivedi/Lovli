@@ -12,8 +12,11 @@ import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
 import { extractErrorMessage } from "@/src/api/client";
 import {
-  Language, Vibe, getTimezone, listMemoryCards, deleteMemoryCard, deleteAllGenerations, patchSettings,
+  Language, Vibe, getTimezone, listMemoryCards, deleteMemoryCard, deleteAllGenerations,
+  deleteLearnedMemory, deleteAskThread, patchSettings,
 } from "@/src/api/endpoints";
+import { flags } from "@/src/config/flags";
+import { savePrefs as persistPrefs } from "@/src/lib/user-prefs";
 import { storage } from "@/src/utils/storage";
 import { ensureNotifPermission, resyncNotificationsFromStorage } from "@/src/utils/notifications";
 import { ASK_PENDING_KEY, ASK_THREAD_KEY, PREFS_KEY } from "@/src/config/storage-keys";
@@ -55,9 +58,11 @@ export default function SettingsScreen() {
     });
   }, []);
 
-  const savePrefs = async (next: Prefs) => {
+  // Local write is immediate (native notification + app-lock readers pick it up
+  // straight away); the cloud copy is what survives a reinstall.
+  const savePrefs = async (next: Prefs, changed?: Partial<Prefs>) => {
     setPrefs(next);
-    await storage.setItem(PREFS_KEY, JSON.stringify(next)).catch(() => {});
+    await persistPrefs(next, changed);
   };
 
   // Notification toggles: contextual permission ask on turning ON (native),
@@ -82,7 +87,7 @@ export default function SettingsScreen() {
         return;
       }
     }
-    await savePrefs({ ...prefs, [key]: turningOn });
+    await savePrefs({ ...prefs, [key]: turningOn }, { [key]: turningOn });
     resyncNotificationsFromStorage();
   };
 
@@ -91,7 +96,7 @@ export default function SettingsScreen() {
     if (turningOn && Platform.OS === "web") {
       toast.success("Saved — Face ID arms on your phone.");
     }
-    await savePrefs({ ...prefs, face_id: turningOn });
+    await savePrefs({ ...prefs, face_id: turningOn }, { face_id: turningOn });
   };
 
   const setLanguage = async (l: Language) => {
@@ -110,6 +115,11 @@ export default function SettingsScreen() {
       const cards = await listMemoryCards();
       for (const c of cards) await deleteMemoryCard(c.id);
       await deleteAllGenerations(); // wipes stored results (RECENT strip)
+      // PR-M4: learned style memory goes too — resets must never diverge.
+      await deleteLearnedMemory();
+      // The Ask Lovli thread now lives server-side, so clearing it locally is
+      // not enough — it would come straight back on the next sign-in.
+      await deleteAskThread();
       await storage.removeItem(ASK_THREAD_KEY);
       await storage.removeItem(ASK_PENDING_KEY);
       resyncNotificationsFromStorage(); // cards are gone → reminders cancel too
@@ -127,8 +137,9 @@ export default function SettingsScreen() {
   const pickerValue = picker === "language" ? language : picker === "vibe" ? prefs.default_vibe : prefs.dating;
   const onPick = (v: string) => {
     if (picker === "language") setLanguage(v as Language);
-    else if (picker === "vibe") savePrefs({ ...prefs, default_vibe: v as Vibe });
-    else if (picker === "dating") savePrefs({ ...prefs, dating: v });
+    else if (picker === "vibe")
+      savePrefs({ ...prefs, default_vibe: v as Vibe }, { default_vibe: v as Vibe });
+    else if (picker === "dating") savePrefs({ ...prefs, dating: v }, { dating: v });
     setPicker(null);
   };
 
@@ -173,6 +184,21 @@ export default function SettingsScreen() {
         <View style={styles.divider} />
         <ValueRow label="I'm dating" value={prefs.dating} onPress={() => setPicker("dating")} testID="settings-row-dating" />
       </View>
+
+      {/* WHAT LOVLI'S LEARNED (PR-M6) */}
+      {flags.MEMORY_UI_ENABLED ? (
+        <>
+          <Text style={styles.sectionLabel}>{"WHAT LOVLI'S LEARNED"}</Text>
+          <View style={styles.card}>
+            <ValueRow
+              label="Your style"
+              value=""
+              onPress={() => router.push("/settings/learned")}
+              testID="settings-row-learned"
+            />
+          </View>
+        </>
+      ) : null}
 
       {/* NOTIFICATIONS */}
       <Text style={styles.sectionLabel}>NOTIFICATIONS</Text>

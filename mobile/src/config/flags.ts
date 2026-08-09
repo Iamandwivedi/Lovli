@@ -8,4 +8,11 @@ export const flags = {
    * Flip to true only when payments are ready to go live in a future PR.
    */
   PAYMENTS_ENABLED: false,
+
+  /**
+   * PR-M6: "Your style" personalization UI (learned-preferences screen,
+   * feedback chips, "Sounds like you" pill). Event CAPTURE is always on and
+   * invisible — this flag only gates the new surfaces.
+   */
+  MEMORY_UI_ENABLED: true,
 } as const;

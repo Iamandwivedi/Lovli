@@ -21,6 +21,8 @@ import {
   platformLabelToValue,
   platformValueToLabel,
 } from "@/src/api/endpoints";
+import { trackEvent } from "@/src/lib/memory-events";
+import { saveGoal } from "@/src/lib/user-prefs";
 import { colors, gradients, typography } from "@/src/theme";
 
 const GOALS = [
@@ -33,8 +35,13 @@ const GOALS = [
 ];
 const PLATFORMS: PlatformLabel[] = ["Instagram", "Dating platform", "WhatsApp"];
 const LANGUAGES: Language[] = ["English", "Hinglish", "Hindi + English mixed"];
+// PR-M6 (guide §14): lightweight style questions — cold-start seeds for the
+// memory engine, sent as onboarding_pref events (weak weight, replaced by real
+// behavior as it accumulates).
+const TEXT_STYLES = ["Short and casual", "Playful", "Direct", "Thoughtful"];
+const AVOIDS = ["Cringe lines", "Too much romance", "Too many emojis", "Sounding needy"];
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 5;
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -49,6 +56,8 @@ export default function OnboardingScreen() {
   const [language, setLanguage] = useState<Language>(
     (user?.language_preference as Language) || "Hinglish",
   );
+  const [textStyle, setTextStyle] = useState<string | null>(null);
+  const [avoids, setAvoids] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   const steps = [
@@ -73,15 +82,36 @@ export default function OnboardingScreen() {
       value: language as string,
       onSelect: (v: string) => setLanguage(v as Language),
     },
+    {
+      title: "How do you usually text?",
+      sub: "So my replies sound like you from day one.",
+      options: TEXT_STYLES,
+      value: textStyle,
+      onSelect: (v: string) => setTextStyle(v),
+    },
+    {
+      title: "What should I avoid?",
+      sub: "Pick any — I'll steer clear.",
+      options: AVOIDS,
+      multi: true,
+      value: avoids.length ? avoids[0] : null, // canContinue handled separately
+      onSelect: (v: string) =>
+        setAvoids((cur) => (cur.includes(v) ? cur.filter((a) => a !== v) : [...cur, v])),
+    },
   ];
   const current = steps[step];
-  const canContinue = !!current.value;
+  const isMulti = "multi" in current && current.multi === true;
+  const isSelected = (option: string) =>
+    isMulti ? avoids.includes(option) : current.value === option;
+  // The avoid step is optional — continue is always allowed there.
+  const canContinue = isMulti || !!current.value;
 
   const finish = async (skip: boolean) => {
     try {
       setSaving(true);
       if (!skip && goal) {
-        await storage.setItem("lovli_goal", goal);
+        // Device + account, so the goal survives a reinstall.
+        await saveGoal(goal);
       }
       const body = skip
         ? { timezone: getTimezone() }
@@ -92,6 +122,15 @@ export default function OnboardingScreen() {
           };
       const updated = await patchOnboarding(body);
       updateUser(updated);
+      // PR-M6: seed the memory engine (fire-and-forget; weak-weight events).
+      if (!skip) {
+        if (textStyle) {
+          trackEvent("onboarding_pref", { question: "texting_style", answer: textStyle });
+        }
+        if (avoids.length) {
+          trackEvent("onboarding_pref", { question: "avoid", answers: avoids });
+        }
+      }
       router.replace("/(tabs)/reply");
     } catch (err) {
       toast.error(extractErrorMessage(err, "Could not save preferences."));
@@ -139,7 +178,7 @@ export default function OnboardingScreen() {
       {/* Option list */}
       <View style={styles.options}>
         {current.options.map((option) => {
-          const selected = current.value === option;
+          const selected = isSelected(option);
           return (
             <Pressable
               key={option}

@@ -37,6 +37,8 @@ import { GOAL_KEY, PREFS_KEY } from "@/src/config/storage-keys";
 import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
 import { Sparkle } from "@/src/components/Sparkle";
+import { flags } from "@/src/config/flags";
+import { trackEvent } from "@/src/lib/memory-events";
 import {
   Language,
   MemoryCard,
@@ -80,6 +82,8 @@ const OUTCOMES = [
 const LANGUAGES: Language[] = ["English", "Hinglish", "Hindi + English mixed"];
 // PR-V2-3: "OR MAKE IT…" tone chips — regenerate with a tone hint.
 const TONES = ["Funny", "Romantic", "Confident", "Shorter", "Longer"];
+// PR-M6: quick feedback chips — each one teaches the memory engine.
+const FEEDBACK_CHIPS = ["Not my style", "Too much", "Too formal", "Cringe"];
 
 export default function ReplyScreen() {
   const { user, updateUser } = useAuth();
@@ -287,11 +291,80 @@ export default function ReplyScreen() {
       await Clipboard.setStringAsync(text);
       toast.success("Copied — go get 'em.");
       if (result?.generation_id) {
+        // PR-M2: the richer event first so the reducer's (generation_id, index)
+        // dedupe keeps the payload that carries label + text.
+        trackEvent(
+          "reply_copied",
+          {
+            generation_id: result.generation_id,
+            index,
+            text,
+            label: (result.reply_labels?.[index] || "").trim(),
+            surface: "reply",
+          },
+          memoryId,
+        );
         postFeedback(result.generation_id, index).catch(() => {});
       }
     } catch {
       toast.error("Could not copy.");
     }
+  };
+
+  // PR-M2: user edits to AI output are the highest-value style signal.
+  const onEditCommitted = (original: string, edited: string) => {
+    if (!result?.generation_id || original === edited) return;
+    trackEvent(
+      "reply_edited",
+      {
+        generation_id: result.generation_id,
+        variant_index: 0,
+        generated_text: original,
+        edited_text: edited,
+        surface: "reply",
+      },
+      memoryId,
+    );
+  };
+
+  const trackRejected = (reason: string) => {
+    if (!result?.generation_id) return;
+    trackEvent(
+      "reply_rejected",
+      {
+        generation_id: result.generation_id,
+        index: 0,
+        label: (result.reply_labels?.[0] || "").trim(),
+        reason,
+        surface: "reply",
+      },
+      memoryId,
+    );
+  };
+
+  const onToneChip = (tone: string) => {
+    trackEvent(
+      "tone_selected",
+      { tone, generation_id: result?.generation_id, surface: "reply" },
+      memoryId,
+    );
+    startGeneration(tone);
+  };
+
+  const onFeedbackChip = (chip: string) => {
+    if (!result?.generation_id) return;
+    trackEvent(
+      "feedback_chip",
+      {
+        chip,
+        generation_id: result.generation_id,
+        index: 0,
+        label: (result.reply_labels?.[0] || "").trim(),
+        surface: "reply",
+      },
+      memoryId,
+    );
+    toast.success("Got it — Lovli will adjust.");
   };
 
   return (
@@ -402,12 +475,25 @@ export default function ReplyScreen() {
                 return (
                   <>
                     <InsightCard insight={insight} />
+                    {flags.MEMORY_UI_ENABLED && result.memory_used?.is_personalized ? (
+                      <SoundsLikeYouPill signals={result.memory_used.signals} />
+                    ) : null}
                     <PrimaryReplyCard
                       key={result.generation_id}
                       text={result.replies[0] ?? ""}
                       onCopy={(t) => onCopy(t, 0)}
-                      onRegenerate={() => startGeneration()}
+                      onEditCommitted={onEditCommitted}
+                      onRegenerate={() => {
+                        trackRejected("regenerated");
+                        startGeneration();
+                      }}
                     />
+                    {flags.MEMORY_UI_ENABLED ? (
+                      <FeedbackChipsRow
+                        key={`fb-${result.generation_id}`}
+                        onChip={onFeedbackChip}
+                      />
+                    ) : null}
                     <View>
                       <Text style={styles.sectionLabel}>OR MAKE IT…</Text>
                       <View style={styles.chipsRow}>
@@ -416,7 +502,7 @@ export default function ReplyScreen() {
                             key={t}
                             label={t}
                             selected={false}
-                            onPress={() => startGeneration(t)}
+                            onPress={() => onToneChip(t)}
                             testID={`tone-${t}`}
                           />
                         ))}
@@ -681,10 +767,21 @@ const InsightCard: React.FC<{ insight: ReplyInsight }> = ({ insight }) => {
 const PrimaryReplyCard: React.FC<{
   text: string;
   onCopy: (text: string) => void;
+  onEditCommitted?: (original: string, edited: string) => void;
   onRegenerate: () => void;
-}> = ({ text, onCopy, onRegenerate }) => {
+}> = ({ text, onCopy, onEditCommitted, onRegenerate }) => {
   const [value, setValue] = useState(text);
   const [editing, setEditing] = useState(false);
+  // PR-M2: commit an edit at most once per distinct edited value.
+  const lastCommitted = useRef(text);
+
+  const commitEdit = () => {
+    if (value !== lastCommitted.current) {
+      lastCommitted.current = value;
+      onEditCommitted?.(text, value);
+    }
+  };
+
   return (
     <View>
       <Text style={styles.sectionLabel}>{"I'D SEND THIS 👇"}</Text>
@@ -704,11 +801,29 @@ const PrimaryReplyCard: React.FC<{
           </Text>
         )}
         <View style={styles.primaryActions}>
-          <Pressable style={styles.primaryAction} onPress={() => onCopy(value)} hitSlop={6} testID="primary-copy">
+          <Pressable
+            style={styles.primaryAction}
+            onPress={() => {
+              commitEdit();
+              onCopy(value);
+            }}
+            hitSlop={6}
+            testID="primary-copy"
+          >
             <Ionicons name="copy-outline" size={15} color={colors.lavenderText} />
             <Text style={styles.primaryActionText}>Copy</Text>
           </Pressable>
-          <Pressable style={styles.primaryAction} onPress={() => setEditing((e) => !e)} hitSlop={6} testID="primary-edit">
+          <Pressable
+            style={styles.primaryAction}
+            onPress={() =>
+              setEditing((e) => {
+                if (e) commitEdit(); // "Done" pressed — the edit is final.
+                return !e;
+              })
+            }
+            hitSlop={6}
+            testID="primary-edit"
+          >
             <Ionicons name={editing ? "checkmark" : "pencil-outline"} size={15} color={colors.lavenderText} />
             <Text style={styles.primaryActionText}>{editing ? "Done" : "Edit"}</Text>
           </Pressable>
@@ -717,6 +832,55 @@ const PrimaryReplyCard: React.FC<{
             <Text style={styles.primaryActionText}>Regenerate</Text>
           </Pressable>
         </View>
+      </View>
+    </View>
+  );
+};
+
+// PR-M6: "Sounds like you" pill — tap to see the honest signals behind it.
+const SoundsLikeYouPill: React.FC<{ signals: string[] }> = ({ signals }) => {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <View testID="sounds-like-you">
+      <Pressable
+        onPress={() => setExpanded((e) => !e)}
+        style={({ pressed }) => [styles.memoryPill, pressed && { opacity: 0.85 }]}
+        hitSlop={6}
+        testID="sounds-like-you-pill"
+      >
+        <Sparkle size={11} color={colors.lavender} />
+        <Text style={styles.memoryPillText}>Sounds like you</Text>
+        <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={12} color={colors.lavenderText} />
+      </Pressable>
+      {expanded && signals.length > 0 ? (
+        <Text style={styles.memoryPillDetail} testID="sounds-like-you-signals">
+          Tuned to: {signals.join(" · ")}
+        </Text>
+      ) : null}
+    </View>
+  );
+};
+
+// PR-M6: one-tap style feedback — teaches the engine, thanks the user, done.
+const FeedbackChipsRow: React.FC<{ onChip: (chip: string) => void }> = ({ onChip }) => {
+  const [picked, setPicked] = useState<string | null>(null);
+  return (
+    <View testID="feedback-chips">
+      <Text style={styles.sectionLabel}>NOT QUITE RIGHT?</Text>
+      <View style={styles.chipsRow}>
+        {FEEDBACK_CHIPS.map((c) => (
+          <Chip
+            key={c}
+            label={c}
+            selected={picked === c}
+            onPress={() => {
+              if (picked) return; // one signal per generation is plenty
+              setPicked(c);
+              onChip(c);
+            }}
+            testID={`feedback-chip-${c}`}
+          />
+        ))}
       </View>
     </View>
   );
@@ -1070,6 +1234,31 @@ const styles = StyleSheet.create({
   },
   primaryAction: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4 },
   primaryActionText: { ...typography.body.bodySemibold, fontSize: 13, color: colors.lavenderText },
+  // PR-M6: "Sounds like you" personalization pill
+  memoryPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 6,
+    backgroundColor: colors.violetTint,
+    borderWidth: 1,
+    borderColor: colors.violetTintBorder,
+    borderRadius: radii.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  memoryPillText: {
+    ...typography.body.bodySemibold,
+    fontSize: 12,
+    color: colors.lavenderText,
+  },
+  memoryPillDetail: {
+    ...typography.body.base,
+    fontSize: 12,
+    lineHeight: 17,
+    color: colors.textMuted,
+    marginTop: 6,
+  },
   readEyebrow: {
     ...typography.body.bodySemibold,
     color: colors.lavenderText,

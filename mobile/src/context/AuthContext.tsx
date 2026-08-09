@@ -1,10 +1,19 @@
 // Auth context — holds session state, token persisted in expo-secure-store.
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { authLogin, authMe, authSignup, authTestLogin, User } from "@/src/api/endpoints";
+import {
+  Bootstrap,
+  authLogin,
+  authMe,
+  authSignup,
+  authTestLogin,
+  getBootstrap,
+  User,
+} from "@/src/api/endpoints";
 import { loadAuthToken, setAuthToken, setUnauthorizedHandler } from "@/src/api/client";
 import { storage } from "@/src/utils/storage";
-import { ASK_PENDING_KEY, ASK_THREAD_KEY } from "@/src/config/storage-keys";
-import { cancelAllNotifications } from "@/src/utils/notifications";
+import { ASK_PENDING_KEY, ASK_THREAD_KEY, PREFS_KEY, GOAL_KEY } from "@/src/config/storage-keys";
+import { cancelAllNotifications, resyncNotificationsFromStorage } from "@/src/utils/notifications";
+import { hydrateFromCloud } from "@/src/lib/user-prefs";
 
 type Status = "checking" | "authed" | "unauthed";
 
@@ -13,6 +22,8 @@ type AuthContextValue = {
   status: Status;
   isAuthed: boolean;
   isChecking: boolean;
+  /** Account state restored from the cloud at sign-in (null until it lands). */
+  bootstrap: Bootstrap | null;
   login: (email: string, password: string) => Promise<User>;
   signup: (name: string, email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
@@ -29,6 +40,39 @@ const DEV_AUTO_LOGIN = __DEV__ && process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN === "tr
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<Status>("checking");
+  const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
+
+  /**
+   * Pull the account's cloud state and replay it onto the device.
+   *
+   * This is what makes a reinstall or a new phone look like the old one:
+   * preferences, the onboarding goal, and the Ask Lovli thread all live on the
+   * server keyed to the account. Best-effort — a failure here must never block
+   * sign-in, since the app still works from whatever is cached locally.
+   */
+  const hydrateFromAccount = useCallback(async (): Promise<Bootstrap | null> => {
+    try {
+      const data = await getBootstrap();
+      setBootstrap(data);
+      setUser(data.user);
+      await hydrateFromCloud(data.preferences);
+      if (data.ask_thread?.length) {
+        // The chat screen stores {id, role, text}; the wire format carries only
+        // {role, text}, so mint the ids it uses as React keys.
+        const restored = data.ask_thread.map((turn, i) => ({
+          id: `restored-${i}-${turn.role}`,
+          role: turn.role,
+          text: turn.text,
+        }));
+        await storage.setItem(ASK_THREAD_KEY, JSON.stringify(restored)).catch(() => {});
+      }
+      // Reminder schedules follow the restored preferences.
+      resyncNotificationsFromStorage();
+      return data;
+    } catch {
+      return null;
+    }
+  }, []);
 
   const tryDevAutoLogin = useCallback(async (): Promise<User | null> => {
     try {
@@ -58,6 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const me = await authMe();
       setUser(me);
       setStatus("authed");
+      hydrateFromAccount();
       return me;
     } catch {
       await setAuthToken(null);
@@ -78,13 +123,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const { access_token, user: u } = await authLogin(email, password);
-    await setAuthToken(access_token);
-    setUser(u);
-    setStatus("authed");
-    return u;
-  }, []);
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const { access_token, user: u } = await authLogin(email, password);
+      await setAuthToken(access_token);
+      setUser(u);
+      setStatus("authed");
+      // Signing in on a new device restores everything from the account.
+      await hydrateFromAccount();
+      return u;
+    },
+    [hydrateFromAccount],
+  );
 
   const signup = useCallback(async (name: string, email: string, password: string) => {
     const { access_token, user: u } = await authSignup(name, email, password);
@@ -97,9 +147,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = useCallback(async () => {
     await setAuthToken(null);
     // Personal local data must not leak across accounts (PR-V2-4 carry-in fix).
+    // The cloud copies stay put — signing back in restores them.
     await storage.removeItem(ASK_THREAD_KEY);
     await storage.removeItem(ASK_PENDING_KEY);
+    await storage.removeItem(PREFS_KEY);
+    await storage.removeItem(GOAL_KEY);
     await cancelAllNotifications();
+    setBootstrap(null);
     setUser(null);
     setStatus("unauthed");
   }, []);
@@ -112,13 +166,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       status,
       isAuthed: status === "authed",
       isChecking: status === "checking",
+      bootstrap,
       login,
       signup,
       logout,
       refreshMe,
       updateUser,
     }),
-    [user, status, login, signup, logout, refreshMe, updateUser],
+    [user, status, bootstrap, login, signup, logout, refreshMe, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

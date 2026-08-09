@@ -158,6 +158,7 @@ def build_user_prompt(
     intent: Optional[str] = None,
     outcome: Optional[str] = None,
     goal: Optional[str] = None,
+    style_context: Optional[str] = None,
 ) -> str:
     platform_value = _normalize_platform(platform)
     parts = [
@@ -181,6 +182,10 @@ def build_user_prompt(
         parts.append(f"User note / extra context: {user_note}")
     if memory_context:
         parts.append(f"Memory context about this person: {memory_context}")
+    # PR-M5 (additive): learned texting-style block from the memory orchestra.
+    # Absent → prompt byte-identical.
+    if style_context:
+        parts.append(style_context)
     # PR-V2-3 (additive): emotional/intent context. When absent, the prompt is
     # byte-identical to the pre-V2-3 build.
     if feeling:
@@ -285,6 +290,7 @@ def build_user_prompt_v2(
     intent: Optional[str] = None,
     outcome: Optional[str] = None,
     goal: Optional[str] = None,
+    style_context: Optional[str] = None,
 ) -> str:
     """Rich-mode prompt: situation read + 3 register-differentiated labeled replies.
 
@@ -312,6 +318,9 @@ def build_user_prompt_v2(
         parts.append(f"User note / extra context: {user_note}")
     if memory_context:
         parts.append(f"Memory context about this person: {memory_context}")
+    # PR-M5 (additive): learned texting-style block from the memory orchestra.
+    if style_context:
+        parts.append(style_context)
     # PR-V2-3 (additive): emotional/intent context — folded into the read so the
     # insight speaks to what the user is actually going through.
     if feeling:
@@ -449,6 +458,9 @@ class LovliRequest:
     intent: Optional[str] = None
     outcome: Optional[str] = None
     goal: Optional[str] = None
+    # PR-M5 (additive): learned texting-style prompt block. None → prompts
+    # byte-identical to pre-memory-engine builds.
+    style_context: Optional[str] = None
 
 
 class LovliLlmError(RuntimeError):
@@ -487,6 +499,7 @@ async def _generate_anthropic(req: LovliRequest, retry: bool = False) -> dict:
         intent=req.intent,
         outcome=req.outcome,
         goal=req.goal,
+        style_context=req.style_context,
     )
     if retry:
         if req.rich:
@@ -574,6 +587,7 @@ async def _generate_emergent(req: LovliRequest, retry: bool = False) -> dict:
         intent=req.intent,
         outcome=req.outcome,
         goal=req.goal,
+        style_context=req.style_context,
     )
     if retry:
         if req.rich:
@@ -720,10 +734,14 @@ def _build_ask_prompt(
     message: str,
     history: list[dict],
     memory_context: "Optional[str]",
+    style_context: "Optional[str]" = None,
 ) -> str:
     parts: list[str] = []
     if memory_context:
         parts.append(f"PERSON CONTEXT (about who we're discussing): {memory_context}")
+    # PR-M5 (additive): learned texting-style block — shapes suggested lines.
+    if style_context:
+        parts.append(style_context)
     if history:
         lines = []
         for turn in history:
@@ -796,6 +814,7 @@ async def ask_lovli(
     history: list[dict],
     memory_context: "Optional[str]" = None,
     session_id: str = "ask-lovli",
+    style_context: "Optional[str]" = None,
 ) -> str:
     """One coach-chat turn. Returns Lovli's plain-text reply.
 
@@ -814,7 +833,7 @@ async def ask_lovli(
         primary = explicit
         fallback = None
 
-    prompt = _build_ask_prompt(message, history, memory_context)
+    prompt = _build_ask_prompt(message, history, memory_context, style_context)
 
     async def _attempt(provider: str) -> str:
         if provider == "anthropic":
@@ -872,6 +891,8 @@ class DecodeRequest:
     memory_context: Optional[str] = None
     language: str = "Hinglish"
     session_id: str = "decode"
+    # PR-M5 (additive): learned texting-style prompt block.
+    style_context: Optional[str] = None
 
 
 def _clamp_vibe_label(value: object) -> str:
@@ -922,6 +943,9 @@ def _build_decode_prompt(req: DecodeRequest, retry: bool) -> str:
         )
     if req.memory_context:
         parts.append(f"PERSON CONTEXT: {req.memory_context}")
+    # PR-M5 (additive): learned texting-style block.
+    if req.style_context:
+        parts.append(req.style_context)
     if req.feeling:
         parts.append(f"How the user is feeling right now: {req.feeling}.")
     parts.append(f"User's reply language preference: {req.language}.")
@@ -1161,6 +1185,8 @@ class FeatureRequest:
     memory_context: Optional[str] = None
     language: str = "Hinglish"
     session_id: str = "feature"
+    # PR-M5 (additive): learned texting-style prompt block.
+    style_context: Optional[str] = None
 
 
 def _clamp_red_flag_verdict(value: object) -> str:
@@ -1221,6 +1247,9 @@ def _build_feature_prompt(req: FeatureRequest, retry: bool) -> str:
     parts.append(FEATURE_SUFFIXES[req.feature_id])
     if req.memory_context:
         parts.append(f"PERSON CONTEXT (about who we're discussing): {req.memory_context}")
+    # PR-M5 (additive): learned texting-style block.
+    if req.style_context:
+        parts.append(req.style_context)
     if req.feeling:
         parts.append(f"How the user is feeling right now: {req.feeling}.")
     parts.append(f"User's reply language preference: {req.language}.")
