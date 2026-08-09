@@ -87,7 +87,7 @@ MIGRATIONS: tuple[tuple[int, str, Callable[..., Awaitable[dict]]], ...] = (
 
 
 async def get_schema_version(db) -> int:
-    doc = await db._meta.find_one({"_id": _META_ID})
+    doc = await db["_meta"].find_one({"_id": _META_ID})
     return int((doc or {}).get("version", 0))
 
 
@@ -103,7 +103,7 @@ async def run_migrations(db, *, allow_stamp: bool = True) -> dict:
         return {"from": current, "to": current, "applied": [], "status": "up-to-date"}
 
     if current == 0 and allow_stamp and await _is_fresh_database(db):
-        await db._meta.update_one(
+        await db["_meta"].update_one(
             {"_id": _META_ID},
             {
                 "$set": {
@@ -134,7 +134,7 @@ async def run_migrations(db, *, allow_stamp: bool = True) -> dict:
             "applied_at": _now_iso(),
             "result": result,
         }
-        await db._meta.update_one(
+        await db["_meta"].update_one(
             {"_id": _META_ID},
             {"$set": {"version": version, "updated_at": _now_iso()},
              "$push": {"history": entry}},

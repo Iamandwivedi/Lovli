@@ -177,6 +177,29 @@ class TestTenantIsolation:
 
 # ---- migrations --------------------------------------------------------------
 
+class TestUnderscoreCollections:
+    """PyMongo refuses attribute access for underscore-prefixed names, so the
+    `_meta` collection must always be reached with db["_meta"]. Using db._meta
+    worked against a permissive stub while raising AttributeError in
+    production, which silently stopped migrations from running."""
+
+    def test_attribute_access_is_refused_like_pymongo(self, raw):
+        with pytest.raises(AttributeError):
+            raw._meta
+
+    def test_bracket_access_works(self, raw):
+        _run(raw["_meta"].insert_one({"_id": "schema", "version": 1}))
+        assert _run(raw["_meta"].find_one({"_id": "schema"}))["version"] == 1
+
+    def test_guarded_db_supports_bracket_access(self, gdb):
+        # The tenant guard must delegate through __getitem__ too, or the same
+        # AttributeError resurfaces one layer up.
+        assert _run(gdb["_meta"].find_one({"_id": "schema"})) is None
+
+    def test_schema_version_read_works_end_to_end(self, raw):
+        assert _run(get_schema_version(raw)) == 0
+
+
 class TestMigrations:
     def test_fresh_database_is_stamped_not_backfilled(self, raw):
         result = _run(run_migrations(raw))

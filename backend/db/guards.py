@@ -166,8 +166,18 @@ class TenantGuardedDatabase:
         """The raw, unguarded database — for deliberate cross-user operations."""
         return self._db
 
+    def _guarded(self, name: str, target):
+        cached = self._cache.get(name)
+        if cached is not None:
+            return cached
+        guarded = _GuardedCollection(target, BY_NAME.get(name), name)
+        self._cache[name] = guarded
+        return guarded
+
     def __getitem__(self, name: str):
-        return self.__getattr__(name)
+        # Bracket access, because PyMongo refuses attribute access for names
+        # starting with an underscore (e.g. the "_meta" collection).
+        return self._guarded(name, self._db[name])
 
     def __getattr__(self, name: str):
         if name.startswith("__"):
@@ -179,9 +189,7 @@ class TenantGuardedDatabase:
         # Non-collection attributes (client, name, command, ...) pass through.
         if not hasattr(target, "find_one"):
             return target
-        guarded = _GuardedCollection(target, BY_NAME.get(name), name)
-        self._cache[name] = guarded
-        return guarded
+        return self._guarded(name, target)
 
 
 def tenant_guarded(db) -> TenantGuardedDatabase:

@@ -182,12 +182,22 @@ class MemDb:
         self._cols: dict[str, MemCol] = {}
 
     def __getattr__(self, name: str) -> MemCol:
-        if name.startswith("__"):
-            raise AttributeError(name)
+        # Mirror PyMongo: attribute access is refused for underscore-prefixed
+        # names so a collection like "_meta" MUST be reached via db["_meta"].
+        # Without this the stub is more permissive than the real driver, and
+        # `db._meta` passes here while raising AttributeError in production.
+        if name.startswith("_"):
+            raise AttributeError(
+                f"Database has no attribute {name!r}. To access the {name} "
+                f"collection, use database[{name!r}]."
+            )
+        return self._col(name)
+
+    def _col(self, name: str) -> MemCol:
         cols = self.__dict__.setdefault("_cols", {})
         if name not in cols:
             cols[name] = MemCol()
         return cols[name]
 
     def __getitem__(self, name: str) -> MemCol:
-        return getattr(self, name)
+        return self._col(name)
