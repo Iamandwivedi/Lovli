@@ -123,6 +123,34 @@ class TestPreferences:
         assert client.get("/api/preferences", headers=_auth()).json()["notif_reminders"] is False
 
 
+class TestSignupSeedsPreferences:
+    """A real signup on a device produced a user with no preferences row: the
+    client only fetched /bootstrap on login, and the server created preferences
+    lazily. Anything that account changed in its first session was therefore not
+    cloud-backed. The server now seeds the row at account creation."""
+
+    def test_new_account_gets_preferences_immediately(self, client, db):
+        r = client.post(
+            "/api/auth/signup",
+            json={"name": "Fresh", "email": "fresh@lovli.in", "password": "Sup3rSecret!"},
+        )
+        assert r.status_code == 200, r.text
+        new_id = r.json()["user"]["id"]
+        prefs = _run(db.user_preferences.find_one({"user_id": new_id}))
+        assert prefs is not None, "signup must create a preferences row"
+        assert prefs["default_vibe"] == "Playful"
+
+    def test_preferences_row_is_owned_by_the_new_user_only(self, client, db):
+        r = client.post(
+            "/api/auth/signup",
+            json={"name": "Fresh2", "email": "fresh2@lovli.in", "password": "Sup3rSecret!"},
+        )
+        new_id = r.json()["user"]["id"]
+        rows = _run(db.user_preferences.find({"user_id": new_id}).to_list(None))
+        assert len(rows) == 1
+        assert rows[0]["user_id"] == new_id
+
+
 class TestAskThread:
     def test_empty_by_default(self, client):
         assert client.get("/api/ask-thread", headers=_auth()).json()["turns"] == []

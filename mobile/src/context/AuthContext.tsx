@@ -136,13 +136,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [hydrateFromAccount],
   );
 
-  const signup = useCallback(async (name: string, email: string, password: string) => {
-    const { access_token, user: u } = await authSignup(name, email, password);
-    await setAuthToken(access_token);
-    setUser(u);
-    setStatus("authed");
-    return u;
-  }, []);
+  const signup = useCallback(
+    async (name: string, email: string, password: string) => {
+      const { access_token, user: u } = await authSignup(name, email, password);
+      await setAuthToken(access_token);
+      setUser(u);
+      setStatus("authed");
+      // Same as login: a new account needs its cloud state established up front,
+      // otherwise nothing it changes in the first session is cloud-backed.
+      await hydrateFromAccount();
+      return u;
+    },
+    [hydrateFromAccount],
+  );
 
   const logout = useCallback(async () => {
     await setAuthToken(null);

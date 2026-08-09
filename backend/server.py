@@ -262,6 +262,22 @@ async def _create_user_doc(
     if set_last_login:
         doc["last_login_at"] = doc["created_at"]
     await db.users.insert_one(doc)
+
+    # Give every account its preferences row at creation rather than waiting for
+    # a lazy read. Otherwise a client that signs up and never calls /bootstrap
+    # goes a whole session with nothing cloud-backed, and anything it changes is
+    # lost on reinstall. Best-effort: signup must not fail over this.
+    try:
+        prefs = UserPreferences(
+            user_id=doc["id"],
+            language_preference=doc.get("language_preference") or "Hinglish",
+            preferred_platform=doc.get("preferred_platform"),
+        ).model_dump()
+        prefs["created_at"] = prefs["created_at"].isoformat()
+        prefs["updated_at"] = prefs["updated_at"].isoformat()
+        await db.user_preferences.insert_one(prefs)
+    except Exception:
+        logger.exception("could not seed preferences for new user %s", doc.get("id"))
     return doc
 
 
