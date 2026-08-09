@@ -51,10 +51,17 @@ jobs:
           ENVIRONMENT: production
           ALLOW_TEST_LOGIN: "true"
         # server.py refuses to boot with ALLOW_TEST_LOGIN=true in production.
-        # A clean import here would mean that guard regressed.
+        # Assert on the specific RuntimeError, not merely "the import failed" —
+        # otherwise an unrelated breakage (a missing dependency, say) would make
+        # this check pass while the guard itself was gone.
         run: |
-          if python -c "import server" 2>/dev/null; then
+          if python -c "import server" 2>err.log; then
             echo "::error::ALLOW_TEST_LOGIN=true booted under ENVIRONMENT=production"
+            exit 1
+          fi
+          if ! grep -q "ALLOW_TEST_LOGIN must not be enabled" err.log; then
+            echo "::error::import failed, but not because of the production guard:"
+            cat err.log
             exit 1
           fi
           echo "OK: test-login bypass is blocked in production"
