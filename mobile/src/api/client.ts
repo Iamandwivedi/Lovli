@@ -2,7 +2,10 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { storage } from "@/src/utils/storage";
 
-const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL || "https://app.lovli.in";
+// Production API. The fallback matters: a release/EAS build without the env var
+// injected must still reach the API, and app.lovli.in is the web app — it would
+// answer with the SPA's HTML instead of JSON and fail in a confusing way.
+const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL || "https://api.lovli.in";
 export const TOKEN_KEY = "lovli_access_token";
 
 export const api = axios.create({
