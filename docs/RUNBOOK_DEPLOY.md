@@ -48,7 +48,7 @@ tab shows the workflow running (backend pytest + mobile typecheck + hygiene).
    database name before the `?`:
 
 ```
-mongodb+srv://lovli_app:<PASSWORD>@lovli-prod.xxxxx.mongodb.net/lovli?retryWrites=true&w=majority
+mongodb+srv://lovli_app:<PASSWORD>@lovli-prod.<cluster-id>.mongodb.net/lovli?retryWrites=true&w=majority
 ```
 
 7. **Backup** → enable Cloud Backup (default policy).
@@ -79,7 +79,7 @@ Do **not** deploy yet — set the variables first.
 `openssl rand -hex 32`:
 
 ```env
-MONGO_URL=mongodb+srv://lovli_app:PASSWORD@lovli-prod.xxxxx.mongodb.net/lovli?retryWrites=true&w=majority
+MONGO_URL=mongodb+srv://lovli_app:<PASSWORD>@lovli-prod.<cluster-id>.mongodb.net/lovli?retryWrites=true&w=majority
 DB_NAME=lovli
 JWT_SECRET=<openssl rand -hex 32>
 ADMIN_KEY=<openssl rand -hex 32>
