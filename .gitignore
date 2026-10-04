@@ -58,3 +58,6 @@ coverage/
 credentials.json
 *.pem
 .credentials
+
+# Claude Code local config
+.claude/
