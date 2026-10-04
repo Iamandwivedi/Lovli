@@ -24,7 +24,7 @@
 4. Connect → Drivers → Python 3.12 → copy connection string.
 5. Insert `/lovli` before `?` so the DB name is set:
    ```
-   mongodb+srv://lovli_app:PASS@cluster0.xxxxx.mongodb.net/lovli?retryWrites=true&w=majority&appName=Cluster0
+   mongodb+srv://lovli_app:<PASSWORD>@cluster0.<cluster-id>.mongodb.net/lovli?retryWrites=true&w=majority&appName=Cluster0
    ```
 
 ## 2. Railway (backend)

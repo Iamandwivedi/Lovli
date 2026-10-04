@@ -8,7 +8,7 @@ Minimum required (11):
 
 | Variable | Example | Notes |
 |---|---|---|
-| `MONGO_URL` | `mongodb+srv://lovli_app:PASS@cluster0.xxxxx.mongodb.net/lovli?retryWrites=true&w=majority` | Atlas connection string. `/lovli` is the db name, inserted before `?`. URL-encode special chars in password. |
+| `MONGO_URL` | `mongodb+srv://lovli_app:<PASSWORD>@cluster0.<cluster-id>.mongodb.net/lovli?retryWrites=true&w=majority` | Atlas connection string. `/lovli` is the db name, inserted before `?`. URL-encode special chars in password. |
 | `DB_NAME` | `lovli` | |
 | `JWT_SECRET` | 64-char hex | Generate: `openssl rand -hex 32`. Rotating logs everyone out. |
 | `ADMIN_KEY` | 64-char hex | Generate: `openssl rand -hex 32`. Used as `X-Admin-Key` header for `/api/admin/*`. |
