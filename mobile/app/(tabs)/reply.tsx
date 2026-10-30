@@ -1087,18 +1087,19 @@ const styles = StyleSheet.create({
   feelingDot: { width: 6, height: 6, borderRadius: 999 },
   // Three equal capture targets
   targets: { flexDirection: "row", gap: 8 },
+  // Icon over label so "Screenshot" never truncates on narrow phones.
   target: {
     flex: 1,
-    minHeight: 56,
-    flexDirection: "row",
+    minHeight: 60,
     alignItems: "center",
     justifyContent: "center",
-    gap: 7,
+    gap: 5,
     borderWidth: 1,
     borderColor: "rgba(167,139,250,0.28)",
     borderRadius: 18,
     backgroundColor: colors.surfaceSoft,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 9,
   },
   targetPrimary: {
     borderStyle: "dashed",
@@ -1107,7 +1108,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.violetTint,
   },
   targetPressed: { backgroundColor: "rgba(255,255,255,0.12)", borderColor: colors.lavender },
-  targetLabel: { ...typography.body.bodySemibold, fontSize: 13, color: colors.text, flexShrink: 1 },
+  targetLabel: { ...typography.body.bodySemibold, fontSize: 12.5, color: colors.text, textAlign: "center" },
   sampleChip: {
     minHeight: 44,
     flexDirection: "row",
