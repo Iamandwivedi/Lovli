@@ -34,7 +34,7 @@ export const ResultActions: React.FC<Props> = ({ personName, canSave, onAskLovli
         />
         {personName ? (
           <ActionPill
-            icon={<Ionicons name="heart-outline" size={14} color={canSave ? colors.lavender : colors.textDim} />}
+            icon={<Ionicons name="heart-outline" size={14} color={canSave ? colors.lavender : colors.textFaint} />}
             label={`Save to ${personName}'s memory`}
             onPress={onSave}
             disabled={!canSave}
@@ -50,6 +50,11 @@ export const ResultActions: React.FC<Props> = ({ personName, canSave, onAskLovli
           testID="action-report"
         />
       </View>
+      {personName && !canSave ? (
+        <Text style={styles.disabledHint} testID="save-memory-hint">
+          Copy a reply first to save it to {personName}&apos;s story.
+        </Text>
+      ) : null}
       {reporting && !reported ? (
         <View style={styles.reasons} testID="report-reasons">
           <Text style={styles.reasonsLabel}>WHAT WENT WRONG?</Text>
@@ -115,10 +120,12 @@ const styles = StyleSheet.create({
     borderColor: colors.hairline,
     backgroundColor: colors.surfaceSoft,
   },
-  pillDisabled: { opacity: 0.55 },
+  // Locked, not broken: full-opacity hairline pill with faint text + a hint below.
+  pillDisabled: { borderColor: colors.divider },
   pillPressed: { backgroundColor: "rgba(255,255,255,0.12)" },
   pillText: { ...typography.body.bodySemibold, fontSize: 13, color: colors.textSoft },
   pillTextDisabled: { color: colors.textFaint },
+  disabledHint: { ...typography.body.caption, fontSize: 12, color: colors.textFaint, marginTop: -4 },
   reasons: { gap: 8 },
   reasonsLabel: {
     fontFamily: typography.fonts.bodyBold,

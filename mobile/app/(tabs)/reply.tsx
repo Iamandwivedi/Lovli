@@ -1043,7 +1043,7 @@ const styles = StyleSheet.create({
   skipText: {
     fontFamily: typography.fonts.bodySemibold,
     fontSize: 12,
-    color: colors.textDim,
+    color: colors.textFaint,
     marginBottom: 10,
     paddingHorizontal: 4,
   },

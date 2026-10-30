@@ -50,7 +50,7 @@ export const colors = {
   textSoft: "#E5E7EB",        // body
   textMuted: "#A1A1AA",       // secondary / sub-copy
   textSecondary: "#A1A1AA",   // alias
-  textFaint: "#71717A",       // muted — placeholders, captions
+  textFaint: "#8A8A94",       // muted — placeholders, captions (≥4.7:1 on cards; was #71717A at 3.3:1)
   textDim: "#52525B",         // faint
   textDisabled: "#3F3F46",
 

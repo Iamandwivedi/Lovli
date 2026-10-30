@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     color: colors.textFaint,
     marginBottom: 10,
   },
-  optional: { ...typography.body.caption, fontSize: 12, color: colors.textDim, marginBottom: 10 },
+  optional: { ...typography.body.caption, fontSize: 12, color: colors.textFaint, marginBottom: 10 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   skipRow: { alignItems: "center", paddingVertical: 12, minHeight: 44, justifyContent: "center" },
   skip: {

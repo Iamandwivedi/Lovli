@@ -73,7 +73,7 @@ export const InsightCard: React.FC<{ insight: ReplyInsight }> = ({ insight }) =>
       </View>
     ) : null}
     <Text style={styles.advice}>
-      <Text style={styles.adviceLabel}>{"If I were your wingman: "}</Text>
+      <Text style={styles.adviceLabel}>{"If I were you: "}</Text>
       {insight.wingman_advice}
     </Text>
   </GlassCard>

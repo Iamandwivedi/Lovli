@@ -281,11 +281,12 @@ const styles = StyleSheet.create({
   iconBtnPressed: { backgroundColor: "rgba(255,255,255,0.12)" },
   text: {
     ...typography.body.base,
-    fontSize: 17,
-    lineHeight: 25,
+    fontSize: 16.5,
+    lineHeight: 24,
     color: colors.text,
     marginTop: 10,
   },
+  // ~12 % larger so the emphasis registers (8 % did not read on device).
   textEmphasized: { fontSize: 18.5, lineHeight: 27 },
   input: { padding: 0, minHeight: 50, textAlignVertical: "top" },
   footer: {
