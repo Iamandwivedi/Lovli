@@ -1,8 +1,8 @@
 // Reply tab — V3 glass flow as a phase machine:
 //   home → intent → generating → results
-// home:       "Kya scene hai?" + person picker + continuity strip + three equal
-//             capture targets (Paste · Screenshot · Camera) + situation chips +
-//             always-visible note + feeling check-in + ✦ Get replies
+// home:       "Kya scene hai?" + person picker + continuity strip + two equal
+//             capture targets (Paste · Screenshot) + a one-line "Private" note
+//             + situation chips + always-visible note + feeling check-in + ✦ Get replies
 // intent:     "Got it. I read the chat." + chat preview + WHAT DO YOU WANT? /
 //             HOW SHOULD IT LAND? / REPLY LANGUAGE (last intent per person recalled)
 // generating: four truthful stages timed to the real request (StagedLoader)
@@ -10,7 +10,7 @@
 //             "Noted" fact proposal, Ask / Save / Report actions, tone chips.
 // Research doc: "Lovli UI/UX Research — What to Build", §5, §7, §11, §12.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
@@ -34,7 +34,7 @@ import { SituationSection, buildUserNote } from "@/src/components/reply/Situatio
 import { StagedLoader, STAGE_MS, buildGenerationStages } from "@/src/components/reply/StagedLoader";
 import { parseChatText } from "@/src/utils/chatParse";
 import { storage } from "@/src/utils/storage";
-import { ASK_PENDING_KEY, GOAL_KEY, LAST_INTENT_KEY, PREFS_KEY, PRIVACY_SEEN_KEY } from "@/src/config/storage-keys";
+import { ASK_PENDING_KEY, GOAL_KEY, LAST_INTENT_KEY, PREFS_KEY } from "@/src/config/storage-keys";
 import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
 import { haptic } from "@/src/lib/haptics";
@@ -104,23 +104,15 @@ export default function ReplyScreen() {
   const [intentRecalled, setIntentRecalled] = useState(false);
   const [outcome, setOutcome] = useState<string | null>(null);
   const [goalPref, setGoalPref] = useState<string>("");
+  // Research §11, as Aman wants it: no sheet before the first upload — a quiet
+  // "Private" line under the input instead, with the full sheet one tap away.
   const [privacyOpen, setPrivacyOpen] = useState(false);
-  const privacySeen = useRef<boolean | null>(null);
-  const afterPrivacy = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     storage
       .getItem<string>(GOAL_KEY, "")
       .then((g) => setGoalPref(typeof g === "string" ? g : ""))
       .catch(() => {});
-    storage
-      .getItem<boolean>(PRIVACY_SEEN_KEY, false)
-      .then((v) => {
-        privacySeen.current = v === true;
-      })
-      .catch(() => {
-        privacySeen.current = false;
-      });
   }, []);
 
   const [stage, setStage] = useState(0);
@@ -204,25 +196,6 @@ export default function ReplyScreen() {
     [manual],
   );
 
-  // --- Privacy gate: the summary sheet shows once, before the first upload ---
-  const withPrivacyGate = (action: () => void) => {
-    if (privacySeen.current) {
-      action();
-      return;
-    }
-    afterPrivacy.current = action;
-    setPrivacyOpen(true);
-  };
-  const acceptPrivacy = () => {
-    privacySeen.current = true;
-    storage.setItem(PRIVACY_SEEN_KEY, true).catch(() => {});
-    setPrivacyOpen(false);
-    const next = afterPrivacy.current;
-    afterPrivacy.current = null;
-    // Let the modal finish dismissing before the system picker presents.
-    if (next) setTimeout(next, 350);
-  };
-
   const acceptAsset = (asset: Pick) => {
     if (asset.fileSize && asset.fileSize > MAX_IMAGE_BYTES) {
       toast.error("This image is too large.");
@@ -231,8 +204,7 @@ export default function ReplyScreen() {
     setImage(asset);
   };
 
-  const pickImage = () =>
-    withPrivacyGate(async () => {
+  const pickImage = async () => {
       try {
         const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
         let granted = status === "granted";
@@ -256,23 +228,7 @@ export default function ReplyScreen() {
       } catch {
         toast.error("Could not open your photos.");
       }
-    });
-
-  const takePhoto = () =>
-    withPrivacyGate(async () => {
-      try {
-        const req = await ImagePicker.requestCameraPermissionsAsync();
-        if (req.status !== "granted") {
-          toast.error(req.canAskAgain ? "I need the camera for that." : "Enable Camera in Settings to use it.");
-          return;
-        }
-        const res = await ImagePicker.launchCameraAsync({ quality: 0.85, exif: false });
-        if (res.canceled) return;
-        acceptAsset(res.assets[0]);
-      } catch {
-        toast.error("Could not open the camera.");
-      }
-    });
+  };
 
   // Explicit paste on tap only — the clipboard is never auto-read.
   const pasteFromClipboard = async () => {
@@ -527,8 +483,8 @@ export default function ReplyScreen() {
           onSituation={setSituation}
           onNote={setNote}
           onPickImage={pickImage}
-          onTakePhoto={takePhoto}
           onPaste={pasteFromClipboard}
+          onOpenPrivacy={() => setPrivacyOpen(true)}
           onRemoveImage={() => setImage(null)}
           onTrySample={() => router.push("/sample")}
           onContinue={goToIntent}
@@ -685,15 +641,7 @@ export default function ReplyScreen() {
         </>
       ) : null}
 
-      <PrivacySheet
-        visible={privacyOpen}
-        onClose={() => {
-          afterPrivacy.current = null;
-          setPrivacyOpen(false);
-        }}
-        primaryLabel="Got it — pick a screenshot"
-        onPrimary={acceptPrivacy}
-      />
+      <PrivacySheet visible={privacyOpen} onClose={() => setPrivacyOpen(false)} />
     </Screen>
   );
 }
@@ -716,8 +664,8 @@ const HomePhase: React.FC<{
   onSituation: (s: string | null) => void;
   onNote: (v: string) => void;
   onPickImage: () => void;
-  onTakePhoto: () => void;
   onPaste: () => void;
+  onOpenPrivacy: () => void;
   onRemoveImage: () => void;
   onTrySample: () => void;
   onContinue: () => void;
@@ -740,8 +688,8 @@ const HomePhase: React.FC<{
   onSituation,
   onNote,
   onPickImage,
-  onTakePhoto,
   onPaste,
+  onOpenPrivacy,
   onRemoveImage,
   onTrySample,
   onContinue,
@@ -788,7 +736,7 @@ const HomePhase: React.FC<{
       </View>
     ) : null}
 
-    {/* Hero input: three equal capture targets, 56 pt, no dropdown */}
+    {/* Hero input: two equal capture targets, no dropdown */}
     {image ? (
       <View style={styles.preview} testID="upload-preview">
         <Image source={{ uri: image.uri }} style={styles.previewImg} resizeMode="cover" />
@@ -807,9 +755,6 @@ const HomePhase: React.FC<{
       <View style={styles.targets} testID="capture-targets">
         <CaptureTarget icon="clipboard-outline" label="Paste text" onPress={onPaste} testID="capture-paste" />
         <CaptureTarget icon="images-outline" label="Screenshot" onPress={onPickImage} testID="upload-area" primary />
-        {Platform.OS !== "web" ? (
-          <CaptureTarget icon="camera-outline" label="Camera" onPress={onTakePhoto} testID="capture-camera" />
-        ) : null}
       </View>
     )}
 
@@ -823,6 +768,25 @@ const HomePhase: React.FC<{
       inputTestID="manual-text-input"
       style={{ minHeight: 52 }}
     />
+
+    {/* Quiet privacy line — the full six-card sheet is one tap away */}
+    <Pressable
+      onPress={() => {
+        haptic.selection();
+        onOpenPrivacy();
+      }}
+      accessibilityRole="button"
+      accessibilityLabel="Private. Your screenshot is read once and never saved. Opens how Lovli handles your chats."
+      testID="privacy-line"
+      style={({ pressed }) => [styles.privacyLine, pressed && { opacity: 0.7 }]}
+    >
+      <Ionicons name="lock-closed" size={11} color={colors.textFaint} />
+      <Text style={styles.privacyText} numberOfLines={1}>
+        <Text style={styles.privacyLabel}>PRIVATE</Text>
+        {"  Read once, never saved. "}
+        <Text style={styles.privacyLink}>How it works</Text>
+      </Text>
+    </Pressable>
 
     {/* Empty state: play-first beats explain-first */}
     {!image && !manual.trim() && memoryCards.length === 0 ? (
@@ -1109,6 +1073,17 @@ const styles = StyleSheet.create({
   },
   targetPressed: { backgroundColor: "rgba(255,255,255,0.12)", borderColor: colors.lavender },
   targetLabel: { ...typography.body.bodySemibold, fontSize: 12.5, color: colors.text, textAlign: "center" },
+  privacyLine: {
+    minHeight: 32,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: -6,
+    paddingHorizontal: 4,
+  },
+  privacyText: { ...typography.body.caption, fontSize: 12, color: colors.textFaint, flexShrink: 1 },
+  privacyLabel: { fontFamily: typography.fonts.bodyBold, fontSize: 10.5, letterSpacing: 1.1, color: colors.textFaint },
+  privacyLink: { fontFamily: typography.fonts.bodySemibold, fontSize: 12, color: colors.lavenderText },
   sampleChip: {
     minHeight: 44,
     flexDirection: "row",

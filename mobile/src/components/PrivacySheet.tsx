@@ -1,6 +1,6 @@
-// Privacy summary sheet (research §11): six cards, one line each, shown ONCE
-// before the first upload (not at install) and reachable from Settings in
-// two taps. Every line here must stay true to the backend — if the retention
+// Privacy summary sheet (research §11): six cards, one line each. Opened from
+// the "Private · How it works" line on Reply home and from Settings — never
+// forced before an upload. Every line here must stay true to the backend — if the retention
 // rule changes, change this copy in the same PR.
 import React from "react";
 import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";

@@ -6,8 +6,6 @@ export const ASK_PENDING_KEY = "lovli_ask_pending";
 export const GOAL_KEY = "lovli_goal";
 // Local preference bag: { default_vibe, dating, notif_reminders, notif_checkin, face_id }
 export const PREFS_KEY = "lovli_prefs";
-// Research §11: the privacy summary sheet shows once, before the first upload.
-export const PRIVACY_SEEN_KEY = "lovli_privacy_seen";
 // Research §5: last-used intent per person, pre-selected next time
 // ({ [personId | "none"]: intent }).
 export const LAST_INTENT_KEY = "lovli_last_intent";
