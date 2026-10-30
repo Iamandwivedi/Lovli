@@ -62,6 +62,8 @@ from llm_service import (  # noqa: E402
     FEATURE_SUFFIXES,
     generate_feature,
     generate_replies,
+    SUGGESTED_FACTS_MAX,
+    sanitize_suggested_facts,
 )
 from db.guards import TenantScopeError, guard_status, tenant_guarded, unscoped
 from db.indexes import describe_indexes, sync_indexes
@@ -623,6 +625,16 @@ def _extra_memory_context(mc: dict) -> str:
     return " ".join(bits)
 
 
+def _dedupe_suggested_facts(facts: list[dict], mc: dict) -> list[dict]:
+    """PR-NOTED: drop proposals whose text already sits on the card's `facts`
+    (case-insensitive, whitespace-normalized) so "Noted:" never re-asks."""
+    existing: set[str] = set()
+    for f in mc.get("facts") or []:
+        if isinstance(f, dict) and isinstance(f.get("text"), str):
+            existing.add(" ".join(f["text"].split()).lower())
+    return [f for f in facts if " ".join(f["text"].split()).lower() not in existing]
+
+
 
 @api.post(
     "/generate-replies",
@@ -795,6 +807,9 @@ async def generate_replies_endpoint(
                 outcome=outcome,
                 goal=goal,
                 style_context=style_context,
+                # PR-NOTED: ask for "Noted:" proposals only when there is a card
+                # to keep them on (and only rich mode knows the field).
+                suggest_facts=bool(rich and mc),
             )
         )
     except LovliLlmError as e:
@@ -852,6 +867,19 @@ async def generate_replies_endpoint(
                 "whats_going_on": str(rich_read.get("situation") or ""),
                 "wingman_advice": wingman,
             }
+
+    # PR-NOTED: grounded "Noted:" proposals. Present (possibly []) only when
+    # rich=true AND the memory card resolved; None otherwise so exclude_none
+    # keeps the legacy and plain-rich shapes byte-identical. The model only
+    # proposes — the client PATCHes a kept fact onto the card itself.
+    rich_suggested_facts: Optional[list[dict]] = None
+    if rich and mc:
+        # Clean → drop what the card already knows → then cap, so a stale
+        # proposal never crowds out a genuinely new one.
+        rich_suggested_facts = _dedupe_suggested_facts(
+            sanitize_suggested_facts(result.get("suggested_facts"), max_items=None),
+            mc,
+        )[:SUGGESTED_FACTS_MAX]
 
     gen = Generation(
         user_id=user_id,
@@ -928,6 +956,7 @@ async def generate_replies_endpoint(
             if mem_plan is not None
             else None
         ),  # type: ignore[arg-type]  # dict → MemoryUsed
+        suggested_facts=rich_suggested_facts,  # type: ignore[arg-type]  # dict → SuggestedFact
     )
 
 

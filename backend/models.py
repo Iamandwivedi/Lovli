@@ -335,6 +335,14 @@ class ReplyInsight(BaseModel):
     wingman_advice: str
 
 
+class SuggestedFact(BaseModel):
+    """PR-NOTED additive: one grounded "Noted:" proposal the client may Keep
+    onto the selected memory card's `facts`. Same shape as FactEntry so the
+    client can PATCH it through unchanged."""
+    text: str
+    kind: Literal["like", "avoid", "date"] = "like"
+
+
 class GenerateRepliesResponse(BaseModel):
     generation_id: str
     replies: List[str]
@@ -353,6 +361,11 @@ class GenerateRepliesResponse(BaseModel):
     # PR-M5 additive: present only when the memory engine personalized this
     # response (flag on + enough learned signal). exclude_none hides it otherwise.
     memory_used: Optional[MemoryUsed] = None
+    # PR-NOTED additive: up to 2 facts the model noticed the OTHER person say
+    # (places, plans, likes, dislikes, dates). Present (possibly []) only when
+    # rich=true AND a memory_card_id resolved to a card; None otherwise so the
+    # legacy and plain-rich shapes stay byte-identical (exclude_none).
+    suggested_facts: Optional[List[SuggestedFact]] = None
 
 
 class UsageResponse(BaseModel):

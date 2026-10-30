@@ -275,6 +275,11 @@ RICH_LABELS_ALLOWED = (
 )
 _RICH_LABEL_LC = {lbl.lower(): lbl for lbl in RICH_LABELS_ALLOWED}
 RICH_TEMPERATURE_ALLOWED = ("interested", "neutral", "cold")
+# PR-NOTED: fact kinds mirror models.FactEntry.kind so a kept proposal can be
+# PATCHed onto the memory card unchanged.
+SUGGESTED_FACT_KINDS = ("like", "avoid", "date")
+SUGGESTED_FACTS_MAX = 2
+_SUGGESTED_FACT_TEXT_MAX = 160
 
 
 def build_user_prompt_v2(
@@ -291,8 +296,13 @@ def build_user_prompt_v2(
     outcome: Optional[str] = None,
     goal: Optional[str] = None,
     style_context: Optional[str] = None,
+    suggest_facts: bool = False,
 ) -> str:
     """Rich-mode prompt: situation read + 3 register-differentiated labeled replies.
+
+    suggest_facts (PR-NOTED, additive): when True the schema gains an optional
+    `suggested_facts` list (up to 2 grounded facts the OTHER person stated) for
+    the "Noted:" card. Default False keeps the rich prompt byte-identical.
 
     Same language/platform/vibe scaffolding as build_user_prompt — the rich
     instruction is appended on top so Claude keeps every other rule.
@@ -356,10 +366,31 @@ def build_user_prompt_v2(
         '    {"text": "...", "label": "Flirty"},\n'
         '    {"text": "...", "label": "Bold"}\n'
         "  ],\n"
-        '  "tone_notes": "1 short sentence on why these work",\n'
+        + (
+            '  "suggested_facts": [{"text": "short fact the OTHER person stated", "kind": "like | avoid | date"}],\n'
+            if suggest_facts
+            else ""
+        )
+        + '  "tone_notes": "1 short sentence on why these work",\n'
         '  "wingman_advice": "one honest first-person line — what you would do next if you were the user\'s wingman (no scores, no percentages)"\n'
         "}"
     )
+    if suggest_facts:
+        parts.append(
+            "MEMORY NOTES (suggested_facts): the user keeps a memory card for this "
+            "person. If the OTHER person said something concrete about themselves "
+            "in this chat \u2014 a place, a plan, something they like, something "
+            f"they dislike, a date \u2014 list at most {SUGGESTED_FACTS_MAX} of them "
+            "as suggested_facts. Each text is one short plain phrase (max ~10 "
+            "words) about them, e.g. {\"text\": \"likes chai dates\", \"kind\": "
+            "\"like\"} or {\"text\": \"lives in Koramangala\", \"kind\": \"like\"}. "
+            "kind = like (things they enjoy or details about them), avoid (things "
+            "they dislike or asked not to do), date (a plan or date they "
+            "mentioned). Only what the other person ACTUALLY said in the chat "
+            "\u2014 never infer, never guess, nothing from the user's own messages, "
+            "and nothing already covered by the memory context above. When "
+            "nothing concrete was said, return an empty list []."
+        )
     parts.append(
         "General rules: each reply text must be 1-3 sentences max, sound like a "
         "real Indian Gen-Z / millennial would text, match the selected vibe, and "
@@ -435,6 +466,56 @@ def validate_payload_v2(payload: dict) -> None:
     if not isinstance(wingman, str) or not wingman.strip():
         payload.pop("wingman_advice", None)
 
+    # PR-NOTED: suggested_facts is soft-optional too — junk is dropped item by
+    # item, never fails the generation. Absent/invalid → key removed.
+    if "suggested_facts" in payload:
+        cleaned = sanitize_suggested_facts(payload.get("suggested_facts"))
+        if cleaned:
+            payload["suggested_facts"] = cleaned
+        else:
+            payload.pop("suggested_facts", None)
+
+
+def sanitize_suggested_facts(
+    value: object, *, max_items: Optional[int] = SUGGESTED_FACTS_MAX
+) -> list[dict]:
+    """PR-NOTED: defensively coerce model output into [{text, kind}].
+
+    Accepts a list of {"text": str, "kind": str} objects (bare strings are
+    treated as kind="like"). Trims text, drops empty / non-string / overlong
+    items, lowercases kind and falls back to "like" when it is not one of
+    SUGGESTED_FACT_KINDS, de-duplicates case-insensitively and caps the list at
+    max_items (None = no cap; the endpoint caps after de-duping against the
+    card). Anything that is not a list → [].
+    """
+    if not isinstance(value, list):
+        return []
+    out: list[dict] = []
+    seen: set[str] = set()
+    for item in value:
+        if isinstance(item, str):
+            text, kind = item, "like"
+        elif isinstance(item, dict):
+            text, kind = item.get("text"), item.get("kind")
+        else:
+            continue
+        if not isinstance(text, str):
+            continue
+        text = " ".join(text.split())
+        if not text or len(text) > _SUGGESTED_FACT_TEXT_MAX:
+            continue
+        key = text.lower()
+        if key in seen:
+            continue
+        kind_lc = kind.strip().lower() if isinstance(kind, str) else ""
+        if kind_lc not in SUGGESTED_FACT_KINDS:
+            kind_lc = "like"
+        seen.add(key)
+        out.append({"text": text, "kind": kind_lc})
+        if max_items is not None and len(out) >= max_items:
+            break
+    return out
+
 
 # ----- Provider abstraction -------------------------------------------------
 
@@ -461,6 +542,10 @@ class LovliRequest:
     # PR-M5 (additive): learned texting-style prompt block. None → prompts
     # byte-identical to pre-memory-engine builds.
     style_context: Optional[str] = None
+    # PR-NOTED (additive): ask the rich prompt for up to 2 grounded
+    # suggested_facts. Only honoured when rich=True; default False keeps every
+    # prompt byte-identical.
+    suggest_facts: bool = False
 
 
 class LovliLlmError(RuntimeError):
@@ -487,7 +572,7 @@ async def _generate_anthropic(req: LovliRequest, retry: bool = False) -> dict:
     model = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-5-20250929")
 
     prompt_builder = build_user_prompt_v2 if req.rich else build_user_prompt
-    user_prompt = prompt_builder(
+    prompt_kwargs: dict = dict(
         platform=req.platform,
         vibe=req.vibe,
         language=req.language,
@@ -501,6 +586,10 @@ async def _generate_anthropic(req: LovliRequest, retry: bool = False) -> dict:
         goal=req.goal,
         style_context=req.style_context,
     )
+    if req.rich:
+        # PR-NOTED: only the rich builder knows about fact proposals.
+        prompt_kwargs["suggest_facts"] = req.suggest_facts
+    user_prompt = prompt_builder(**prompt_kwargs)
     if retry:
         if req.rich:
             user_prompt = (
@@ -575,7 +664,7 @@ async def _generate_emergent(req: LovliRequest, retry: bool = False) -> dict:
         raise LovliLlmError("EMERGENT_LLM_KEY not configured")
 
     prompt_builder = build_user_prompt_v2 if req.rich else build_user_prompt
-    user_prompt = prompt_builder(
+    prompt_kwargs: dict = dict(
         platform=req.platform,
         vibe=req.vibe,
         language=req.language,
@@ -589,6 +678,10 @@ async def _generate_emergent(req: LovliRequest, retry: bool = False) -> dict:
         goal=req.goal,
         style_context=req.style_context,
     )
+    if req.rich:
+        # PR-NOTED: only the rich builder knows about fact proposals.
+        prompt_kwargs["suggest_facts"] = req.suggest_facts
+    user_prompt = prompt_builder(**prompt_kwargs)
     if retry:
         if req.rich:
             user_prompt = (
