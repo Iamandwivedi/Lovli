@@ -66,3 +66,43 @@ const early = upcomingWithDates(cards, new Date(2026, 5, 15, 8, 0, 0));
 assert.strictEqual(early.length, 2, "today's 9AM reminder included when now < 9AM");
 console.log("upcomingWithDates: 6/6 assertions pass");
 console.log("ALL PURE-LOGIC TESTS PASS");
+
+// ---- reply-logic (research §5): user_note folding + continuity strip ------
+const { buildUserNote, continuityLine, relativeDays } = loadTs("src/utils/reply-logic.ts");
+assert.strictEqual(buildUserNote(null, "", undefined), undefined, "empty note is undefined");
+assert.strictEqual(buildUserNote("They went cold", "", null), "Situation: they went cold.");
+assert.strictEqual(
+  buildUserNote("First message", "  her bio says she hikes ", "Funny"),
+  "Situation: first message. Note from me: her bio says she hikes Tone adjustment: make the reply funny.",
+);
+console.log("buildUserNote: 3/3 pass");
+
+const today = new Date(2026, 9, 30); // 30 Oct 2026
+assert.strictEqual(relativeDays("2026-10-30", today), "today");
+assert.strictEqual(relativeDays("2026-10-29", today), "yesterday");
+assert.strictEqual(relativeDays("2026-10-28", today), "2 days ago");
+assert.strictEqual(relativeDays("2026-10-31", today), "tomorrow");
+assert.strictEqual(relativeDays("2026-11-02", today), "in 3 days");
+assert.strictEqual(relativeDays("2026-08-01", today), "3 months ago");
+console.log("relativeDays: 6/6 pass");
+
+const aanya = { id: "1", nickname: "Aanya", platform: "Hinge", stage: "Talking" };
+assert.strictEqual(continuityLine(aanya, today), "Hinge · Talking", "meta fallback");
+assert.strictEqual(continuityLine({ id: "2", nickname: "X" }, today), "nothing saved yet — tap to add");
+assert.strictEqual(
+  continuityLine({ ...aanya, facts: [{ text: "likes chai dates", kind: "like" }] }, today),
+  "I remember: likes chai dates",
+);
+assert.strictEqual(
+  continuityLine({ ...aanya, timeline: [{ title: "she asked about Saturday chai", date: "2026-10-28" }] }, today),
+  "last time: she asked about Saturday chai · 2 days ago",
+);
+assert.strictEqual(
+  continuityLine(
+    { ...aanya, timeline: [{ title: "first chat", date_label: "12 Oct" }, { title: "Saturday chai", date: "2026-10-31", upcoming: true }] },
+    today,
+  ),
+  "coming up: Saturday chai · tomorrow",
+  "upcoming beats past",
+);
+console.log("continuityLine: 5/5 pass");

@@ -61,6 +61,9 @@ export type Replies = {
   insight?: ReplyInsight | null;
   // PR-M5 additive: undefined unless the backend personalized this response.
   memory_used?: MemoryUsed | null;
+  // Research §7 ("Noted"): optional facts the backend proposes about the person
+  // from this chat. The UI shows Keep / Not this and never invents its own.
+  suggested_facts?: MemoryFact[] | null;
 };
 
 export type MemoryCard = {

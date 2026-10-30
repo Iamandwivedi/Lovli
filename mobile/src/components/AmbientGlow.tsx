@@ -6,6 +6,7 @@ import { ViewStyle } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -18,15 +19,21 @@ type Props = {
 };
 
 export function AmbientGlow({ size = 400, style }: Props) {
+  const reduceMotion = useReducedMotion();
   const opacity = useSharedValue(0.5);
 
   useEffect(() => {
+    // Reduce Motion: hold a calm mid-opacity instead of breathing.
+    if (reduceMotion) {
+      opacity.value = 0.75;
+      return;
+    }
     opacity.value = withRepeat(
       withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.quad) }),
       -1,
       true,
     );
-  }, [opacity]);
+  }, [opacity, reduceMotion]);
 
   const aStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 

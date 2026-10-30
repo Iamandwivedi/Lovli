@@ -1,27 +1,20 @@
 // Reply tab — V3 glass flow as a phase machine:
 //   home → intent → generating → results
-// home:      "Kya scene hai?" + feeling check-in + compact upload/paste + ✦ Get replies
-// intent:    "Got it. I read the chat." + chat preview + WHAT DO YOU WANT? / HOW SHOULD IT LAND?
-// generating: staged 5-step loader timed to the real request
-// results:   insight + reply cards
-// NOTE (PR-V2-2): feeling/intent/outcome are stored client-side ONLY — they are
-// sent to the backend (with the onboarding goal from AsyncStorage `lovli_goal`)
-// in PR-V2-3. Language/platform/vibe defaults are sent unchanged.
+// home:       "Kya scene hai?" + person picker + continuity strip + three equal
+//             capture targets (Paste · Screenshot · Camera) + situation chips +
+//             always-visible note + feeling check-in + ✦ Get replies
+// intent:     "Got it. I read the chat." + chat preview + WHAT DO YOU WANT? /
+//             HOW SHOULD IT LAND? / REPLY LANGUAGE (last intent per person recalled)
+// generating: four truthful stages timed to the real request (StagedLoader)
+// results:    the read FIRST, then three labelled cards (middle emphasised),
+//             "Noted" fact proposal, Ask / Save / Report actions, tone chips.
+// Research doc: "Lovli UI/UX Research — What to Build", §5, §7, §11, §12.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Animated,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { Screen } from "@/src/components/Screen";
 import { AppHeader } from "@/src/components/AppHeader";
 import { GlassCard } from "@/src/components/GlassCard";
@@ -29,34 +22,43 @@ import { Chip } from "@/src/components/Chip";
 import { Input } from "@/src/components/Input";
 import { PrimaryButton } from "@/src/components/PrimaryButton";
 import { PersonChip } from "@/src/components/PersonChip";
+import { PrivacySheet } from "@/src/components/PrivacySheet";
+import { Sparkle } from "@/src/components/Sparkle";
 import { ChatPreview } from "@/src/components/reply/ChatPreview";
-import { StagedLoader, GENERATION_STAGES } from "@/src/components/reply/StagedLoader";
+import { ContinuityStrip } from "@/src/components/reply/ContinuityStrip";
+import { InsightCard } from "@/src/components/reply/InsightCard";
+import { NotedCard } from "@/src/components/reply/NotedCard";
+import { ReplyCard, REPLY_LABEL_FALLBACK } from "@/src/components/reply/ReplyCard";
+import { ResultActions } from "@/src/components/reply/ResultActions";
+import { SituationSection, buildUserNote } from "@/src/components/reply/SituationChips";
+import { StagedLoader, STAGE_MS, buildGenerationStages } from "@/src/components/reply/StagedLoader";
 import { parseChatText } from "@/src/utils/chatParse";
 import { storage } from "@/src/utils/storage";
-import { GOAL_KEY, PREFS_KEY } from "@/src/config/storage-keys";
+import { ASK_PENDING_KEY, GOAL_KEY, LAST_INTENT_KEY, PREFS_KEY, PRIVACY_SEEN_KEY } from "@/src/config/storage-keys";
 import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
-import { Sparkle } from "@/src/components/Sparkle";
-import { flags } from "@/src/config/flags";
+import { haptic } from "@/src/lib/haptics";
+import { compressForUpload } from "@/src/lib/image-compress";
 import { trackEvent } from "@/src/lib/memory-events";
 import {
   Language,
   MemoryCard,
+  MemoryFact,
   PlatformLabel,
   Replies,
-  ReplyInsight,
   ReplyRead,
   Vibe,
   generateReplies,
   getUsage,
   getClientLocalDate,
   listMemoryCards,
+  patchMemoryCard,
   platformLabelToValue,
   platformValueToLabel,
   postFeedback,
 } from "@/src/api/endpoints";
 import { extractErrorMessage } from "@/src/api/client";
-import { colors, fontSize, radii, space, typography } from "@/src/theme";
+import { colors, radii, space, typography } from "@/src/theme";
 
 type Phase = "home" | "intent" | "generating" | "results";
 type Pick = ImagePicker.ImagePickerAsset;
@@ -80,33 +82,50 @@ const OUTCOMES = [
   "Be mature",
 ];
 const LANGUAGES: Language[] = ["English", "Hinglish", "Hindi + English mixed"];
-// PR-V2-3: "OR MAKE IT…" tone chips — regenerate with a tone hint.
+// "OR MAKE IT…" tone chips — regenerate with a tone hint.
 const TONES = ["Funny", "Romantic", "Confident", "Shorter", "Longer"];
-// PR-M6: quick feedback chips — each one teaches the memory engine.
-const FEEDBACK_CHIPS = ["Not my style", "Too much", "Too formal", "Cringe"];
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+
+const niceToday = () =>
+  new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 
 export default function ReplyScreen() {
   const { user, updateUser } = useAuth();
   const toast = useToast();
+  const router = useRouter();
 
   const [phase, setPhase] = useState<Phase>("home");
   const [image, setImage] = useState<Pick | null>(null);
   const [manual, setManual] = useState("");
   const [feeling, setFeeling] = useState<string | null>(null);
+  const [situation, setSituation] = useState<string | null>(null);
+  const [note, setNote] = useState("");
   const [intent, setIntent] = useState<string>("Reply");
+  const [intentRecalled, setIntentRecalled] = useState(false);
   const [outcome, setOutcome] = useState<string | null>(null);
-  // PR-V2-3: onboarding goal (lovli_goal) rides along with every generation.
   const [goalPref, setGoalPref] = useState<string>("");
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const privacySeen = useRef<boolean | null>(null);
+  const afterPrivacy = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     storage
       .getItem<string>(GOAL_KEY, "")
       .then((g) => setGoalPref(typeof g === "string" ? g : ""))
       .catch(() => {});
+    storage
+      .getItem<boolean>(PRIVACY_SEEN_KEY, false)
+      .then((v) => {
+        privacySeen.current = v === true;
+      })
+      .catch(() => {
+        privacySeen.current = false;
+      });
   }, []);
+
   const [stage, setStage] = useState(0);
   const [result, setResult] = useState<Replies | null>(null);
-  // PR-V2-3.1: per-generation overrides — reset to defaults on each new flow.
+  const [lastCopied, setLastCopied] = useState<string | null>(null);
   const [language, setLanguage] = useState<Language>(
     (user?.language_preference as Language) || "Hinglish",
   );
@@ -118,10 +137,14 @@ export default function ReplyScreen() {
     plan: user?.plan ?? "free",
   });
 
-  // Settings defaults — sent unchanged unless overridden on the Intent screen.
   const defaultLanguage: Language = (user?.language_preference as Language) || "Hinglish";
   const platform: PlatformLabel = platformValueToLabel(user?.preferred_platform || "instagram");
   const [vibe, setVibe] = useState<Vibe>("Playful");
+
+  const person = useMemo(
+    () => (memoryId ? memoryCards.find((c) => c.id === memoryId) || null : null),
+    [memoryId, memoryCards],
+  );
 
   const refreshContext = useCallback(async () => {
     try {
@@ -142,7 +165,6 @@ export default function ReplyScreen() {
     try {
       const cards = await listMemoryCards();
       setMemoryCards(cards || []);
-      // Final PR: drop a stale selection if that person was deleted.
       setMemoryId((cur) => (cur && !(cards || []).some((c) => c.id === cur) ? null : cur));
     } catch {
       setMemoryCards([]);
@@ -155,24 +177,22 @@ export default function ReplyScreen() {
     }, [refreshContext]),
   );
 
-  // Bug fix (PR-V2-3.1): on cold boot the focus effect can fire before the auth
-  // token is restored → memory-cards fetch 401s and the person row stayed hidden.
-  // Refetch once the user is actually loaded.
   useEffect(() => {
     if (user?.id) refreshContext();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  // Staged loader: advance sequentially (~650ms per stage), hold on the last
-  // until the real request resolves.
+  // Staged loader: advance every STAGE_MS, hold on the last stage until the
+  // real request resolves.
+  const stages = useMemo(() => buildGenerationStages(person?.nickname), [person?.nickname]);
   useEffect(() => {
     if (phase !== "generating") return;
     setStage(0);
     const id = setInterval(() => {
-      setStage((s) => Math.min(s + 1, GENERATION_STAGES.length - 1));
-    }, 650);
+      setStage((s) => Math.min(s + 1, stages.length - 1));
+    }, STAGE_MS);
     return () => clearInterval(id);
-  }, [phase]);
+  }, [phase, stages.length]);
 
   const remaining = useMemo(() => {
     if (usage.plan === "pro") return Infinity;
@@ -184,85 +204,158 @@ export default function ReplyScreen() {
     [manual],
   );
 
-  const pickImage = async () => {
-    try {
-      const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
-      let granted = status === "granted";
-      if (!granted) {
-        const req = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        granted = req.status === "granted";
-        if (!granted && !req.canAskAgain) {
-          toast.error("Enable Photos in Settings to upload a screenshot.");
+  // --- Privacy gate: the summary sheet shows once, before the first upload ---
+  const withPrivacyGate = (action: () => void) => {
+    if (privacySeen.current) {
+      action();
+      return;
+    }
+    afterPrivacy.current = action;
+    setPrivacyOpen(true);
+  };
+  const acceptPrivacy = () => {
+    privacySeen.current = true;
+    storage.setItem(PRIVACY_SEEN_KEY, true).catch(() => {});
+    setPrivacyOpen(false);
+    const next = afterPrivacy.current;
+    afterPrivacy.current = null;
+    // Let the modal finish dismissing before the system picker presents.
+    if (next) setTimeout(next, 350);
+  };
+
+  const acceptAsset = (asset: Pick) => {
+    if (asset.fileSize && asset.fileSize > MAX_IMAGE_BYTES) {
+      toast.error("This image is too large.");
+      return;
+    }
+    setImage(asset);
+  };
+
+  const pickImage = () =>
+    withPrivacyGate(async () => {
+      try {
+        const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
+        let granted = status === "granted";
+        if (!granted) {
+          const req = await ImagePicker.requestMediaLibraryPermissionsAsync();
+          granted = req.status === "granted";
+          if (!granted && !req.canAskAgain) {
+            toast.error("Enable Photos in Settings to upload a screenshot.");
+            return;
+          }
+          if (!granted) return;
+        }
+        const res = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ["images"],
+          allowsMultipleSelection: false,
+          quality: 0.85,
+          exif: false,
+        });
+        if (res.canceled) return;
+        acceptAsset(res.assets[0]);
+      } catch {
+        toast.error("Could not open your photos.");
+      }
+    });
+
+  const takePhoto = () =>
+    withPrivacyGate(async () => {
+      try {
+        const req = await ImagePicker.requestCameraPermissionsAsync();
+        if (req.status !== "granted") {
+          toast.error(req.canAskAgain ? "I need the camera for that." : "Enable Camera in Settings to use it.");
           return;
         }
-        if (!granted) return;
+        const res = await ImagePicker.launchCameraAsync({ quality: 0.85, exif: false });
+        if (res.canceled) return;
+        acceptAsset(res.assets[0]);
+      } catch {
+        toast.error("Could not open the camera.");
       }
-      const res = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        allowsMultipleSelection: false,
-        quality: 0.85,
-        exif: false,
-      });
-      if (res.canceled) return;
-      const asset = res.assets[0];
-      if (asset.fileSize && asset.fileSize > 8 * 1024 * 1024) {
-        toast.error("This image is too large.");
+    });
+
+  // Explicit paste on tap only — the clipboard is never auto-read.
+  const pasteFromClipboard = async () => {
+    try {
+      const text = (await Clipboard.getStringAsync()).trim();
+      if (!text) {
+        toast.error("Nothing to paste yet — copy their message first.");
         return;
       }
-      setImage(asset);
+      haptic.success();
+      setManual((cur) => (cur.trim() ? `${cur.trim()}\n${text}` : text));
     } catch {
-      toast.error("Could not open your photos.");
+      toast.error("Could not read the clipboard.");
     }
   };
 
-  const goToIntent = () => {
+  const goToIntent = async () => {
     if (!image && !manual.trim()) {
       toast.error("Show me the conversation first — screenshot or paste.");
       return;
     }
     if (usage.plan !== "pro" && remaining <= 0) {
-      toast.error("You've used today's free generations.");
+      haptic.warning();
+      toast.error("That's today's free replies — back tomorrow, or go Pro.");
       return;
     }
-    // Per-generation language override starts from the default each time.
-    // (Person selection is made on Home and carries through — reset on results→home.)
     setLanguage(defaultLanguage);
+    // Research §5: remember the last-used intent per person and pre-select it.
+    try {
+      const raw = await storage.getItem<string>(LAST_INTENT_KEY, "");
+      const map = raw ? (JSON.parse(raw) as Record<string, string>) : {};
+      const last = map[memoryId || "none"];
+      if (last && INTENTS.includes(last)) {
+        setIntent(last);
+        setIntentRecalled(true);
+      } else {
+        setIntent("Reply");
+        setIntentRecalled(false);
+      }
+    } catch {
+      setIntentRecalled(false);
+    }
     setPhase("intent");
+  };
+
+  const rememberIntent = async () => {
+    try {
+      const raw = await storage.getItem<string>(LAST_INTENT_KEY, "");
+      const map = raw ? (JSON.parse(raw) as Record<string, string>) : {};
+      map[memoryId || "none"] = intent;
+      await storage.setItem(LAST_INTENT_KEY, JSON.stringify(map));
+    } catch {
+      // best-effort
+    }
   };
 
   const startGeneration = async (toneHint?: string) => {
     setPhase("generating");
     setResult(null);
-    // Keep the staged loader readable even on fast responses.
-    const minWait = new Promise((r) => setTimeout(r, 2200));
+    setLastCopied(null);
+    rememberIntent();
+    // Four stages × STAGE_MS: the labels are readable even on a fast response,
+    // and never pad beyond real latency by more than one stage.
+    const minWait = new Promise((r) => setTimeout(r, STAGE_MS * stages.length));
     try {
       const [data] = await Promise.all([
-        generateReplies({
-          platform: platformLabelToValue(platform),
-          vibe,
-          language,
-          manual_text: manual,
-          memory_card_id: memoryId,
-          rich: true,
-          // PR-V2-3: emotional/intent context, folded into the prompt.
-          feeling,
-          intent,
-          outcome,
-          goal: goalPref,
-          // "OR MAKE IT…" chips regenerate with a tone hint.
-          user_note: toneHint
-            ? `Tone adjustment: make the reply ${toneHint.toLowerCase()}.`
-            : undefined,
-          image: image
-            ? {
-                uri: image.uri,
-                name:
-                  image.fileName ||
-                  `chat.${(image.mimeType || "image/jpeg").split("/").pop()}`,
-                type: image.mimeType || "image/jpeg",
-              }
-            : null,
-        }),
+        (async () => {
+          const upload = image ? await compressForUpload(image) : null;
+          return generateReplies({
+            platform: platformLabelToValue(platform),
+            vibe,
+            language,
+            manual_text: manual,
+            memory_card_id: memoryId,
+            rich: true,
+            feeling,
+            intent,
+            outcome,
+            goal: goalPref,
+            user_note: buildUserNote(situation, note, toneHint),
+            image: upload,
+          });
+        })(),
         minWait,
       ]);
       setResult(data);
@@ -289,10 +382,8 @@ export default function ReplyScreen() {
   const onCopy = async (text: string, index: number) => {
     try {
       await Clipboard.setStringAsync(text);
-      toast.success("Copied — go get 'em.");
+      setLastCopied(text);
       if (result?.generation_id) {
-        // PR-M2: the richer event first so the reducer's (generation_id, index)
-        // dedupe keeps the payload that carries label + text.
         trackEvent(
           "reply_copied",
           {
@@ -311,14 +402,14 @@ export default function ReplyScreen() {
     }
   };
 
-  // PR-M2: user edits to AI output are the highest-value style signal.
-  const onEditCommitted = (original: string, edited: string) => {
+  // User edits to AI output are the highest-value style signal.
+  const onEditCommitted = (index: number) => (original: string, edited: string) => {
     if (!result?.generation_id || original === edited) return;
     trackEvent(
       "reply_edited",
       {
         generation_id: result.generation_id,
-        variant_index: 0,
+        variant_index: index,
         generated_text: original,
         edited_text: edited,
         surface: "reply",
@@ -327,19 +418,13 @@ export default function ReplyScreen() {
     );
   };
 
-  const trackRejected = (reason: string) => {
-    if (!result?.generation_id) return;
+  const onMoreLikeThis = (index: number, label: string, text: string) => {
     trackEvent(
-      "reply_rejected",
-      {
-        generation_id: result.generation_id,
-        index: 0,
-        label: (result.reply_labels?.[0] || "").trim(),
-        reason,
-        surface: "reply",
-      },
+      "tone_selected",
+      { tone: `more like ${label}`, index, generation_id: result?.generation_id, surface: "reply" },
       memoryId,
     );
+    startGeneration(`closer to the ${label.toLowerCase()} option — "${text}"`);
   };
 
   const onToneChip = (tone: string) => {
@@ -351,21 +436,72 @@ export default function ReplyScreen() {
     startGeneration(tone);
   };
 
-  const onFeedbackChip = (chip: string) => {
+  const onReportBadRead = (reason: string) => {
     if (!result?.generation_id) return;
     trackEvent(
       "feedback_chip",
-      {
-        chip,
-        generation_id: result.generation_id,
-        index: 0,
-        label: (result.reply_labels?.[0] || "").trim(),
-        surface: "reply",
-      },
+      { chip: reason, generation_id: result.generation_id, index: 0, surface: "reply", target: "read" },
       memoryId,
     );
-    toast.success("Got it — Lovli will adjust.");
   };
+
+  const onAskLovli = async () => {
+    if (!result) return;
+    const insight = safeInsight(result.insight);
+    const lead = insight ? `${insight.whats_going_on} ` : "";
+    const text =
+      `Lovli, about this chat — ${lead}you suggested: "${result.replies[0] || ""}". ` +
+      "What should I keep in mind before I send?";
+    await storage.setItem(ASK_PENDING_KEY, JSON.stringify({ text, personId: memoryId }));
+    router.push("/(tabs)/ask-lovli");
+  };
+
+  const onSaveToMemory = async () => {
+    if (!person || !lastCopied) return;
+    try {
+      const updated = await patchMemoryCard(person.id, {
+        timeline: [
+          ...(person.timeline || []),
+          {
+            title: "You sent a reply",
+            date_label: niceToday(),
+            date: getClientLocalDate(),
+            detail: lastCopied,
+            upcoming: false,
+          },
+        ],
+      });
+      setMemoryCards((cur) => cur.map((c) => (c.id === updated.id ? updated : c)));
+      haptic.success();
+      toast.success(`Saved to ${person.nickname}'s story.`);
+    } catch (err) {
+      toast.error(extractErrorMessage(err, "Could not save that."));
+    }
+  };
+
+  const onKeepFact = async (fact: MemoryFact) => {
+    if (!person) return;
+    try {
+      const updated = await patchMemoryCard(person.id, {
+        facts: [...(person.facts || []), fact],
+      });
+      setMemoryCards((cur) => cur.map((c) => (c.id === updated.id ? updated : c)));
+    } catch (err) {
+      toast.error(extractErrorMessage(err, "Could not save that."));
+      throw err;
+    }
+  };
+
+  const resetFlow = () => {
+    setMemoryId(null);
+    setSituation(null);
+    setNote("");
+    setIntentRecalled(false);
+    setPhase("home");
+  };
+
+  const creditsText =
+    usage.plan === "pro" ? "Pro" : remaining <= 0 ? "Back tomorrow, or go Pro" : `${remaining} left today`;
 
   return (
     <Screen
@@ -378,16 +514,26 @@ export default function ReplyScreen() {
           image={image}
           manual={manual}
           feeling={feeling}
+          situation={situation}
+          note={note}
           memoryCards={memoryCards}
           memoryId={memoryId}
+          person={person}
           onToggleMemory={(id) => setMemoryId((cur) => (cur === id ? null : id))}
+          onOpenPerson={(id) => router.push(`/memory/${id}`)}
           onChangeManual={setManual}
           onToggleFeeling={(f) => setFeeling((cur) => (cur === f ? null : f))}
           onSkipFeeling={() => setFeeling(null)}
+          onSituation={setSituation}
+          onNote={setNote}
           onPickImage={pickImage}
+          onTakePhoto={takePhoto}
+          onPaste={pasteFromClipboard}
           onRemoveImage={() => setImage(null)}
+          onTrySample={() => router.push("/sample")}
           onContinue={goToIntent}
-          creditsText={usage.plan === "pro" ? "Pro" : `${remaining} free left`}
+          creditsText={creditsText}
+          outOfCredits={usage.plan !== "pro" && remaining <= 0}
         />
       ) : null}
 
@@ -402,14 +548,24 @@ export default function ReplyScreen() {
             <ChatPreview messages={parsedMessages} imageUri={image?.uri} />
 
             <View>
-              <Text style={styles.sectionLabel}>WHAT DO YOU WANT?</Text>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionLabel}>WHAT DO YOU WANT?</Text>
+                {intentRecalled ? (
+                  <Text style={styles.sectionCaption} testID="intent-recalled">
+                    same as last time
+                  </Text>
+                ) : null}
+              </View>
               <View style={styles.chipsRow}>
                 {INTENTS.map((it) => (
                   <Chip
                     key={it}
                     label={it}
                     selected={intent === it}
-                    onPress={() => setIntent(it)}
+                    onPress={() => {
+                      setIntent(it);
+                      setIntentRecalled(false);
+                    }}
                     testID={`intent-${it}`}
                   />
                 ))}
@@ -431,7 +587,6 @@ export default function ReplyScreen() {
               </View>
             </View>
 
-            {/* PR-V2-3.1: per-generation language override (doesn't change the saved default) */}
             <View>
               <Text style={styles.sectionLabel}>REPLY LANGUAGE</Text>
               <View style={styles.chipsRow}>
@@ -456,99 +611,89 @@ export default function ReplyScreen() {
         </>
       ) : null}
 
-      {phase === "generating" ? <StagedLoader activeIndex={stage} /> : null}
+      {phase === "generating" ? <StagedLoader activeIndex={stage} stages={stages} /> : null}
 
       {phase === "results" && result ? (
         <>
-          <BackHeader
-            title="Three ways to say it"
-            onBack={() => {
-              // New flow starts fresh: person selection resets to "No one".
-              setMemoryId(null);
-              setPhase("home");
-            }}
-          />
+          <BackHeader title="Three ways to say it" onBack={resetFlow} />
           <View testID="reply-results-block" style={{ gap: space.l }}>
             {(() => {
               const insight = safeInsight(result.insight);
-              if (insight) {
-                // PR-V2-3 "Generated" surface.
-                return (
-                  <>
-                    <InsightCard insight={insight} />
-                    {flags.MEMORY_UI_ENABLED && result.memory_used?.is_personalized ? (
-                      <SoundsLikeYouPill signals={result.memory_used.signals} />
-                    ) : null}
-                    <PrimaryReplyCard
-                      key={result.generation_id}
-                      text={result.replies[0] ?? ""}
-                      toneLabel={(result.reply_labels?.[0] || "Smooth").trim()}
-                      onCopy={(t) => onCopy(t, 0)}
-                      onEditCommitted={onEditCommitted}
-                      onRegenerate={() => {
-                        trackRejected("regenerated");
-                        startGeneration();
-                      }}
-                    />
-                    {result.replies.slice(1, 3).map((reply, offset) => (
-                      <ReplyResultCard
-                        key={`${result.generation_id}-alt-${offset + 1}`}
-                        text={reply}
-                        toneLabel={(result.reply_labels?.[offset + 1] || "Smooth").trim()}
-                        index={offset + 1}
-                        onCopy={() => onCopy(reply, offset + 1)}
-                        onRegenerate={() => startGeneration()}
-                      />
-                    ))}
-                    {flags.MEMORY_UI_ENABLED ? (
-                      <FeedbackChipsRow
-                        key={`fb-${result.generation_id}`}
-                        onChip={onFeedbackChip}
-                      />
-                    ) : null}
-                    <View>
-                      <Text style={styles.sectionLabel}>OR MAKE IT…</Text>
-                      <View style={styles.chipsRow}>
-                        {TONES.map((t) => (
-                          <Chip
-                            key={t}
-                            label={t}
-                            selected={false}
-                            onPress={() => onToneChip(t)}
-                            testID={`tone-${t}`}
-                          />
-                        ))}
-                      </View>
-                    </View>
-                  </>
-                );
-              }
-              // Fallback: insight missing → pre-V2-3 behavior.
-              const read = safeRead(result.read);
+              const labels = result.replies.map((_, i) =>
+                (result.reply_labels?.[i] || "").trim() || REPLY_LABEL_FALLBACK[Math.min(i, 2)],
+              );
+              const styleSignals = result.memory_used?.is_personalized
+                ? result.memory_used.signals
+                : null;
+              const suggestions = (result.suggested_facts || []).filter(
+                (f) => f && typeof f.text === "string" && f.text.trim(),
+              );
+              const read = insight ? null : safeRead(result.read);
               return (
                 <>
-                  {read ? <ReadCard read={read} /> : null}
-                  {result.replies.map((reply, i) => {
-                    const richLabel = Array.isArray(result.reply_labels)
-                      ? (result.reply_labels[i] || "").trim()
-                      : "";
-                    return (
-                      <ReplyResultCard
-                        key={`${result.generation_id}-${i}`}
-                        text={reply}
-                        toneLabel={richLabel || "Warm"}
-                        index={i}
-                        onCopy={() => onCopy(reply, i)}
-                        onRegenerate={() => startGeneration()}
-                      />
-                    );
-                  })}
+                  {insight ? <InsightCard insight={insight} /> : read ? <ReadCard read={read} /> : null}
+                  {person ? (
+                    <RememberedChip person={person} onEdit={() => router.push(`/memory/${person.id}`)} />
+                  ) : null}
+                  {result.replies.slice(0, 3).map((reply, i) => (
+                    <ReplyCard
+                      key={`${result.generation_id}-${i}`}
+                      text={reply}
+                      label={labels[i]}
+                      index={i}
+                      emphasized={i === 1}
+                      styleSignals={styleSignals}
+                      onCopy={(t) => onCopy(t, i)}
+                      onEditCommitted={onEditCommitted(i)}
+                      onMoreLikeThis={() => onMoreLikeThis(i, labels[i], reply)}
+                    />
+                  ))}
+                  {person && suggestions.length > 0 ? (
+                    <NotedCard
+                      key={`noted-${result.generation_id}`}
+                      personName={person.nickname}
+                      suggestions={suggestions}
+                      onKeep={onKeepFact}
+                    />
+                  ) : null}
+                  <ResultActions
+                    key={`actions-${result.generation_id}`}
+                    personName={person?.nickname}
+                    canSave={!!lastCopied}
+                    onAskLovli={onAskLovli}
+                    onSave={onSaveToMemory}
+                    onReport={onReportBadRead}
+                  />
+                  <View>
+                    <Text style={styles.sectionLabel}>OR MAKE IT…</Text>
+                    <View style={styles.chipsRow}>
+                      {TONES.map((t) => (
+                        <Chip
+                          key={t}
+                          label={t}
+                          selected={false}
+                          onPress={() => onToneChip(t)}
+                          testID={`tone-${t}`}
+                        />
+                      ))}
+                    </View>
+                  </View>
                 </>
               );
             })()}
           </View>
         </>
       ) : null}
+
+      <PrivacySheet
+        visible={privacyOpen}
+        onClose={() => {
+          afterPrivacy.current = null;
+          setPrivacyOpen(false);
+        }}
+        primaryLabel="Got it — pick a screenshot"
+        onPrimary={acceptPrivacy}
+      />
     </Screen>
   );
 }
@@ -558,30 +703,50 @@ const HomePhase: React.FC<{
   image: Pick | null;
   manual: string;
   feeling: string | null;
+  situation: string | null;
+  note: string;
   memoryCards: MemoryCard[];
   memoryId: string | null;
+  person: MemoryCard | null;
   onToggleMemory: (id: string) => void;
+  onOpenPerson: (id: string) => void;
   onChangeManual: (v: string) => void;
   onToggleFeeling: (f: string) => void;
   onSkipFeeling: () => void;
+  onSituation: (s: string | null) => void;
+  onNote: (v: string) => void;
   onPickImage: () => void;
+  onTakePhoto: () => void;
+  onPaste: () => void;
   onRemoveImage: () => void;
+  onTrySample: () => void;
   onContinue: () => void;
   creditsText: string;
+  outOfCredits: boolean;
 }> = ({
   image,
   manual,
   feeling,
+  situation,
+  note,
   memoryCards,
   memoryId,
+  person,
   onToggleMemory,
+  onOpenPerson,
   onChangeManual,
   onToggleFeeling,
   onSkipFeeling,
+  onSituation,
+  onNote,
   onPickImage,
+  onTakePhoto,
+  onPaste,
   onRemoveImage,
+  onTrySample,
   onContinue,
   creditsText,
+  outOfCredits,
 }) => (
   <>
     <AppHeader credits={{ text: creditsText, tone: creditsText === "Pro" ? "pro" : "default" }} />
@@ -590,65 +755,67 @@ const HomePhase: React.FC<{
       <Text style={styles.h1} testID="reply-heading">
         Kya scene hai?
       </Text>
-      <Text style={styles.sub}>
-        Tell me what happened — or just show me the conversation.
-      </Text>
+      <Text style={styles.sub}>Overthinking their last text? Paste it — I'll read it with you.</Text>
     </View>
 
-    {/* Emotional check-in — optional, single-select toggle */}
-    <View testID="feeling-section">
-      <View style={styles.feelingHeader}>
-        <Text style={styles.sectionLabel}>HOW ARE YOU FEELING?</Text>
-        <Pressable onPress={onSkipFeeling} hitSlop={10} testID="feeling-skip">
-          <Text style={styles.skipText}>Skip</Text>
-        </Pressable>
+    {/* Person picker — hidden entirely when no memory cards. Never blocks. */}
+    {memoryCards.length > 0 ? (
+      <View testID="person-section" style={{ gap: 10 }}>
+        <View>
+          <Text style={styles.sectionLabel}>{"WHO'S THIS ABOUT?"}</Text>
+          <View style={styles.chipsRow}>
+            <Chip
+              label="No one"
+              selected={memoryId === null}
+              onPress={() => memoryId !== null && onToggleMemory(memoryId)}
+              testID="person-none"
+            />
+            {memoryCards.map((c) => (
+              <PersonChip
+                key={c.id}
+                name={c.nickname}
+                selected={memoryId === c.id}
+                onPress={() => {
+                  haptic.selection();
+                  onToggleMemory(c.id);
+                }}
+                testID={`person-${c.id}`}
+              />
+            ))}
+          </View>
+        </View>
+        {person ? <ContinuityStrip card={person} onPress={() => onOpenPerson(person.id)} /> : null}
       </View>
-      <View style={styles.chipsRow}>
-        {FEELINGS.map((f) => (
-          <FeelingChip
-            key={f.label}
-            label={f.label}
-            color={f.color}
-            selected={feeling === f.label}
-            onPress={() => onToggleFeeling(f.label)}
-            testID={`feeling-${f.label}`}
-          />
-        ))}
-      </View>
-    </View>
+    ) : null}
 
-    {/* Upload row */}
+    {/* Hero input: three equal capture targets, 56 pt, no dropdown */}
     {image ? (
       <View style={styles.preview} testID="upload-preview">
         <Image source={{ uri: image.uri }} style={styles.previewImg} resizeMode="cover" />
         <Pressable
           onPress={onRemoveImage}
           testID="upload-remove-button"
+          accessibilityRole="button"
+          accessibilityLabel="Remove screenshot"
           style={({ pressed }) => [styles.removeBtn, pressed && { opacity: 0.8 }]}
           hitSlop={10}
         >
-          <Ionicons name="close" size={16} color={colors.text} />
+          <Ionicons name="close" size={18} color={colors.text} />
         </Pressable>
       </View>
     ) : (
-      <Pressable
-        onPress={onPickImage}
-        testID="upload-area"
-        style={({ pressed }) => [styles.upload, pressed && styles.uploadPressed]}
-      >
-        <View style={styles.uploadIcon}>
-          <Ionicons name="arrow-up" size={20} color={colors.lavender} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.uploadTitle}>Show me the conversation</Text>
-          <Text style={styles.uploadHint}>Screenshot from any chat app</Text>
-        </View>
-      </Pressable>
+      <View style={styles.targets} testID="capture-targets">
+        <CaptureTarget icon="clipboard-outline" label="Paste text" onPress={onPaste} testID="capture-paste" />
+        <CaptureTarget icon="images-outline" label="Screenshot" onPress={onPickImage} testID="upload-area" primary />
+        {Platform.OS !== "web" ? (
+          <CaptureTarget icon="camera-outline" label="Camera" onPress={onTakePhoto} testID="capture-camera" />
+        ) : null}
+      </View>
     )}
 
-    {/* Paste field */}
+    {/* Paste field — always visible so a tapped Paste has somewhere to land */}
     <Input
-      placeholder="Or paste the chat here…"
+      placeholder="Or type what they said…"
       multiline
       numberOfLines={2}
       value={manual}
@@ -657,71 +824,138 @@ const HomePhase: React.FC<{
       style={{ minHeight: 52 }}
     />
 
-    {/* PR-V2-3.1: optional person picker — hidden entirely when no memory cards.
-        Never blocks Get replies; "No one" sends no memory_card_id. */}
-    {memoryCards.length > 0 ? (
-      <View testID="person-section">
-        <Text style={styles.sectionLabel}>{"WHO'S THIS ABOUT?"}</Text>
-        <View style={styles.chipsRow}>
-          <Chip
-            label="No one"
-            selected={memoryId === null}
-            onPress={() => memoryId !== null && onToggleMemory(memoryId)}
-            testID="person-none"
-          />
-          {memoryCards.map((c) => (
-            <PersonChip
-              key={c.id}
-              name={c.nickname}
-              selected={memoryId === c.id}
-              onPress={() => onToggleMemory(c.id)}
-              testID={`person-${c.id}`}
-            />
-          ))}
-        </View>
-      </View>
+    {/* Empty state: play-first beats explain-first */}
+    {!image && !manual.trim() && memoryCards.length === 0 ? (
+      <Pressable
+        onPress={() => {
+          haptic.selection();
+          onTrySample();
+        }}
+        accessibilityRole="button"
+        testID="try-sample-chip"
+        style={({ pressed }) => [styles.sampleChip, pressed && { opacity: 0.85 }]}
+      >
+        <Sparkle size={11} color={colors.lavender} />
+        <Text style={styles.sampleChipText}>Not sure yet? Try with a sample chat</Text>
+      </Pressable>
     ) : null}
 
-    <View style={{ marginTop: space.s }}>
+    <SituationSection situation={situation} onSituation={onSituation} note={note} onNote={onNote} />
+
+    {/* Emotional check-in — optional, single-select toggle */}
+    <View testID="feeling-section">
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionLabel}>HOW ARE YOU FEELING?</Text>
+        <Pressable onPress={onSkipFeeling} hitSlop={10} testID="feeling-skip" accessibilityRole="button">
+          <Text style={styles.skipText}>Skip</Text>
+        </Pressable>
+      </View>
+      <View style={styles.chipsRow}>
+        {FEELINGS.map((f) => (
+          <Chip
+            key={f.label}
+            label={f.label}
+            selected={feeling === f.label}
+            onPress={() => onToggleFeeling(f.label)}
+            leading={<View style={[styles.feelingDot, { backgroundColor: f.color }]} />}
+            testID={`feeling-${f.label}`}
+          />
+        ))}
+      </View>
+    </View>
+
+    <View style={{ marginTop: space.s, gap: 8 }}>
       <PrimaryButton label="Get replies" onPress={onContinue} testID="generate-replies-button" />
+      {outOfCredits ? (
+        <Text style={styles.creditsHint} testID="credits-hint">
+          Free replies reset at midnight. Pro has no limit.
+        </Text>
+      ) : null}
     </View>
   </>
 );
 
-const FeelingChip: React.FC<{
+type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
+
+const CaptureTarget: React.FC<{
+  icon: IoniconName;
   label: string;
-  color: string;
-  selected: boolean;
   onPress: () => void;
+  primary?: boolean;
   testID?: string;
-}> = ({ label, color, selected, onPress, testID }) => (
+}> = ({ icon, label, onPress, primary, testID }) => (
   <Pressable
-    onPress={onPress}
+    onPress={() => {
+      haptic.selection();
+      onPress();
+    }}
     testID={testID}
-    style={({ pressed }) => [
-      styles.feelingChip,
-      selected && styles.feelingChipSelected,
-      pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
-    ]}
+    accessibilityRole="button"
+    accessibilityLabel={label}
+    style={({ pressed }) => [styles.target, primary && styles.targetPrimary, pressed && styles.targetPressed]}
   >
-    <View style={[styles.feelingDot, { backgroundColor: color }]} />
-    <Text style={[styles.feelingText, selected && styles.feelingTextSelected]}>
+    <Ionicons name={icon} size={20} color={colors.lavender} />
+    <Text style={styles.targetLabel} numberOfLines={1}>
       {label}
     </Text>
   </Pressable>
 );
 
+// "Remembered" chip (research §5 / §7): shows memory being used — the facts
+// that were in context for this generation. Tappable to correct.
+const RememberedChip: React.FC<{ person: MemoryCard; onEdit: () => void }> = ({ person, onEdit }) => {
+  const [open, setOpen] = useState(false);
+  const facts = (person.facts || []).slice(0, 3);
+  return (
+    <View testID="remembered-chip">
+      <Pressable
+        onPress={() => {
+          haptic.selection();
+          setOpen((o) => !o);
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={`Remembered ${person.nickname}. Shows what Lovli used.`}
+        style={({ pressed }) => [styles.memoryPill, pressed && { opacity: 0.85 }]}
+        hitSlop={6}
+      >
+        <Sparkle size={11} color={colors.lavender} />
+        <Text style={styles.memoryPillText}>Remembered · {person.nickname}</Text>
+        <Ionicons name={open ? "chevron-up" : "chevron-down"} size={12} color={colors.lavenderText} />
+      </Pressable>
+      {open ? (
+        <View style={styles.memoryDetail}>
+          <Text style={styles.memoryDetailText} testID="remembered-detail">
+            {facts.length > 0
+              ? `Used: ${facts.map((f) => f.text).join(" · ")}`
+              : "Used what you've saved about them so far."}
+          </Text>
+          <Pressable onPress={onEdit} hitSlop={8} accessibilityRole="button" testID="remembered-edit">
+            <Text style={styles.memoryEdit}>Fix something</Text>
+          </Pressable>
+        </View>
+      ) : null}
+    </View>
+  );
+};
+
 // --- Back header (recurring sub-screen pattern) ---
 const BackHeader: React.FC<{ title: string; onBack: () => void }> = ({ title, onBack }) => (
   <View style={styles.backHeader}>
-    <Pressable onPress={onBack} hitSlop={12} testID="reply-back-button">
+    <Pressable
+      onPress={onBack}
+      hitSlop={12}
+      testID="reply-back-button"
+      accessibilityRole="button"
+      accessibilityLabel="Back"
+      style={styles.backBtn}
+    >
       <Ionicons name="chevron-back" size={22} color={colors.text} />
     </Pressable>
     <Text style={styles.backTitle}>{title}</Text>
   </View>
 );
 
-// --- PR-INT: defensive read parser (unchanged) ---
+// --- Defensive parsers (unchanged contract) ---
 function safeRead(value: ReplyRead | null | undefined): ReplyRead | null {
   if (!value || typeof value !== "object") return null;
   const v = value as ReplyRead;
@@ -744,16 +978,8 @@ function safeRead(value: ReplyRead | null | undefined): ReplyRead | null {
   };
 }
 
-const TEMPERATURE_META: Record<ReplyRead["temperature"], { emoji: string; label: string }> = {
-  interested: { emoji: "🔥", label: "Interested" },
-  neutral: { emoji: "🙂", label: "Neutral" },
-  cold: { emoji: "❄", label: "Cold" },
-};
-
-// --- PR-V2-3 "Generated" surface -------------------------------------------
-
-function safeInsight(value: ReplyInsight | null | undefined): ReplyInsight | null {
-  const v = value as ReplyInsight | null | undefined;
+export function safeInsight(value: Replies["insight"]): NonNullable<Replies["insight"]> | null {
+  const v = value;
   if (!v || typeof v !== "object") return null;
   if (v.temperature !== "warm" && v.temperature !== "mixed" && v.temperature !== "cold") {
     return null;
@@ -766,201 +992,41 @@ function safeInsight(value: ReplyInsight | null | undefined): ReplyInsight | nul
   return { ...v, noticing };
 }
 
-// Spec: dot-pills, not emoji. Warm = amber #FFB259.
-const INSIGHT_TEMP: Record<ReplyInsight["temperature"], { label: string; color: string }> = {
-  warm: { label: "Leaning interested", color: colors.amber },
-  mixed: { label: "Mixed signals", color: colors.lavenderText },
-  cold: { label: "Not into it", color: colors.sky },
+const TEMPERATURE_META: Record<ReplyRead["temperature"], { icon: IoniconName; label: string; color: string }> = {
+  interested: { icon: "flame-outline", label: "Warm", color: colors.amber },
+  neutral: { icon: "pulse-outline", label: "Mixed", color: colors.lavenderText },
+  cold: { icon: "snow-outline", label: "Cold", color: colors.sky },
 };
 
-const InsightCard: React.FC<{ insight: ReplyInsight }> = ({ insight }) => {
-  const temp = INSIGHT_TEMP[insight.temperature];
-  return (
-    <GlassCard padded variant="elevated" testID="insight-card">
-      <View style={styles.insightHeader}>
-        <Text style={styles.readEyebrow}>{"WHAT'S GOING ON"}</Text>
-        <View style={[styles.tempPill, { backgroundColor: `${temp.color}1F`, borderColor: `${temp.color}55` }]} testID="insight-temp-pill">
-          <View style={[styles.tempDot, { backgroundColor: temp.color }]} />
-          <Text style={[styles.tempPillText, { color: temp.color }]}>{temp.label}</Text>
-        </View>
-      </View>
-      {insight.noticing.map((n, i) => (
-        <View key={i} style={styles.noticeRow}>
-          <Sparkle size={12} color={colors.lavender} />
-          <Text style={styles.noticeText}>{n}</Text>
-        </View>
-      ))}
-      <Text style={styles.insightLine}>
-        <Text style={styles.insightLabel}>{"What's really going on: "}</Text>
-        {insight.whats_going_on}
-      </Text>
-      <Text style={styles.insightLine}>
-        <Text style={styles.insightLabel}>{"If I were your wingman: "}</Text>
-        {insight.wingman_advice}
-      </Text>
-    </GlassCard>
-  );
-};
-
-const PrimaryReplyCard: React.FC<{
-  text: string;
-  toneLabel: string;
-  onCopy: (text: string) => void;
-  onEditCommitted?: (original: string, edited: string) => void;
-  onRegenerate: () => void;
-}> = ({ text, toneLabel, onCopy, onEditCommitted, onRegenerate }) => {
-  const [value, setValue] = useState(text);
-  const [editing, setEditing] = useState(false);
-  // PR-M2: commit an edit at most once per distinct edited value.
-  const lastCommitted = useRef(text);
-
-  const commitEdit = () => {
-    if (value !== lastCommitted.current) {
-      lastCommitted.current = value;
-      onEditCommitted?.(text, value);
-    }
-  };
-
-  return (
-    <View>
-      <View style={styles.primaryCard} testID="primary-reply-card">
-        <View style={styles.toneRow}>
-          <View style={[styles.toneDot, { backgroundColor: colors.pink }]} />
-          <Text style={[styles.toneLabel, { color: colors.pink }]} testID="primary-tone-label">
-            {toneLabel || "Smooth"}
-          </Text>
-        </View>
-        {editing ? (
-          <TextInput
-            value={value}
-            onChangeText={setValue}
-            multiline
-            autoFocus
-            style={[styles.primaryText, styles.primaryInput]}
-            testID="primary-reply-edit-input"
-          />
-        ) : (
-          <Text style={styles.primaryText} testID="primary-reply-text">
-            {value}
-          </Text>
-        )}
-        <View style={styles.primaryActions}>
-          <Pressable
-            style={styles.primaryAction}
-            onPress={() => {
-              commitEdit();
-              onCopy(value);
-            }}
-            hitSlop={6}
-            testID="primary-copy"
-          >
-            <Ionicons name="copy-outline" size={15} color={colors.lavenderText} />
-            <Text style={styles.primaryActionText}>Copy</Text>
-          </Pressable>
-          <Pressable
-            style={styles.primaryAction}
-            onPress={() =>
-              setEditing((e) => {
-                if (e) commitEdit(); // "Done" pressed — the edit is final.
-                return !e;
-              })
-            }
-            hitSlop={6}
-            testID="primary-edit"
-          >
-            <Ionicons name={editing ? "checkmark" : "pencil-outline"} size={15} color={colors.lavenderText} />
-            <Text style={styles.primaryActionText}>{editing ? "Done" : "Edit"}</Text>
-          </Pressable>
-          <Pressable style={styles.primaryAction} onPress={onRegenerate} hitSlop={6} testID="primary-regenerate">
-            <Ionicons name="refresh-outline" size={15} color={colors.lavenderText} />
-            <Text style={styles.primaryActionText}>Regenerate</Text>
-          </Pressable>
-        </View>
-      </View>
-    </View>
-  );
-};
-
-// PR-M6: "Sounds like you" pill — tap to see the honest signals behind it.
-const SoundsLikeYouPill: React.FC<{ signals: string[] }> = ({ signals }) => {
-  const [expanded, setExpanded] = useState(false);
-  return (
-    <View testID="sounds-like-you">
-      <Pressable
-        onPress={() => setExpanded((e) => !e)}
-        style={({ pressed }) => [styles.memoryPill, pressed && { opacity: 0.85 }]}
-        hitSlop={6}
-        testID="sounds-like-you-pill"
-      >
-        <Sparkle size={11} color={colors.lavender} />
-        <Text style={styles.memoryPillText}>Sounds like you</Text>
-        <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={12} color={colors.lavenderText} />
-      </Pressable>
-      {expanded && signals.length > 0 ? (
-        <Text style={styles.memoryPillDetail} testID="sounds-like-you-signals">
-          Tuned to: {signals.join(" · ")}
-        </Text>
-      ) : null}
-    </View>
-  );
-};
-
-// PR-M6: one-tap style feedback — teaches the engine, thanks the user, done.
-const FeedbackChipsRow: React.FC<{ onChip: (chip: string) => void }> = ({ onChip }) => {
-  const [picked, setPicked] = useState<string | null>(null);
-  return (
-    <View testID="feedback-chips">
-      <Text style={styles.sectionLabel}>NOT QUITE RIGHT?</Text>
-      <View style={styles.chipsRow}>
-        {FEEDBACK_CHIPS.map((c) => (
-          <Chip
-            key={c}
-            label={c}
-            selected={picked === c}
-            onPress={() => {
-              if (picked) return; // one signal per generation is plenty
-              setPicked(c);
-              onChip(c);
-            }}
-            testID={`feedback-chip-${c}`}
-          />
-        ))}
-      </View>
-    </View>
-  );
-};
-
+// Legacy read (rich=true without an insight) — same word + icon rule.
 const ReadCard: React.FC<{ read: ReplyRead }> = ({ read }) => {
   const temp = TEMPERATURE_META[read.temperature];
   return (
     <GlassCard padded variant="elevated" testID="read-card">
       <View style={styles.readHeader}>
-        <View style={styles.readTitleRow}>
-          <Ionicons name="eye-outline" size={14} color={colors.lavender} />
-          <Text style={styles.readEyebrow}>{"What's going on"}</Text>
-        </View>
-        <View style={styles.tempChip} testID="read-temperature-chip">
-          <Text style={styles.tempEmoji}>{temp.emoji}</Text>
-          <Text style={styles.tempLabel}>{temp.label}</Text>
+        <Text style={styles.readEyebrow}>THE READ</Text>
+        <View
+          style={[styles.tempChip, { backgroundColor: `${temp.color}1F`, borderColor: `${temp.color}66` }]}
+          testID="read-temperature-chip"
+          accessibilityLabel={`Temperature: ${temp.label}`}
+        >
+          <Ionicons name={temp.icon} size={13} color={temp.color} />
+          <Text style={[styles.tempLabel, { color: temp.color }]}>{temp.label}</Text>
         </View>
       </View>
-
       <Text style={styles.readSituation} testID="read-situation">
         {read.situation}
       </Text>
-
       {read.signals.length > 0 ? (
         <View style={styles.readSection}>
-          <Text style={styles.readSectionTitle}>Signals from the chat</Text>
           {read.signals.map((s, i) => (
             <View key={`sig-${i}`} style={styles.bulletRow}>
-              <Ionicons name="checkmark" size={14} color={colors.violet} />
+              <Sparkle size={11} color={colors.lavender} />
               <Text style={styles.bulletText}>{s}</Text>
             </View>
           ))}
         </View>
       ) : null}
-
       {read.outcome.length > 0 ? (
         <View style={styles.readSection}>
           <Text style={styles.readSectionTitle}>These replies will likely…</Text>
@@ -973,71 +1039,6 @@ const ReadCard: React.FC<{ read: ReplyRead }> = ({ read }) => {
         </View>
       ) : null}
     </GlassCard>
-  );
-};
-
-// --- Reply result card (restyle lands in PR-V2-3) ---
-const ReplyResultCard: React.FC<{
-  text: string;
-  toneLabel: string;
-  index: number;
-  onCopy: () => void;
-  onRegenerate: () => void;
-}> = ({ text, toneLabel, index, onCopy, onRegenerate }) => {
-  const [copied, setCopied] = useState(false);
-  const fade = useRef(new Animated.Value(0)).current;
-  const slide = useRef(new Animated.Value(10)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fade, { toValue: 1, duration: 320, delay: index * 80, useNativeDriver: true }),
-      Animated.timing(slide, { toValue: 0, duration: 360, delay: index * 80, useNativeDriver: true }),
-    ]).start();
-  }, [fade, slide, index]);
-
-  const handleCopy = async () => {
-    setCopied(true);
-    await onCopy();
-    setTimeout(() => setCopied(false), 1800);
-  };
-
-  return (
-    <Animated.View
-      style={[styles.replyCard, { opacity: fade, transform: [{ translateY: slide }] }]}
-      testID="reply-result-card"
-    >
-      <View style={styles.toneRow}>
-        <View style={styles.toneDot} />
-        <Text style={styles.toneLabel} testID="reply-tone-label">
-          {toneLabel}
-        </Text>
-      </View>
-      <Text style={styles.replyText} testID="reply-result-text">
-        {text}
-      </Text>
-      <View style={styles.replyActions}>
-        <Pressable
-          onPress={handleCopy}
-          style={({ pressed }) => [styles.copyBtn, pressed && { opacity: 0.85 }]}
-          testID="reply-copy-button"
-        >
-          <Ionicons
-            name={copied ? "checkmark-circle" : "copy-outline"}
-            size={14}
-            color={colors.ctaText}
-          />
-          <Text style={styles.copyText}>{copied ? "Copied" : "Copy"}</Text>
-        </Pressable>
-        <Pressable
-          onPress={onRegenerate}
-          style={({ pressed }) => [styles.regenBtn, pressed && { opacity: 0.8 }]}
-          testID="reply-regenerate-button"
-        >
-          <Ionicons name="refresh" size={14} color={colors.textSoft} />
-          <Text style={styles.regenText}>Regenerate</Text>
-        </Pressable>
-      </View>
-    </Animated.View>
   );
 };
 
@@ -1054,9 +1055,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.textMuted,
     marginTop: 8,
-    maxWidth: 290,
+    maxWidth: 300,
   },
-  // Recurring V3 section label.
   sectionLabel: {
     fontFamily: typography.fonts.bodyBold,
     fontSize: 12,
@@ -1065,88 +1065,60 @@ const styles = StyleSheet.create({
     color: colors.textFaint,
     marginBottom: 10,
   },
-  feelingHeader: {
+  sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  sectionCaption: {
+    ...typography.body.caption,
+    fontSize: 12,
+    color: colors.lavenderText,
+    marginBottom: 10,
   },
   skipText: {
     fontFamily: typography.fonts.bodySemibold,
     fontSize: 12,
     color: colors.textDim,
+    marginBottom: 10,
+    paddingHorizontal: 4,
   },
   chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  feelingChip: {
-    minHeight: 36,
+  feelingDot: { width: 6, height: 6, borderRadius: 999 },
+  // Three equal capture targets
+  targets: { flexDirection: "row", gap: 8 },
+  target: {
+    flex: 1,
+    minHeight: 56,
     flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    paddingHorizontal: 13,
-    paddingVertical: 8,
-    borderRadius: radii.pill,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.09)",
-    backgroundColor: colors.surfaceSoft,
-  },
-  feelingChipSelected: {
-    backgroundColor: "rgba(167,139,250,0.11)",
-    borderColor: "rgba(167,139,250,0.36)",
-    shadowColor: "#A78BFA",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  feelingDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 999,
-  },
-  feelingText: {
-    fontFamily: typography.fonts.bodyMedium,
-    fontSize: 12.5,
-    color: colors.textMuted,
-  },
-  feelingTextSelected: {
-    fontFamily: typography.fonts.bodyBold,
-    color: colors.lavenderText,
-  },
-  // Compact dashed upload row
-  upload: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: space.m,
-    borderWidth: 1.5,
-    borderColor: "rgba(167,139,250,0.4)",
-    borderStyle: "dashed",
-    borderRadius: 20,
-    paddingHorizontal: 18,
-    paddingVertical: 15,
-    backgroundColor: colors.surfaceSoft,
-  },
-  uploadPressed: {
-    borderColor: colors.lavender,
-    backgroundColor: colors.violetTint,
-  },
-  uploadIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 13,
-    backgroundColor: colors.violetTint,
     alignItems: "center",
     justifyContent: "center",
+    gap: 7,
+    borderWidth: 1,
+    borderColor: "rgba(167,139,250,0.28)",
+    borderRadius: 18,
+    backgroundColor: colors.surfaceSoft,
+    paddingHorizontal: 8,
   },
-  uploadTitle: {
-    ...typography.body.bodySemibold,
-    fontSize: 14.5,
-    color: colors.text,
+  targetPrimary: {
+    borderStyle: "dashed",
+    borderWidth: 1.5,
+    borderColor: "rgba(167,139,250,0.45)",
+    backgroundColor: colors.violetTint,
   },
-  uploadHint: {
-    ...typography.body.caption,
-    fontSize: 12.5,
-    color: colors.textFaint,
-    marginTop: 3,
+  targetPressed: { backgroundColor: "rgba(255,255,255,0.12)", borderColor: colors.lavender },
+  targetLabel: { ...typography.body.bodySemibold, fontSize: 13, color: colors.text, flexShrink: 1 },
+  sampleChip: {
+    minHeight: 44,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    alignSelf: "center",
+    paddingHorizontal: 14,
   },
+  sampleChipText: { ...typography.body.bodySemibold, fontSize: 13, color: colors.lavenderText },
+  creditsHint: { ...typography.body.caption, fontSize: 12, color: colors.textFaint, textAlign: "center" },
   preview: {
     position: "relative",
     borderRadius: radii.lg,
@@ -1158,8 +1130,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 10,
     right: 10,
-    width: 30,
-    height: 30,
+    width: 36,
+    height: 36,
     borderRadius: 999,
     backgroundColor: "rgba(5, 5, 9, 0.7)",
     borderColor: colors.border,
@@ -1170,152 +1142,19 @@ const styles = StyleSheet.create({
   backHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
+    gap: 10,
     marginTop: space.s,
   },
+  backBtn: { width: 44, height: 44, alignItems: "center", justifyContent: "center", marginLeft: -11 },
   backTitle: {
     fontFamily: typography.fonts.displayBold,
     fontSize: 20,
     letterSpacing: 0,
     color: colors.text,
   },
-  // --- results (interim until PR-V2-3) ---
-  replyCard: {
-    backgroundColor: colors.surface,
-    borderColor: colors.hairline,
-    borderWidth: 1,
-    borderRadius: 24,
-    padding: space.l + 2,
-  },
-  toneRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  toneDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 999,
-    backgroundColor: colors.pink,
-    shadowColor: colors.pink,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 6,
-  },
-  toneLabel: {
-    ...typography.body.caption,
-    fontFamily: typography.fonts.bodySemibold,
-    color: colors.lavenderSoft,
-    fontSize: 11,
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-  },
-  replyText: {
-    fontFamily: typography.fonts.displaySemibold,
-    color: colors.text,
-    fontSize: 17,
-    lineHeight: 26,
-    marginTop: 10,
-  },
-  replyActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginTop: space.m,
-    flexWrap: "wrap",
-  },
-  copyBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: colors.ctaBg,
-    borderRadius: radii.pill,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-  },
-  copyText: { ...typography.body.bodySemibold, color: colors.ctaText, fontSize: fontSize.sm },
-  regenBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: radii.pill,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  regenText: { ...typography.body.bodySemibold, color: colors.textSoft, fontSize: fontSize.sm },
-  // --- ReadCard ---
-  readHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 8,
-    gap: 8,
-  },
-  readTitleRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  // --- PR-V2-3 "Generated" surface ---
-  insightHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-    marginBottom: 10,
-  },
-  tempPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  tempDot: { width: 7, height: 7, borderRadius: 4 },
-  tempPillText: {
-    ...typography.body.bodySemibold,
-    fontSize: 11.5,
-    letterSpacing: 0.4,
-  },
-  noticeRow: { flexDirection: "row", alignItems: "flex-start", gap: 8, paddingVertical: 3 },
-  noticeText: { ...typography.body.base, fontSize: 13.5, lineHeight: 19, color: colors.textSoft, flex: 1 },
-  insightLine: {
-    ...typography.body.base,
-    fontSize: 13.5,
-    lineHeight: 19.5,
-    color: colors.textMuted,
-    marginTop: 8,
-  },
-  insightLabel: { ...typography.body.bodySemibold, color: colors.text },
-  primaryCard: {
-    backgroundColor: colors.glassFill,
-    borderWidth: 1,
-    borderColor: colors.glassStroke,
-    borderRadius: 24,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 18 },
-    shadowOpacity: 0.55,
-    shadowRadius: 44,
-    elevation: 8,
-  },
-  primaryText: {
-    fontFamily: typography.fonts.displaySemibold,
-    fontSize: 17,
-    lineHeight: 24,
-    letterSpacing: 0,
-    color: colors.text,
-    marginTop: 12,
-  },
-  primaryInput: { padding: 0, minHeight: 48, textAlignVertical: "top" },
-  primaryActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 22,
-    marginTop: 16,
-  },
-  primaryAction: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4 },
-  primaryActionText: { ...typography.body.bodySemibold, fontSize: 13, color: colors.lavenderText },
-  // PR-M6: "Sounds like you" personalization pill
+  // "Remembered" pill
   memoryPill: {
+    minHeight: 36,
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
@@ -1327,17 +1166,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  memoryPillText: {
-    ...typography.body.bodySemibold,
-    fontSize: 12,
-    color: colors.lavenderText,
-  },
-  memoryPillDetail: {
-    ...typography.body.base,
-    fontSize: 12,
-    lineHeight: 17,
-    color: colors.textMuted,
-    marginTop: 6,
+  memoryPillText: { ...typography.body.bodySemibold, fontSize: 12, color: colors.lavenderText },
+  memoryDetail: { marginTop: 8, gap: 4 },
+  memoryDetailText: { ...typography.body.base, fontSize: 12.5, lineHeight: 17, color: colors.textMuted },
+  memoryEdit: { ...typography.body.bodySemibold, fontSize: 12.5, color: colors.lavenderText, paddingVertical: 6 },
+  // --- legacy ReadCard ---
+  readHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+    gap: 8,
   },
   readEyebrow: {
     ...typography.body.bodySemibold,
@@ -1350,25 +1189,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: colors.violetTint,
+    borderWidth: 1,
     borderRadius: radii.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
   },
-  tempEmoji: { fontSize: 13 },
-  tempLabel: {
-    ...typography.body.bodySemibold,
-    color: colors.lavenderText,
-    fontSize: 12,
-  },
+  tempLabel: { fontFamily: typography.fonts.displaySemibold, fontSize: 13 },
   readSituation: {
     fontFamily: typography.fonts.displayMedium,
     color: colors.text,
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: space.m,
+    fontSize: 18,
+    lineHeight: 25,
+    marginBottom: space.s,
   },
-  readSection: { marginTop: space.s + 2, gap: 6 },
+  readSection: { marginTop: space.s, gap: 6 },
   readSectionTitle: {
     ...typography.body.bodySemibold,
     color: colors.textMuted,

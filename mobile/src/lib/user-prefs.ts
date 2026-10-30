@@ -23,6 +23,8 @@ export type LocalPrefs = {
   notif_checkin: boolean;
   notif_details: boolean;
   face_id: boolean;
+  /** Research §11: blur Lovli in the app switcher / recents. Device-only, default on. */
+  app_switcher_blur: boolean;
 };
 
 export const DEFAULT_PREFS: LocalPrefs = {
@@ -32,6 +34,7 @@ export const DEFAULT_PREFS: LocalPrefs = {
   notif_checkin: false,
   notif_details: false,
   face_id: false,
+  app_switcher_blur: true,
 };
 
 export const readLocalPrefs = async (): Promise<LocalPrefs> => {
@@ -83,7 +86,10 @@ export const saveGoal = async (goal: string): Promise<void> => {
  * This is what makes a fresh install look like the user's old phone.
  */
 export const hydrateFromCloud = async (cloud: UserPreferences): Promise<LocalPrefs> => {
+  // Device-only settings are not on the server; keep whatever this phone has.
+  const prev = await readLocalPrefs();
   const local: LocalPrefs = {
+    app_switcher_blur: prev.app_switcher_blur,
     default_vibe: cloud.default_vibe ?? DEFAULT_PREFS.default_vibe,
     dating: cloud.dating ?? DEFAULT_PREFS.dating,
     notif_reminders: cloud.notif_reminders ?? DEFAULT_PREFS.notif_reminders,

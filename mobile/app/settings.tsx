@@ -15,7 +15,10 @@ import {
   deleteLearnedMemory, deleteAskThread, patchSettings,
 } from "@/src/api/endpoints";
 import { flags } from "@/src/config/flags";
+import { haptic } from "@/src/lib/haptics";
+import { applyAppSwitcherProtection } from "@/src/lib/screen-privacy";
 import { savePrefs as persistPrefs } from "@/src/lib/user-prefs";
+import { PrivacySheet } from "@/src/components/PrivacySheet";
 import { storage } from "@/src/utils/storage";
 import { ensureNotifPermission, resyncNotificationsFromStorage } from "@/src/utils/notifications";
 import { ASK_PENDING_KEY, ASK_THREAD_KEY, PREFS_KEY } from "@/src/config/storage-keys";
@@ -32,10 +35,12 @@ type Prefs = {
   notif_checkin: boolean;
   notif_details: boolean; // discreet by default — no names on the lock screen
   face_id: boolean;
+  app_switcher_blur: boolean; // research §11 — hide chats in the app switcher
 };
 const DEFAULT_PREFS: Prefs = {
   default_vibe: "Playful", dating: "Women",
   notif_reminders: true, notif_checkin: false, notif_details: false, face_id: false,
+  app_switcher_blur: true,
 };
 
 export default function SettingsScreen() {
@@ -45,6 +50,7 @@ export default function SettingsScreen() {
   const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
   const [picker, setPicker] = useState<null | "language" | "vibe" | "dating">(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
 
@@ -88,6 +94,13 @@ export default function SettingsScreen() {
     }
     await savePrefs({ ...prefs, [key]: turningOn }, { [key]: turningOn });
     resyncNotificationsFromStorage();
+  };
+
+  const toggleAppSwitcherBlur = async () => {
+    const next = !prefs.app_switcher_blur;
+    haptic.selection();
+    await savePrefs({ ...prefs, app_switcher_blur: next }, {});
+    applyAppSwitcherProtection(next);
   };
 
   const toggleFaceId = async () => {
@@ -221,8 +234,16 @@ export default function SettingsScreen() {
         <ToggleRow label="Lock with Face ID" value={prefs.face_id}
           onToggle={toggleFaceId} testID="toggle-faceid" />
         <View style={styles.divider} />
+        <ToggleRow label="Hide chats in app switcher" value={prefs.app_switcher_blur}
+          onToggle={toggleAppSwitcherBlur} testID="toggle-app-switcher" />
+        <View style={styles.divider} />
+        <ValueRow label="How Lovli handles your chats" value="" onPress={() => setPrivacyOpen(true)} testID="settings-row-privacy" />
+        <View style={styles.divider} />
         <ValueRow label="Delete my memories" value="" onPress={() => setConfirmOpen(true)} testID="settings-row-delete" />
       </View>
+      <Text style={styles.sectionHint}>
+        Hiding chats blurs Lovli in the app switcher so a glance at your recents shows nothing.
+      </Text>
 
       {/* Footer */}
       <View style={[styles.card, { marginBottom: 32 }]}>
@@ -253,6 +274,8 @@ export default function SettingsScreen() {
           ))}
         </View>
       </Modal>
+
+      <PrivacySheet visible={privacyOpen} onClose={() => setPrivacyOpen(false)} />
 
       {/* Delete confirm */}
       <Modal visible={confirmOpen} transparent animationType="slide" onRequestClose={() => setConfirmOpen(false)}>

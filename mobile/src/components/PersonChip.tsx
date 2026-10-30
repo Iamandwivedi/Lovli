@@ -16,6 +16,9 @@ export const PersonChip: React.FC<Props> = ({ name, selected, onPress, testID })
   <Pressable
     onPress={onPress}
     testID={testID}
+    accessibilityRole="button"
+    accessibilityState={{ selected }}
+    accessibilityLabel={`${name}${selected ? ", selected" : ""}`}
     style={({ pressed }) => [
       styles.chip,
       selected ? styles.selected : styles.unselected,
@@ -43,7 +46,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 7,
-    minHeight: 38,
+    minHeight: 44,
     paddingHorizontal: space.l - 2,
     paddingVertical: space.s - 2,
     borderRadius: radii.pill,

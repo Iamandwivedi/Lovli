@@ -1,13 +1,11 @@
-// Onboarding — V3 dark glass.
-// Template: back chevron + gradient progress
-// track + "N of 3", serif H1, radio option list, white Continue CTA (no ✦).
-// Goal is stored locally (lovli_goal) and fed into generation prompts in a later PR.
+// Onboarding — V3 dark glass. Research §9: ONE screen, three chip rows max
+// (where you text · language · how you text), then straight to Reply.
+// Keeping the intent survey to three questions or fewer (Moburst benchmark).
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { Screen } from "@/src/components/Screen";
+import { Chip } from "@/src/components/Chip";
 import { PrimaryButton } from "@/src/components/PrimaryButton";
 import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
@@ -21,34 +19,18 @@ import {
   platformValueToLabel,
 } from "@/src/api/endpoints";
 import { trackEvent } from "@/src/lib/memory-events";
-import { saveGoal } from "@/src/lib/user-prefs";
-import { colors, gradients, typography } from "@/src/theme";
+import { colors, typography } from "@/src/theme";
 
-const GOALS = [
-  "Find a relationship",
-  "Fix things with someone",
-  "Get better at dating apps",
-  "Survive the talking stage",
-  "Heading toward marriage",
-  "Recover after a breakup",
-];
-const PLATFORMS: PlatformLabel[] = ["Instagram", "Dating platform", "WhatsApp"];
-const LANGUAGES: Language[] = ["English", "Hinglish", "Hindi + English mixed"];
-// PR-M6 (guide §14): lightweight style questions — cold-start seeds for the
-// memory engine, sent as onboarding_pref events (weak weight, replaced by real
-// behavior as it accumulates).
+const PLATFORMS: PlatformLabel[] = ["Instagram", "WhatsApp", "Dating platform"];
+const LANGUAGES: Language[] = ["Hinglish", "English", "Hindi + English mixed"];
+// Cold-start seed for the memory engine (weak weight, replaced by real behaviour).
 const TEXT_STYLES = ["Short and casual", "Playful", "Direct", "Thoughtful"];
-const AVOIDS = ["Cringe lines", "Too much romance", "Too many emojis", "Sounding needy"];
-
-const TOTAL_STEPS = 5;
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const { user, updateUser } = useAuth();
   const toast = useToast();
 
-  const [step, setStep] = useState(0); // 0-indexed
-  const [goal, setGoal] = useState<string | null>(null);
   const [platform, setPlatform] = useState<PlatformLabel>(
     platformValueToLabel(user?.preferred_platform || "instagram"),
   );
@@ -56,62 +38,11 @@ export default function OnboardingScreen() {
     (user?.language_preference as Language) || "Hinglish",
   );
   const [textStyle, setTextStyle] = useState<string | null>(null);
-  const [avoids, setAvoids] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
-
-  const steps = [
-    {
-      title: "What brings you here?",
-      sub: "I'll shape my advice around it.",
-      options: GOALS,
-      value: goal,
-      onSelect: (v: string) => setGoal(v),
-    },
-    {
-      title: "Where do you mostly chat?",
-      sub: "I'll match the tone of the app you're on.",
-      options: PLATFORMS as string[],
-      value: platform as string,
-      onSelect: (v: string) => setPlatform(v as PlatformLabel),
-    },
-    {
-      title: "How do you actually text?",
-      sub: "Pick by ear — replies come back in this by default.",
-      options: LANGUAGES as string[],
-      value: language as string,
-      onSelect: (v: string) => setLanguage(v as Language),
-    },
-    {
-      title: "How do you usually text?",
-      sub: "So my replies sound like you from day one.",
-      options: TEXT_STYLES,
-      value: textStyle,
-      onSelect: (v: string) => setTextStyle(v),
-    },
-    {
-      title: "What should I avoid?",
-      sub: "Pick any — I'll steer clear.",
-      options: AVOIDS,
-      multi: true,
-      value: avoids.length ? avoids[0] : null, // canContinue handled separately
-      onSelect: (v: string) =>
-        setAvoids((cur) => (cur.includes(v) ? cur.filter((a) => a !== v) : [...cur, v])),
-    },
-  ];
-  const current = steps[step];
-  const isMulti = "multi" in current && current.multi === true;
-  const isSelected = (option: string) =>
-    isMulti ? avoids.includes(option) : current.value === option;
-  // The avoid step is optional — continue is always allowed there.
-  const canContinue = isMulti || !!current.value;
 
   const finish = async (skip: boolean) => {
     try {
       setSaving(true);
-      if (!skip && goal) {
-        // Device + account, so the goal survives a reinstall.
-        await saveGoal(goal);
-      }
       const body = skip
         ? { timezone: getTimezone() }
         : {
@@ -121,14 +52,8 @@ export default function OnboardingScreen() {
           };
       const updated = await patchOnboarding(body);
       updateUser(updated);
-      // PR-M6: seed the memory engine (fire-and-forget; weak-weight events).
-      if (!skip) {
-        if (textStyle) {
-          trackEvent("onboarding_pref", { question: "texting_style", answer: textStyle });
-        }
-        if (avoids.length) {
-          trackEvent("onboarding_pref", { question: "avoid", answers: avoids });
-        }
+      if (!skip && textStyle) {
+        trackEvent("onboarding_pref", { question: "texting_style", answer: textStyle });
       }
       router.replace("/(tabs)/reply");
     } catch (err) {
@@ -138,68 +63,59 @@ export default function OnboardingScreen() {
     }
   };
 
-  const handleContinue = () => {
-    if (step < TOTAL_STEPS - 1) {
-      setStep(step + 1);
-    } else {
-      finish(false);
-    }
-  };
-
   return (
     <Screen scroll={false} testID="onboarding-page">
-      {/* Progress row */}
-      <View style={styles.progressRow}>
-        <Pressable
-          onPress={() => step > 0 && setStep(step - 1)}
-          hitSlop={12}
-          disabled={step === 0}
-          style={{ opacity: step === 0 ? 0 : 1 }}
-          testID="onboarding-back-button"
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
-        </Pressable>
-        <View style={styles.track}>
-          <LinearGradient
-            colors={gradients.progress}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={[styles.trackFill, { width: `${((step + 1) / TOTAL_STEPS) * 100}%` }]}
-          />
+      <Text style={styles.h1}>Three quick things</Text>
+      <Text style={styles.sub}>So the first reply already sounds like you.</Text>
+
+      <View style={styles.sections}>
+        <View>
+          <Text style={styles.sectionLabel}>WHERE ARE YOU TEXTING?</Text>
+          <View style={styles.chips}>
+            {PLATFORMS.map((p) => (
+              <Chip
+                key={p}
+                label={p === "Dating platform" ? "Dating app" : p}
+                selected={platform === p}
+                onPress={() => setPlatform(p)}
+                testID={`onboarding-option-${p}`}
+              />
+            ))}
+          </View>
         </View>
-        <Text style={styles.stepLabel}>{`${step + 1} of ${TOTAL_STEPS}`}</Text>
-      </View>
 
-      {/* Heading */}
-      <Text style={styles.h1}>{current.title}</Text>
-      <Text style={styles.sub}>{current.sub}</Text>
+        <View>
+          <Text style={styles.sectionLabel}>REPLY LANGUAGE</Text>
+          <View style={styles.chips}>
+            {LANGUAGES.map((l) => (
+              <Chip
+                key={l}
+                label={l}
+                selected={language === l}
+                onPress={() => setLanguage(l)}
+                testID={`onboarding-option-${l}`}
+              />
+            ))}
+          </View>
+        </View>
 
-      {/* Option list */}
-      <View style={styles.options}>
-        {current.options.map((option) => {
-          const selected = isSelected(option);
-          return (
-            <Pressable
-              key={option}
-              onPress={() => current.onSelect(option)}
-              testID={`onboarding-option-${option}`}
-              style={({ pressed }) => [
-                styles.option,
-                selected && styles.optionSelected,
-                pressed && { opacity: 0.85 },
-              ]}
-            >
-              <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
-                {option}
-              </Text>
-              {selected ? (
-                <View style={styles.check}>
-                  <Ionicons name="checkmark" size={13} color="#050509" />
-                </View>
-              ) : null}
-            </Pressable>
-          );
-        })}
+        <View>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionLabel}>HOW DO YOU USUALLY TEXT?</Text>
+            <Text style={styles.optional}>optional</Text>
+          </View>
+          <View style={styles.chips}>
+            {TEXT_STYLES.map((s) => (
+              <Chip
+                key={s}
+                label={s}
+                selected={textStyle === s}
+                onPress={() => setTextStyle((cur) => (cur === s ? null : s))}
+                testID={`onboarding-option-${s}`}
+              />
+            ))}
+          </View>
+        </View>
       </View>
 
       <View style={{ flex: 1 }} />
@@ -207,14 +123,14 @@ export default function OnboardingScreen() {
       <PrimaryButton
         label="Continue"
         withSparkle={false}
-        onPress={handleContinue}
-        disabled={!canContinue}
-        loading={saving && step === TOTAL_STEPS - 1}
+        onPress={() => finish(false)}
+        loading={saving}
         testID="onboarding-continue-button"
       />
       <Pressable
         onPress={() => finish(true)}
         disabled={saving}
+        accessibilityRole="button"
         testID="onboarding-skip-button"
         style={({ pressed }) => [styles.skipRow, pressed && { opacity: 0.7 }]}
       >
@@ -225,33 +141,6 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  progressRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    marginTop: 8,
-    paddingHorizontal: 4,
-  },
-  track: {
-    flex: 1,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.hairline,
-    overflow: "hidden",
-  },
-  trackFill: {
-    height: 4,
-    borderRadius: 2,
-    shadowColor: "#A78BFA",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
-  },
-  stepLabel: {
-    ...typography.body.bodySemibold,
-    fontSize: 12.5,
-    color: colors.textFaint,
-  },
   h1: {
     fontFamily: typography.fonts.displayBold,
     fontSize: 30,
@@ -268,47 +157,19 @@ const styles = StyleSheet.create({
     marginTop: 6,
     paddingHorizontal: 4,
   },
-  options: { gap: 10, marginTop: 22 },
-  option: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: colors.surfaceSoft,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.09)",
-    borderRadius: 18,
-    paddingVertical: 15,
-    paddingHorizontal: 17,
+  sections: { gap: 22, marginTop: 26 },
+  sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  sectionLabel: {
+    fontFamily: typography.fonts.bodyBold,
+    fontSize: 12,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    color: colors.textFaint,
+    marginBottom: 10,
   },
-  optionSelected: {
-    backgroundColor: "rgba(167,139,250,0.09)",
-    borderWidth: 1.5,
-    borderColor: "rgba(167,139,250,0.34)",
-    shadowColor: "#A78BFA",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 4,
-  },
-  optionText: {
-    ...typography.body.bodySemibold,
-    fontSize: 14.5,
-    color: colors.textSoft,
-  },
-  optionTextSelected: {
-    ...typography.body.bodyBold,
-    fontSize: 14.5,
-    color: colors.text,
-  },
-  check: {
-    width: 21,
-    height: 21,
-    borderRadius: 999,
-    backgroundColor: colors.lavender,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  skipRow: { alignItems: "center", paddingVertical: 12 },
+  optional: { ...typography.body.caption, fontSize: 12, color: colors.textDim, marginBottom: 10 },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  skipRow: { alignItems: "center", paddingVertical: 12, minHeight: 44, justifyContent: "center" },
   skip: {
     ...typography.body.bodyMedium,
     fontSize: 14,

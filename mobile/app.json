@@ -14,7 +14,8 @@
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Upload chat screenshots for reply suggestions.",
         "NSFaceIDUsageDescription": "Unlock Lovli quickly and privately",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Snap a photo of a chat to get replies."
       }
     },
     "android": {
@@ -42,7 +43,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Lovli needs photo access so you can upload chat screenshots."
+          "photosPermission": "Lovli needs photo access so you can upload chat screenshots.",
+          "cameraPermission": "Lovli uses the camera so you can snap a chat and get replies."
         }
       ],
       [

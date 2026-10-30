@@ -20,6 +20,9 @@ import type { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SwipeTabs } from "@/src/navigation/swipe-tabs";
 import { initNotifications, resyncNotificationsFromStorage } from "@/src/utils/notifications";
+import { haptic } from "@/src/lib/haptics";
+import { applyAppSwitcherProtection } from "@/src/lib/screen-privacy";
+import { readLocalPrefs } from "@/src/lib/user-prefs";
 import { colors, typography } from "@/src/theme";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -157,6 +160,7 @@ function LiquidTabBar({ state, descriptors, navigation }: MaterialTopTabBarProps
                 canPreventDefault: true,
               });
               if (!focused && !event.defaultPrevented) {
+                haptic.selection(); // research §12: selection haptic on every tab change
                 navigation.navigate(route.name, route.params);
               }
             };
@@ -201,6 +205,10 @@ export default function TabsLayout() {
   useEffect(() => {
     initNotifications();
     resyncNotificationsFromStorage();
+    // Research §11: app-switcher blur / FLAG_SECURE, on by default.
+    readLocalPrefs()
+      .then((p) => applyAppSwitcherProtection(p.app_switcher_blur))
+      .catch(() => {});
   }, []);
 
   return (
