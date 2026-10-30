@@ -61,3 +61,4 @@ credentials.json
 
 # Claude Code local config
 .claude/
+*.zip
