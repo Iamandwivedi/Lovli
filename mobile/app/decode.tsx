@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
   meterLabel: {
     fontFamily: typography.fonts.bodySemibold,
     fontSize: 10.5,
-    color: colors.textDisabled,
+    color: colors.textFaint,
   },
   meterLabelActive: { fontFamily: typography.fonts.bodyBold, color: colors.lavenderText },
   bulletRow: { flexDirection: "row", alignItems: "flex-start", gap: 9, paddingVertical: 3 },

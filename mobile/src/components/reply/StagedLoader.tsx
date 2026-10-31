@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   textPending: {
     ...typography.body.base,
     fontSize: 14,
-    color: colors.textDisabled,
+    color: colors.textDim,
     flex: 1,
   },
 });
