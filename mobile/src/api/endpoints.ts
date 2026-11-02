@@ -1,5 +1,6 @@
 // Typed methods that mirror the live Lovli backend.
 import { api } from "./client";
+import { cleanDashesDeep } from "@/src/utils/cleanCopy";
 
 export type PlatformValue = "instagram" | "dating_platform" | "whatsapp";
 export type PlatformLabel = "Instagram" | "Dating platform" | "WhatsApp";
@@ -202,7 +203,7 @@ export const askLovli = async (
     history,
     person_id: personId ?? null,
   });
-  return data;
+  return cleanDashesDeep(data);
 };
 
 export const getUsage = async (client_local_date: string) => {
@@ -270,7 +271,7 @@ export const generateReplies = async (input: GenerateInput) => {
   const { data } = await api.post<Replies>("/generate-replies", form, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return data;
+  return cleanDashesDeep(data);
 };
 
 // ---- Decode (PR-V2-5) --------------------------------------------------------
@@ -300,7 +301,7 @@ export const decodeSituation = async (input: {
   const { data } = await api.post<DecodeResult>("/decode", form, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return data;
+  return cleanDashesDeep(data);
 };
 
 export const patchMemoryCard = async (id: string, body: Partial<MemoryCardInput>) => {
@@ -343,7 +344,7 @@ export const runFeature = async (input: {
   const { data } = await api.post<FeatureResult>("/feature", form, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return data;
+  return cleanDashesDeep(data);
 };
 
 // ---- Recent results (PR4c) ---------------------------------------------------
@@ -356,7 +357,7 @@ export type RecentResult = {
 
 export const listRecentResults = async (limit = 5) => {
   const { data } = await api.get<RecentResult[]>(`/recent-results?limit=${limit}`);
-  return data;
+  return cleanDashesDeep(data);
 };
 
 export type StoredGeneration = {
@@ -369,7 +370,7 @@ export type StoredGeneration = {
 
 export const getGeneration = async (genId: string) => {
   const { data } = await api.get<StoredGeneration>(`/generations/${genId}`);
-  return data;
+  return cleanDashesDeep(data);
 };
 
 export const deleteAllGenerations = async () => {
@@ -481,7 +482,7 @@ export const getAskThread = async () => {
   const { data } = await api.get<{ turns: AskLovliTurn[]; updated_at?: string }>(
     "/ask-thread",
   );
-  return data;
+  return cleanDashesDeep(data);
 };
 
 export const putAskThread = async (turns: AskLovliTurn[]) => {

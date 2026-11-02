@@ -41,7 +41,7 @@ export const SituationSection: React.FC<Props> = ({ situation, onSituation, note
       ))}
     </View>
     <Input
-      placeholder="Add a note — e.g. we haven't talked in a week"
+      placeholder="Add a note, e.g. we haven't talked in a week"
       multiline
       value={note}
       onChangeText={onNote}

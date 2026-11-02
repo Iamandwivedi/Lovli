@@ -25,7 +25,7 @@ import { ASK_PENDING_KEY, ASK_THREAD_KEY } from "@/src/config/storage-keys";
 import { colors, radii, typography } from "@/src/theme";
 
 const GREETING =
-  "Hey — what's on your mind? Tell me the situation, or ask me anything. No judgement, promise.";
+  "Hey, what's on your mind? Tell me the situation, or ask me anything. No judgement, promise.";
 
 const STARTERS = [
   "Help me respond to a message",
@@ -213,7 +213,7 @@ export default function AskLovliScreen() {
                   hitSlop={8}
                 >
                   <Ionicons name="refresh" size={12} color={colors.pink} />
-                  <Text style={styles.retryText}>{"Didn't send — tap to retry"}</Text>
+                  <Text style={styles.retryText}>{"Didn't send. Tap to retry"}</Text>
                 </Pressable>
               ) : null}
             </View>

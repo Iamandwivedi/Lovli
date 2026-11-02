@@ -20,8 +20,8 @@ const OUTCOMES = [
   "Unlimited replies, any situation",
   "Relationship memory for everyone you're talking to",
   "Deeper message decoding",
-  "Ask Lovli anytime — no limits",
-  "Priority AI — faster, sharper answers",
+  "Ask Lovli anytime, no limits",
+  "Priority AI: faster, sharper answers",
 ];
 
 export default function PremiumScreen() {
@@ -117,7 +117,7 @@ export default function PremiumScreen() {
             <Sparkle size={16} color={colors.lavender} glow />
             <Text style={styles.confirmTitle}>{"You're on the list."}</Text>
             <Text style={styles.confirmSub}>
-              {"I'll ping you the moment Premium opens up — you're near the front."}
+              {"I'll ping you the moment Premium opens up. You're near the front."}
             </Text>
           </View>
         ) : (
@@ -131,7 +131,7 @@ export default function PremiumScreen() {
             <View style={styles.footerLinks}>
               <Text style={styles.footerText}>Then ₹3,499/year</Text>
               <Text style={styles.footerSep}>·</Text>
-              <Pressable onPress={() => toast.success("Nothing to restore yet — payments open soon.")} hitSlop={8} testID="paywall-restore">
+              <Pressable onPress={() => toast.success("Nothing to restore yet. Payments open soon.")} hitSlop={8} testID="paywall-restore">
                 <Text style={styles.footerText}>Restore</Text>
               </Pressable>
               <Text style={styles.footerSep}>·</Text>

@@ -97,7 +97,7 @@ export const ReplyCard: React.FC<Props> = ({
   const toggleEdit = () => {
     haptic.selection();
     setEditing((e) => {
-      if (e) commitEdit(); // "Done" — the edit is final.
+      if (e) commitEdit(); // "Done" means the edit is final.
       return !e;
     });
   };
@@ -138,7 +138,7 @@ export const ReplyCard: React.FC<Props> = ({
           {copied ? (
             <View style={styles.copiedRow} testID={`reply-copied-${index}`}>
               <Ionicons name="checkmark-circle" size={15} color={colors.green} />
-              <Text style={styles.copiedText}>Copied — go send it</Text>
+              <Text style={styles.copiedText}>Copied. Go send it</Text>
             </View>
           ) : (
             <View style={styles.toneRow}>

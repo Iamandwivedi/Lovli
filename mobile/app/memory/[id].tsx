@@ -141,7 +141,7 @@ export default function PersonDetail() {
               <Text style={styles.entryTitle}>{e.title}</Text>
               {e.date_label || e.detail ? (
                 <Text style={styles.entryDetail}>
-                  {[e.date_label, e.detail].filter(Boolean).join(" — ")}
+                  {[e.date_label, e.detail].filter(Boolean).join(" · ")}
                 </Text>
               ) : null}
             </View>
@@ -186,7 +186,7 @@ export default function PersonDetail() {
           {Platform.OS === "web" ? (
             <TextInput
               value={dateIso} onChangeText={setDateIso}
-              placeholder="Real date for reminders (optional) — YYYY-MM-DD"
+              placeholder="Real date for reminders, optional: YYYY-MM-DD"
               placeholderTextColor={colors.textFaint} style={styles.sheetInput}
               testID="moment-date-iso-input"
             />

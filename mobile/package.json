@@ -12,6 +12,7 @@
     "android:device": "expo run:android --device",
     "web": "expo start --web",
     "lint": "expo lint",
+    "lint:copy": "bash ./scripts/check-dashes.sh",
     "typecheck": "tsc --noEmit",
     "build:dev:ios": "eas build --profile development --platform ios",
     "build:dev:android": "eas build --profile development --platform android",

@@ -118,7 +118,7 @@ export default function FeatureScreen() {
         return;
       }
     } else if (!image && !manual.trim()) {
-      toast.error("Tell me what happened first — screenshot or paste.");
+      toast.error("Tell me what happened first. Screenshot or paste.");
       return;
     }
     setPhase("generating");
@@ -157,7 +157,7 @@ export default function FeatureScreen() {
     try {
       await Clipboard.setStringAsync(text);
       setCopiedIndex(index);
-      toast.success("Copied — go send it.");
+      toast.success("Copied. Go send it.");
       // PR-M2: feature-tool copies teach the memory engine too.
       if (result?.generation_id) {
         trackEvent(
@@ -201,7 +201,7 @@ export default function FeatureScreen() {
     // Tier-aware (red flag safety tier): never invite the user to minimize.
     const severe =
       cfg.askSuffixSevere &&
-      result.verdict === "This is serious — please don't brush it off.";
+      /^this is serious/i.test(result.verdict);
     const suffix = severe ? cfg.askSuffixSevere! : cfg.askSuffix;
     const text =
       `I just used "${cfg.title}". Your take was: "${result.verdict}" ${topPoints} ` +
