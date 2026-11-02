@@ -14,6 +14,10 @@ export const fonts = {
   bodyMedium: "Outfit_500Medium",
   bodySemibold: "Outfit_600SemiBold",
   bodyBold: "Outfit_700Bold",
+
+  // Outfit has no rupee glyph. Every currency symbol renders through this
+  // token so it never falls back to the system font mid price line.
+  currency: "BricolageGrotesque_600SemiBold",
 } as const;
 
 // Display scale — bold grotesque, tight line-height, no negative tracking.
