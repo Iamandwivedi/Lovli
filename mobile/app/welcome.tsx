@@ -35,7 +35,7 @@ export default function WelcomeScreen() {
           <Image source={require("../assets/images/icon.png")} style={styles.icon} />
           <Text style={styles.headline}>{"Overthinking their text? I read it with you."}</Text>
           <Text style={styles.sub}>
-            {"Paste any chat. I'll tell you what's really going on and give you three replies that sound like you — Hinglish included."}
+            {"Paste any chat. I'll tell you what's really going on and give you three replies that sound like you, Hinglish included."}
           </Text>
           <View style={styles.tags}>
             <Text style={[styles.tag, styles.tagSky]}>Instagram</Text>

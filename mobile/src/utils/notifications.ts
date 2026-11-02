@@ -54,7 +54,7 @@ export async function syncNotifications(prefs: NotifPrefs, cards: MemoryCard[]) 
     for (const u of upcomingWithDates(cards)) {
       await Notifications.scheduleNotificationAsync({
         content: prefs.details
-          ? { title: `${u.title} — ${u.nickname} ✦`, body: "Today. You've got this." }
+          ? { title: `${u.title}: ${u.nickname} ✦`, body: "Today. You've got this." }
           : { title: "You've got something today ✦", body: "Open Lovli to see what's coming up." },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
@@ -66,7 +66,7 @@ export async function syncNotifications(prefs: NotifPrefs, cards: MemoryCard[]) 
   if (prefs.checkin) {
     await Notifications.scheduleNotificationAsync({
       // Already-discreet copy — keep as approved.
-      content: { title: "Lovli here — quick check-in?", body: "Two minutes. How's it going?" },
+      content: { title: "Lovli here. Quick check-in?", body: "Two minutes. How's it going?" },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
         weekday: 1, // Sunday

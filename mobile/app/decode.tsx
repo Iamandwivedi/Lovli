@@ -97,7 +97,7 @@ export default function DecodeScreen() {
 
   const run = async () => {
     if (!image && !manual.trim()) {
-      toast.error("Show me the conversation first — screenshot or paste.");
+      toast.error("Show me the conversation first. Screenshot or paste.");
       return;
     }
     setPhase("generating");
@@ -150,7 +150,7 @@ export default function DecodeScreen() {
   const askLovliAboutThis = async () => {
     if (!result) return;
     const text =
-      `I just decoded a chat. Verdict: ${result.vibe_label} — "${result.vibe_headline}" ` +
+      `I just decoded a chat. Verdict: ${result.vibe_label}. "${result.vibe_headline}" ` +
       `${result.whats_really_going_on} What should I do next?`;
     await storage.setItem(ASK_PENDING_KEY, JSON.stringify({ text, personId: memoryId }));
     router.push("/(tabs)/ask-lovli");
@@ -183,7 +183,7 @@ export default function DecodeScreen() {
             {phase === "input" ? (
               <>
                 <Text style={styles.sub}>
-                  {"Show me the conversation — I'll tell you what's really going on."}
+                  {"Show me the conversation. I'll tell you what's really going on."}
                 </Text>
                 <Pressable
                   onPress={pickImage}

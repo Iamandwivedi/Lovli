@@ -47,7 +47,7 @@ export default function LearnedScreen() {
     setSummary({ ...summary, paused: next });
     try {
       await pauseLearnedMemory(next);
-      toast.success(next ? "Paused — Lovli stops learning for now." : "Learning again.");
+      toast.success(next ? "Paused. Lovli stops learning for now." : "Learning again.");
     } catch (err) {
       setSummary({ ...summary, paused: !next });
       toast.error(extractErrorMessage(err, "Could not save."));
@@ -73,7 +73,7 @@ export default function LearnedScreen() {
       await deleteLearnedMemory();
       setConfirmOpen(false);
       setConfirmText("");
-      toast.success("Clean slate — Lovli starts learning you fresh.");
+      toast.success("Clean slate. Lovli starts learning you fresh.");
       load();
     } catch (err) {
       toast.error(extractErrorMessage(err, "Could not reset."));
@@ -101,7 +101,7 @@ export default function LearnedScreen() {
         <View style={styles.heroRow}>
           <Sparkle size={14} color={colors.lavender} />
           <Text style={styles.heroText}>
-            Lovli quietly learns how you text — from what you copy, edit, and skip —
+            Lovli quietly learns how you text from what you copy, edit, and skip,
             so replies sound like you, not a bot.
           </Text>
         </View>
@@ -112,7 +112,7 @@ export default function LearnedScreen() {
           <View style={styles.card} testID="learned-empty">
             <Text style={styles.emptyTitle}>Nothing learned yet</Text>
             <Text style={styles.emptyText}>
-              {"Generate a few replies, copy the ones you like, edit the ones you don't — I pick up your style as you go."}
+              {"Generate a few replies, copy the ones you like, edit the ones you don't. I pick up your style as you go."}
             </Text>
           </View>
         ) : (
@@ -165,7 +165,7 @@ export default function LearnedScreen() {
           </Pressable>
         </View>
         <Text style={styles.sectionHint}>
-          Resetting only clears your learned texting style — your people in Memory stay untouched.
+          Resetting only clears your learned texting style. Your people in Memory stay untouched.
         </Text>
       </ScrollView>
 
@@ -175,7 +175,7 @@ export default function LearnedScreen() {
         <View style={styles.sheet} testID="reset-confirm-sheet">
           <Text style={styles.sheetTitle}>Reset your style?</Text>
           <Text style={styles.sheetSub}>
-            Everything Lovli learned about how you text — gone. Type RESET to confirm.
+            Everything Lovli learned about how you text: gone. Type RESET to confirm.
           </Text>
           <TextInput
             value={confirmText}

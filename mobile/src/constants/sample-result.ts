@@ -18,9 +18,9 @@ export const SAMPLE_MESSAGES: ParsedMessage[] = [
 export const SAMPLE_RESULT: Replies = {
   generation_id: "sample",
   replies: [
-    "saturday chai works! koramangala it is ☕ and playlist person, 100% — audiobooks put me to sleep lol",
+    "saturday chai works! koramangala it is ☕ and playlist person, 100%. audiobooks put me to sleep lol",
     "chai on saturday with you? say less 😄 also playlist person, obviously. i'll make you one for the ride to koramangala",
-    "saturday's a yes. you pick the cafe, i pick the playlist — deal? audiobooks are for people who don't trust their own taste 😌",
+    "saturday's a yes. you pick the cafe, i pick the playlist, deal? audiobooks are for people who don't trust their own taste 😌",
   ],
   reply_labels: ["Safe", "Flirty", "Bold"],
   insight: {

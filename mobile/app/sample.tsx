@@ -79,10 +79,10 @@ export default function SampleScreen() {
             />
           ))}
           <Text style={styles.honesty}>
-            {"That's a sample. Yours will be about your chat — and I might be wrong, you know them better."}
+            {"That's a sample. Yours will be about your chat. And I might be wrong, you know them better."}
           </Text>
           <PrimaryButton
-            label={isAuthed ? "Now read mine" : "Let's go — read my chat"}
+            label={isAuthed ? "Now read mine" : "Let's go, read my chat"}
             onPress={finish}
             testID="sample-cta"
           />

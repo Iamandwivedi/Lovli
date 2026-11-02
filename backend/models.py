@@ -96,6 +96,12 @@ class GoogleCodeRequest(BaseModel):
     state: Optional[str] = None
 
 
+class GoogleTokenRequest(BaseModel):
+    """Native Google Sign-In: the id_token minted on device, verified server side."""
+
+    id_token: str = Field(min_length=1)
+
+
 class OnboardingRequest(BaseModel):
     preferred_platform: Optional[str] = None
     preferred_style: Optional[str] = None

@@ -137,7 +137,7 @@ export const MemoryForm: React.FC<Props> = ({ mode, id }) => {
       }
       resyncNotificationsFromStorage(); // their reminders cancel too
       setConfirmOpen(false);
-      toast.success("Deleted — they're out of your Memory.");
+      toast.success("Deleted. They're out of your Memory.");
       router.replace("/(tabs)/memory");
     } catch (err) {
       toast.error(extractErrorMessage(err, "Could not delete right now."));
@@ -419,7 +419,7 @@ export const MemoryForm: React.FC<Props> = ({ mode, id }) => {
         <View style={styles.sheet} testID="delete-person-sheet">
           <Text style={styles.sheetTitle}>{`Delete ${form.nickname || "this person"}?`}</Text>
           <Text style={styles.sheetSub}>
-            Their card, timeline, and facts — gone for good. Type DELETE to confirm.
+            Their card, timeline, and facts: gone for good. Type DELETE to confirm.
           </Text>
           <TextInput
             value={confirmText}

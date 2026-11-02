@@ -65,7 +65,7 @@ export const NotedCard: React.FC<Props> = ({ personName, suggestions, onKeep, on
         <Sparkle size={12} color={colors.lavender} />
         <Text style={styles.text} numberOfLines={3}>
           <Text style={styles.label}>Noted: </Text>
-          {current.kind === "avoid" ? `avoid — ${current.text}` : current.text}
+          {current.kind === "avoid" ? `avoid: ${current.text}` : current.text}
         </Text>
       </View>
       <View style={styles.actions}>

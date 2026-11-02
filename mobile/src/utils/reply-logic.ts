@@ -52,5 +52,5 @@ export function continuityLine(card: MemoryCard, now = new Date()): string {
   const fact = (card.facts || []).find((f) => f.kind !== "avoid");
   if (fact) return `I remember: ${fact.text}`;
   const bits = [card.platform, card.stage || card.relationship_stage].filter(Boolean);
-  return bits.length ? bits.join(" · ") : "nothing saved yet — tap to add";
+  return bits.length ? bits.join(" · ") : "nothing saved yet, tap to add";
 }

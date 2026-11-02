@@ -1,6 +1,6 @@
-// Root layout — wraps the app in providers, loads Lovli fonts, configures Stack routes.
-// V3 maps the mock typography families to bundled fonts: Bricolage-style
-// display from local Clash Display, Outfit-style UI from Plus Jakarta Sans.
+// Root layout: wraps the app in providers, loads Lovli fonts, configures Stack routes.
+// Fonts are the real families the theme tokens name (Bricolage Grotesque for
+// display, Outfit for body), loaded from their expo-google-fonts packages.
 import React, { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import { Stack } from "expo-router";
@@ -10,11 +10,15 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import {
-  PlusJakartaSans_400Regular,
-  PlusJakartaSans_500Medium,
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold,
-} from "@expo-google-fonts/plus-jakarta-sans";
+  BricolageGrotesque_600SemiBold,
+  BricolageGrotesque_700Bold,
+} from "@expo-google-fonts/bricolage-grotesque";
+import {
+  Outfit_400Regular,
+  Outfit_500Medium,
+  Outfit_600SemiBold,
+  Outfit_700Bold,
+} from "@expo-google-fonts/outfit";
 import { AuthProvider } from "@/src/context/AuthContext";
 import { ToastProvider } from "@/src/context/ToastContext";
 import { AppLockGate } from "@/src/components/AppLockGate";
@@ -29,12 +33,12 @@ export default function RootLayout() {
   useEffect(() => {
     let mounted = true;
     Font.loadAsync({
-      BricolageGrotesque_600SemiBold: require("../assets/fonts/ClashDisplay-Semibold.ttf"),
-      BricolageGrotesque_700Bold: require("../assets/fonts/ClashDisplay-Bold.ttf"),
-      Outfit_400Regular: PlusJakartaSans_400Regular,
-      Outfit_500Medium: PlusJakartaSans_500Medium,
-      Outfit_600SemiBold: PlusJakartaSans_600SemiBold,
-      Outfit_700Bold: PlusJakartaSans_700Bold,
+      BricolageGrotesque_600SemiBold,
+      BricolageGrotesque_700Bold,
+      Outfit_400Regular,
+      Outfit_500Medium,
+      Outfit_600SemiBold,
+      Outfit_700Bold,
     })
       .catch(() => {})
       .finally(() => {

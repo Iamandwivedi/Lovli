@@ -1,7 +1,7 @@
-// Typography tokens — V3 mock language.
-// The design handoff specifies Bricolage Grotesque for display and Outfit for UI.
-// App layout maps those family names to bundled/local fonts so screens can use
-// the V3 tokens consistently.
+// Typography tokens: V3 mock language.
+// Bricolage Grotesque for display and Outfit for UI, loaded in app/_layout.tsx
+// from their expo-google-fonts packages under these exact names. This file is
+// the only place a fontFamily string may appear; screens use the tokens.
 
 import { TextStyle } from "react-native";
 
@@ -14,6 +14,10 @@ export const fonts = {
   bodyMedium: "Outfit_500Medium",
   bodySemibold: "Outfit_600SemiBold",
   bodyBold: "Outfit_700Bold",
+
+  // Outfit has no rupee glyph. Every currency symbol renders through this
+  // token so it never falls back to the system font mid price line.
+  currency: "BricolageGrotesque_600SemiBold",
 } as const;
 
 // Display scale — bold grotesque, tight line-height, no negative tracking.

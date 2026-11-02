@@ -23,6 +23,43 @@ from typing import Optional
 
 # ----- Lovli prompt templates -----------------------------------------------
 
+# Lovli copy never uses em or en dashes. Every system prompt carries this line
+# and every response is scrubbed by strip_dashes_deep before validation, so a
+# model that ignores the instruction still cannot leak a dash to a client.
+NO_DASH_RULE = (
+    "Never use em dashes or en dashes in any output. "
+    "Use commas, periods, or separate sentences."
+)
+
+_SPACED_DASH_RE = re.compile(r"\s[\u2014\u2013]\s")
+_ANY_DASH_RE = re.compile(r"[\u2014\u2013]")
+_DOUBLE_COMMA_RE = re.compile(r",\s*,")
+_COMMA_BEFORE_STOP_RE = re.compile(r",\s*([.!?])")
+
+
+def strip_dashes(text: str) -> str:
+    """Replace ' — ' and ' – ' with ', ', turn any remaining em or en dash into
+    ', ' as well (so 'hey—what' does not become 'heywhat'), then tidy up."""
+    if not text:
+        return text
+    out = _SPACED_DASH_RE.sub(", ", text)
+    out = _ANY_DASH_RE.sub(", ", out)
+    out = _DOUBLE_COMMA_RE.sub(",", out)
+    out = _COMMA_BEFORE_STOP_RE.sub(r"\1", out)
+    return out
+
+
+def strip_dashes_deep(value):
+    """Apply strip_dashes to every string inside a JSON-shaped value."""
+    if isinstance(value, str):
+        return strip_dashes(value)
+    if isinstance(value, list):
+        return [strip_dashes_deep(v) for v in value]
+    if isinstance(value, dict):
+        return {k: strip_dashes_deep(v) for k, v in value.items()}
+    return value
+
+
 LOVLI_SYSTEM_PROMPT = (
     "You are Lovli, an AI dating coach for Indian chats. "
     "You help users write natural, respectful, context-aware replies for "
@@ -34,7 +71,8 @@ LOVLI_SYSTEM_PROMPT = (
     "respectful. Never use pickup-artist tactics. Replies should be short "
     "to medium length, directly usable but editable, and free of cringe. "
     "Always respond ONLY with valid JSON in the exact schema requested — "
-    "no markdown fences, no commentary, no leading/trailing prose."
+    "no markdown fences, no commentary, no leading/trailing prose. "
+    + NO_DASH_RULE
 )
 
 
@@ -232,14 +270,17 @@ def _strip_code_fences(text: str) -> str:
 
 
 def parse_lovli_json(raw: str) -> dict:
+    """Parse the model's JSON and scrub dashes from every text field. This runs
+    before validate_payload, validate_decode_payload, and validate_feature_payload."""
     cleaned = _strip_code_fences(raw)
     try:
-        return json.loads(cleaned)
+        payload = json.loads(cleaned)
     except json.JSONDecodeError:
         match = re.search(r"\{.*\}", cleaned, flags=re.DOTALL)
         if not match:
             raise
-        return json.loads(match.group(0))
+        payload = json.loads(match.group(0))
+    return strip_dashes_deep(payload)
 
 
 class LovliValidationError(ValueError):
@@ -820,7 +861,9 @@ Coaching:
 
 HONESTY RULE (hard): qualitative reads only. NEVER give numeric confidence, percentages, scores out of 10, or invented facts about the other person. If you can't know something, say so plainly.
 
-If a PERSON CONTEXT block is provided, weave those details in naturally (names, dates, preferences) — never recite the list back."""
+If a PERSON CONTEXT block is provided, weave those details in naturally (names, dates, preferences) — never recite the list back.
+
+""" + NO_DASH_RULE
 
 
 def _build_ask_prompt(
@@ -930,9 +973,9 @@ async def ask_lovli(
 
     async def _attempt(provider: str) -> str:
         if provider == "anthropic":
-            return await _ask_anthropic(prompt)
+            return strip_dashes(await _ask_anthropic(prompt))
         if provider == "emergent":
-            return await _ask_emergent(prompt, session_id)
+            return strip_dashes(await _ask_emergent(prompt, session_id))
         raise LovliLlmError(f"unknown provider {provider!r}")
 
     try:
@@ -972,7 +1015,9 @@ Output ONLY a JSON object — no prose, no code fences — with this exact shape
     "likely_outcome": "one qualitative sentence on how that move likely lands"
   }
 }
-Language: mirror the chat's language (Hinglish stays Hinglish). Quote tiny fragments of their actual messages inside observations when it helps."""
+Language: mirror the chat's language (Hinglish stays Hinglish). Quote tiny fragments of their actual messages inside observations when it helps.
+
+""" + NO_DASH_RULE
 
 
 @dataclass
@@ -1164,10 +1209,10 @@ async def decode_situation(req: DecodeRequest) -> dict:
 # Contract: /app/docs/FEATURE_API_AND_PROMPTS.md
 
 RED_FLAG_VERDICTS = (
-    "All clear — no red flags.",
-    "Mild — but fixable.",
+    "All clear, no red flags.",
+    "Mild, but fixable.",
     "Pattern worth taking seriously.",
-    "This is serious — please don't brush it off.",
+    "This is serious, please don't brush it off.",
 )
 
 POINT_TONES = ("positive", "warning", "neutral")
@@ -1191,15 +1236,17 @@ Output ONLY a JSON object — no prose, no code fences — with this exact shape
   "replies": ["0-3 ready-to-send messages. [] when a message isn't the right move"]
 }
 points: 1-5 items. tone: "positive" for good signs, "warning" for cautions, "neutral" for context.
-Language: mirror the user's language preference (Hinglish stays Hinglish). Quote tiny fragments of the actual messages inside observations when it helps."""
+Language: mirror the user's language preference (Hinglish stays Hinglish). Quote tiny fragments of the actual messages inside observations when it helps.
+
+""" + NO_DASH_RULE
 
 FEATURE_SUFFIXES: dict[str, str] = {
     "red_flag_check": (
         "TASK: Judge whether what the other person did is a red flag, normal, or "
         "somewhere in between. Be honest — don't catastrophize normal behavior, don't "
         "excuse genuinely bad behavior. `verdict` MUST be EXACTLY one of these four "
-        "phrases and nothing else: \"All clear — no red flags.\" / \"Mild — but "
-        "fixable.\" / \"Pattern worth taking seriously.\" / \"This is serious — please "
+        "phrases and nothing else: \"All clear, no red flags.\" / \"Mild, but "
+        "fixable.\" / \"Pattern worth taking seriously.\" / \"This is serious, please "
         "don't brush it off.\" Use the last one for control, coercion, threats, "
         "isolation, or abuse patterns — and when you do, `actions` must gently point "
         "the user toward trusted people or professional support first, never just "

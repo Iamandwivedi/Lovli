@@ -88,7 +88,7 @@ export default function SettingsScreen() {
         return;
       }
       if (perm === "denied") {
-        toast.error("I need permission to remind you — try again anytime.");
+        toast.error("I need permission to remind you. Try again anytime.");
         return;
       }
     }
@@ -106,7 +106,7 @@ export default function SettingsScreen() {
   const toggleFaceId = async () => {
     const turningOn = !prefs.face_id;
     if (turningOn && Platform.OS === "web") {
-      toast.success("Saved — Face ID arms on your phone.");
+      toast.success("Saved. Face ID arms on your phone.");
     }
     await savePrefs({ ...prefs, face_id: turningOn }, { face_id: turningOn });
   };
@@ -137,7 +137,7 @@ export default function SettingsScreen() {
       resyncNotificationsFromStorage(); // cards are gone → reminders cancel too
       setConfirmOpen(false);
       setConfirmText("");
-      toast.success("Gone — every memory, wiped clean.");
+      toast.success("Gone. Every memory, wiped clean.");
     } catch (err) {
       toast.error(extractErrorMessage(err, "Could not delete everything."));
     } finally {
@@ -225,7 +225,7 @@ export default function SettingsScreen() {
           onToggle={() => toggleNotif("notif_details")} testID="toggle-notif-details" />
       </View>
       <Text style={styles.sectionHint}>
-        Notifications stay discreet by default — no names, no details on your lock screen.
+        Notifications stay discreet by default: no names, no details on your lock screen.
       </Text>
 
       {/* PRIVACY */}
@@ -247,7 +247,7 @@ export default function SettingsScreen() {
 
       {/* Footer */}
       <View style={[styles.card, { marginBottom: 32 }]}>
-        <Pressable style={styles.footerRow} onPress={() => toast.success("Nothing to restore yet — payments open soon.")} testID="settings-restore">
+        <Pressable style={styles.footerRow} onPress={() => toast.success("Nothing to restore yet. Payments open soon.")} testID="settings-restore">
           <Text style={styles.restoreText}>Restore purchases</Text>
         </Pressable>
         <View style={styles.divider} />
@@ -283,7 +283,7 @@ export default function SettingsScreen() {
         <View style={styles.sheet} testID="delete-confirm-sheet">
           <Text style={styles.sheetTitle}>Delete every memory?</Text>
           <Text style={styles.sheetSub}>
-            {"Every person, timeline, saved result, and our chat thread — gone for good. Type DELETE to confirm."}
+            {"Every person, timeline, saved result, and our chat thread: gone for good. Type DELETE to confirm."}
           </Text>
           <TextInput
             value={confirmText} onChangeText={setConfirmText} placeholder="DELETE"

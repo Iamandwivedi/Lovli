@@ -52,10 +52,10 @@ export default function MemoryScreen() {
       <View style={{ marginTop: space.s }}>
         <Text style={styles.h1}>Memory</Text>
         <Text style={styles.intro}>
-          I remember the little things — so you never fumble them.
+          I remember the little things, so you never fumble them.
         </Text>
         <Text style={styles.sub}>
-          {"Save a person and I'll keep track of what you tell me — names, dates, inside jokes."}
+          {"Save a person and I'll keep track of what you tell me: names, dates, inside jokes."}
         </Text>
       </View>
 

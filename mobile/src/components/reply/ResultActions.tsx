@@ -44,7 +44,7 @@ export const ResultActions: React.FC<Props> = ({ personName, canSave, onAskLovli
         ) : null}
         <ActionPill
           icon={<Ionicons name="thumbs-down-outline" size={14} color={reported ? colors.textDim : colors.pink} />}
-          label={reported ? "Thanks — noted" : "Report a bad read"}
+          label={reported ? "Thanks, noted" : "Report a bad read"}
           onPress={() => setReporting((r) => !r)}
           disabled={!!reported}
           testID="action-report"

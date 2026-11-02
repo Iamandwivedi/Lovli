@@ -55,7 +55,13 @@
         }
       ],
       "expo-font",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.TODO-REPLACE-WITH-REVERSED-IOS-CLIENT-ID"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

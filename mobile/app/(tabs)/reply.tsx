@@ -235,7 +235,7 @@ export default function ReplyScreen() {
     try {
       const text = (await Clipboard.getStringAsync()).trim();
       if (!text) {
-        toast.error("Nothing to paste yet — copy their message first.");
+        toast.error("Nothing to paste yet. Copy their message first.");
         return;
       }
       haptic.success();
@@ -247,12 +247,12 @@ export default function ReplyScreen() {
 
   const goToIntent = async () => {
     if (!image && !manual.trim()) {
-      toast.error("Show me the conversation first — screenshot or paste.");
+      toast.error("Show me the conversation first. Screenshot or paste.");
       return;
     }
     if (usage.plan !== "pro" && remaining <= 0) {
       haptic.warning();
-      toast.error("That's today's free replies — back tomorrow, or go Pro.");
+      toast.error("That's today's free replies. Back tomorrow, or go Pro.");
       return;
     }
     setLanguage(defaultLanguage);
@@ -380,7 +380,7 @@ export default function ReplyScreen() {
       { tone: `more like ${label}`, index, generation_id: result?.generation_id, surface: "reply" },
       memoryId,
     );
-    startGeneration(`closer to the ${label.toLowerCase()} option — "${text}"`);
+    startGeneration(`closer to the ${label.toLowerCase()} option: "${text}"`);
   };
 
   const onToneChip = (tone: string) => {
@@ -406,7 +406,7 @@ export default function ReplyScreen() {
     const insight = safeInsight(result.insight);
     const lead = insight ? `${insight.whats_going_on} ` : "";
     const text =
-      `Lovli, about this chat — ${lead}you suggested: "${result.replies[0] || ""}". ` +
+      `Lovli, about this chat. ${lead}You suggested: "${result.replies[0] || ""}". ` +
       "What should I keep in mind before I send?";
     await storage.setItem(ASK_PENDING_KEY, JSON.stringify({ text, personId: memoryId }));
     router.push("/(tabs)/ask-lovli");
@@ -703,7 +703,7 @@ const HomePhase: React.FC<{
       <Text style={styles.h1} testID="reply-heading">
         Kya scene hai?
       </Text>
-      <Text style={styles.sub}>Overthinking their last text? Paste it — I'll read it with you.</Text>
+      <Text style={styles.sub}>{"Overthinking their last text? Paste it. I'll read it with you."}</Text>
     </View>
 
     {/* Person picker — hidden entirely when no memory cards. Never blocks. */}
