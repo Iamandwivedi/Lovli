@@ -7,6 +7,7 @@ import { LovliLogo } from "@/src/components/LovliLogo";
 import { Input } from "@/src/components/Input";
 import { PrimaryButton } from "@/src/components/PrimaryButton";
 import { GlassCard } from "@/src/components/GlassCard";
+import { GoogleSignIn } from "@/src/components/GoogleSignIn";
 import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
 import { extractErrorMessage } from "@/src/api/client";
@@ -93,6 +94,8 @@ export default function SignupScreen() {
             testID="signup-submit-button"
           />
         </View>
+
+        <GoogleSignIn testID="signup-google-button" />
 
         <View style={styles.bottomRow}>
           <Text style={styles.muted}>Already have an account? </Text>

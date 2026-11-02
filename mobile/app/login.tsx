@@ -7,11 +7,12 @@ import { Screen } from "@/src/components/Screen";
 import { LovliLogo } from "@/src/components/LovliLogo";
 import { Input } from "@/src/components/Input";
 import { PrimaryButton } from "@/src/components/PrimaryButton";
-import { SecondaryButton } from "@/src/components/SecondaryButton";
+import { GoogleSignIn } from "@/src/components/GoogleSignIn";
 import { GlassCard } from "@/src/components/GlassCard";
 import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
 import { extractErrorMessage } from "@/src/api/client";
+import { routeAfterAuth } from "@/src/navigation/route-after-auth";
 import { colors, fontSize, space } from "@/src/theme/colors";
 
 export default function LoginScreen() {
@@ -30,9 +31,7 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       const user = await login(email.trim(), password);
-      const hasDefaults = !!user?.preferred_platform || !!user?.onboarding_complete;
-      if (!hasDefaults) router.replace("/onboarding");
-      else router.replace("/(tabs)/reply");
+      routeAfterAuth(user, router);
     } catch (err) {
       toast.error(extractErrorMessage(err, "Could not sign in. Try again."));
     } finally {
@@ -87,19 +86,7 @@ export default function LoginScreen() {
           />
         </View>
 
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>OR</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <SecondaryButton
-          label="Continue with Google"
-          onPress={() => toast.show("Google sign in is coming soon.")}
-          iconLeft={<Ionicons name="logo-google" size={16} color={colors.textSoft} />}
-          testID="login-google-button"
-          disabled
-        />
+        <GoogleSignIn testID="login-google-button" />
 
         <View style={styles.bottomRow}>
           <Text style={styles.muted}>New to Lovli? </Text>
@@ -146,18 +133,6 @@ const styles = StyleSheet.create({
   privacyText: {
     color: colors.textMuted,
     fontSize: 11.5,
-  },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: space.m,
-    marginVertical: space.l,
-  },
-  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
-  dividerText: {
-    color: colors.textMuted,
-    fontSize: 11,
-    letterSpacing: 1.6,
   },
   bottomRow: {
     flexDirection: "row",

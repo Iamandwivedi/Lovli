@@ -16,6 +16,7 @@ Minimum required (11):
 | `GOOGLE_CLIENT_ID` | `xxxxx.apps.googleusercontent.com` | From Google Cloud Console |
 | `GOOGLE_CLIENT_SECRET` | `GOCSPX-xxxxx` | From Google Cloud Console |
 | `GOOGLE_ALLOWED_REDIRECT_URIS` | `https://app.lovli.in/auth,https://lovli.in/auth` | **Frontend** URLs only. Must EXACTLY match Google Console list. |
+| `GOOGLE_IOS_CLIENT_ID` | `xxxxx.apps.googleusercontent.com` | iOS OAuth client (bundle `in.lovli.app`). Public ID, not a secret. Accepted as an id_token audience by `/api/auth/google/token` alongside `GOOGLE_CLIENT_ID`. Optional. |
 | `CORS_ORIGINS` | `https://app.lovli.in,https://lovli.in` | Comma-separated frontend origins. |
 | `ALLOW_TEST_LOGIN` | `false` | NEVER `true` in production. |
 | `PYTHONUNBUFFERED` | `1` | For real-time Railway logs. |

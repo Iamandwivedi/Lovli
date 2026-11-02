@@ -169,6 +169,13 @@ export const authGoogleCode = async (code: string, redirect_uri: string, state?:
   return data;
 };
 
+// Native mobile flow: the Google Sign-In SDK mints an id_token on device and
+// the backend verifies it. Same AuthResponse shape as login.
+export const authGoogleToken = async (id_token: string) => {
+  const { data } = await api.post<AuthResponse>("/auth/google/token", { id_token });
+  return data;
+};
+
 // ---------- Onboarding / Settings ----------
 export const patchOnboarding = async (body: {
   preferred_platform?: PlatformValue;

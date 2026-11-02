@@ -9,6 +9,9 @@ Key endpoints (all prefixed with /api):
 - POST   /auth/login
 - POST   /auth/test-login         (DEV ONLY: ALLOW_TEST_LOGIN=true AND ENVIRONMENT!=production)
 - POST   /auth/google/session     (Emergent managed Google OAuth exchange)
+- GET    /auth/google/config      (public: enabled flag + web client_id)
+- POST   /auth/google/code        (web: OAuth authorization-code exchange)
+- POST   /auth/google/token       (mobile: native Google Sign-In id_token verification)
 - GET    /auth/me
 - PATCH  /auth/onboarding
 - PATCH  /settings
@@ -105,6 +108,7 @@ from models import (
     MemoryPauseRequest,
     GoogleCodeRequest,
     GoogleSessionRequest,  # noqa: F401  (kept for import compatibility)
+    GoogleTokenRequest,
     LoginRequest,
     MemoryCard,
     MemoryCardCreate,
@@ -465,6 +469,16 @@ async def google_code_exchange(req: GoogleCodeRequest):
             status_code=502, detail="Auth provider unavailable. Try again."
         ) from e
 
+    return await _finish_google_login(info)
+
+
+async def _finish_google_login(info: dict) -> AuthResponse:
+    """Shared tail of every Google sign-in path: upsert the user, issue our JWT.
+
+    `info` is the Google userinfo shape: id (stable subject), email,
+    verified_email, name, picture. Both the web code flow and the native
+    id_token flow build this dict and call here, so the two cannot drift.
+    """
     email = (info.get("email") or "").lower()
     if not email:
         raise HTTPException(status_code=400, detail="No email returned by Google.")
@@ -512,6 +526,70 @@ async def google_code_exchange(req: GoogleCodeRequest):
 
     token = create_jwt(user["id"], user["email"])
     return AuthResponse(access_token=token, user=_public_user(user))
+
+
+_GOOGLE_ISSUERS = {"accounts.google.com", "https://accounts.google.com"}
+
+
+def _google_token_audiences() -> list[str]:
+    """Client IDs an id_token may be minted for: the web client, plus the iOS
+    client when configured. (Android id_tokens carry the web client ID.)"""
+    ids = [
+        (os.environ.get("GOOGLE_CLIENT_ID") or "").strip(),
+        (os.environ.get("GOOGLE_IOS_CLIENT_ID") or "").strip(),
+    ]
+    return [i for i in ids if i]
+
+
+def _verify_google_id_token(id_token: str, audiences: list[str]) -> dict:
+    """Verify signature and expiry with google-auth, then our own audience,
+    issuer, and email_verified checks. Returns the token claims."""
+    from google.auth.transport import requests as google_requests
+    from google.oauth2 import id_token as google_id_token
+
+    claims = google_id_token.verify_oauth2_token(
+        id_token, google_requests.Request(), audience=None
+    )
+    aud = claims.get("aud")
+    if aud not in audiences:
+        raise ValueError("audience mismatch")
+    if claims.get("iss") not in _GOOGLE_ISSUERS:
+        raise ValueError("issuer mismatch")
+    if claims.get("email_verified") is not True:
+        raise ValueError("email not verified")
+    return claims
+
+
+@api.post("/auth/google/token", response_model=AuthResponse)
+async def google_token_exchange(req: GoogleTokenRequest):
+    """Native mobile Google Sign-In.
+
+    The app uses the Google Sign-In SDK on device to obtain an id_token, and
+    posts it here. We verify it against Google's public keys, check that it
+    was minted for one of our client IDs, and then run the exact same upsert
+    and JWT issue path as the web code flow. No client secret is involved.
+    """
+    audiences = _google_token_audiences()
+    if not (os.environ.get("GOOGLE_CLIENT_ID") or "").strip():
+        raise HTTPException(
+            status_code=503, detail="Google sign-in is not configured."
+        )
+    try:
+        claims = _verify_google_id_token(req.id_token.strip(), audiences)
+    except Exception as e:  # noqa: BLE001 (any failure is a 401, reason stays server side)
+        logger.warning("google id_token rejected: %s", e)
+        raise HTTPException(
+            status_code=401, detail="Sign-in failed. Try again."
+        ) from e
+
+    info = {
+        "id": claims.get("sub"),
+        "email": claims.get("email"),
+        "verified_email": True,
+        "name": claims.get("name"),
+        "picture": claims.get("picture"),
+    }
+    return await _finish_google_login(info)
 
 
 @api.get("/auth/me", response_model=PublicUser)

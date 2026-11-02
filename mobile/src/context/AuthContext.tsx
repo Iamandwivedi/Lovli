@@ -2,6 +2,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
   Bootstrap,
+  authGoogleToken,
   authLogin,
   authMe,
   authSignup,
@@ -14,6 +15,7 @@ import { storage } from "@/src/utils/storage";
 import { ASK_PENDING_KEY, ASK_THREAD_KEY, PREFS_KEY, GOAL_KEY } from "@/src/config/storage-keys";
 import { cancelAllNotifications, resyncNotificationsFromStorage } from "@/src/utils/notifications";
 import { hydrateFromCloud } from "@/src/lib/user-prefs";
+import { signOutGoogle } from "@/src/auth/google";
 
 type Status = "checking" | "authed" | "unauthed";
 
@@ -26,6 +28,8 @@ type AuthContextValue = {
   bootstrap: Bootstrap | null;
   login: (email: string, password: string) => Promise<User>;
   signup: (name: string, email: string, password: string) => Promise<User>;
+  /** Native Google sign in: exchanges the device id_token for a Lovli session. */
+  loginWithGoogle: (idToken: string) => Promise<User>;
   logout: () => Promise<void>;
   refreshMe: () => Promise<User | null>;
   updateUser: (user: User) => void;
@@ -123,35 +127,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, []);
 
-  const login = useCallback(
-    async (email: string, password: string) => {
-      const { access_token, user: u } = await authLogin(email, password);
+  /**
+   * Everything that happens after the backend hands us a session, whichever
+   * route produced it: persist the JWT, mark the app authed, and restore the
+   * account's cloud state so a new device or new account looks right at once.
+   */
+  const establishSession = useCallback(
+    async ({ access_token, user: u }: { access_token: string; user: User }) => {
       await setAuthToken(access_token);
       setUser(u);
       setStatus("authed");
-      // Signing in on a new device restores everything from the account.
       await hydrateFromAccount();
       return u;
     },
     [hydrateFromAccount],
   );
 
+  const login = useCallback(
+    async (email: string, password: string) =>
+      establishSession(await authLogin(email, password)),
+    [establishSession],
+  );
+
   const signup = useCallback(
-    async (name: string, email: string, password: string) => {
-      const { access_token, user: u } = await authSignup(name, email, password);
-      await setAuthToken(access_token);
-      setUser(u);
-      setStatus("authed");
-      // Same as login: a new account needs its cloud state established up front,
-      // otherwise nothing it changes in the first session is cloud-backed.
-      await hydrateFromAccount();
-      return u;
-    },
-    [hydrateFromAccount],
+    async (name: string, email: string, password: string) =>
+      establishSession(await authSignup(name, email, password)),
+    [establishSession],
+  );
+
+  const loginWithGoogle = useCallback(
+    async (idToken: string) => establishSession(await authGoogleToken(idToken)),
+    [establishSession],
   );
 
   const logout = useCallback(async () => {
     await setAuthToken(null);
+    // Forget the Google account too, so the picker shows on the next sign in.
+    await signOutGoogle();
     // Personal local data must not leak across accounts (PR-V2-4 carry-in fix).
     // The cloud copies stay put — signing back in restores them.
     await storage.removeItem(ASK_THREAD_KEY);
@@ -175,11 +187,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       bootstrap,
       login,
       signup,
+      loginWithGoogle,
       logout,
       refreshMe,
       updateUser,
     }),
-    [user, status, bootstrap, login, signup, logout, refreshMe, updateUser],
+    [user, status, bootstrap, login, signup, loginWithGoogle, logout, refreshMe, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

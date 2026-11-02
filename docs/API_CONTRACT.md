@@ -9,7 +9,8 @@ All routes are prefixed `/api`. JWT auth via `Authorization: Bearer <token>` hea
 | POST | `/api/auth/signup` | `{name, email, password}` | `{token, user}` | none | 422 on validation error returns array `detail`. |
 | POST | `/api/auth/login` | `{email, password}` | `{token, user}` | none | |
 | GET | `/api/auth/google/config` | — | `{enabled, client_id, scope}` | none | Public OAuth config. |
-| POST | `/api/auth/google/code` | `{code, redirect_uri, state}` | `{token, user}` | none | Exchanges Google auth code. |
+| POST | `/api/auth/google/code` | `{code, redirect_uri, state}` | `{token, user}` | none | Exchanges Google auth code (web). |
+| POST | `/api/auth/google/token` | `{id_token}` | `{token, user}` | none | Native mobile sign-in. Verifies a Google id_token (audience must be `GOOGLE_CLIENT_ID` or `GOOGLE_IOS_CLIENT_ID`, issuer accounts.google.com, email verified), then runs the same upsert as `/google/code`. 503 when `GOOGLE_CLIENT_ID` is unset, 401 on any verification failure. |
 | GET | `/api/auth/me` | — | user object | required | |
 | PATCH | `/api/auth/onboarding` | partial preferences | user | required | |
 
