@@ -68,16 +68,31 @@ export default function LoginScreen() {
             onChangeText={setEmail}
             inputTestID="login-email-input"
           />
-          <Input
-            label="Password"
-            placeholder="••••••••"
-            secureTextEntry
-            autoCapitalize="none"
-            autoComplete="password"
-            value={password}
-            onChangeText={setPassword}
-            inputTestID="login-password-input"
-          />
+          <View style={{ gap: space.xs }}>
+            <Input
+              label="Password"
+              placeholder="••••••••"
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="password"
+              value={password}
+              onChangeText={setPassword}
+              inputTestID="login-password-input"
+            />
+            <Pressable
+              onPress={() =>
+                router.push({
+                  pathname: "/forgot-password",
+                  params: email.trim() ? { email: email.trim() } : {},
+                })
+              }
+              hitSlop={8}
+              style={styles.forgotRow}
+              testID="login-forgot-link"
+            >
+              <Text style={[styles.link, styles.forgotText]}>Forgot password?</Text>
+            </Pressable>
+          </View>
           <PrimaryButton
             label={loading ? "Signing in…" : "Sign in"}
             onPress={onSubmit}
@@ -145,6 +160,8 @@ const styles = StyleSheet.create({
     fontSize: fontSize.base,
     textDecorationLine: "underline",
   },
+  forgotRow: { alignSelf: "flex-end" },
+  forgotText: { color: colors.textMuted },
   legal: {
     color: colors.textMuted,
     fontSize: 11,

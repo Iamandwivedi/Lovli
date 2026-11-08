@@ -8,6 +8,7 @@ import {
   authSignup,
   authTestLogin,
   getBootstrap,
+  resetPassword,
   User,
 } from "@/src/api/endpoints";
 import { loadAuthToken, setAuthToken, setUnauthorizedHandler } from "@/src/api/client";
@@ -30,6 +31,8 @@ type AuthContextValue = {
   signup: (name: string, email: string, password: string) => Promise<User>;
   /** Native Google sign in: exchanges the device id_token for a Lovli session. */
   loginWithGoogle: (idToken: string) => Promise<User>;
+  /** Forgot password, step 2: the emailed code plus the new password. Signs the user in. */
+  completePasswordReset: (email: string, code: string, newPassword: string) => Promise<User>;
   logout: () => Promise<void>;
   refreshMe: () => Promise<User | null>;
   updateUser: (user: User) => void;
@@ -160,6 +163,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [establishSession],
   );
 
+  const completePasswordReset = useCallback(
+    async (email: string, code: string, newPassword: string) =>
+      establishSession(await resetPassword(email, code, newPassword)),
+    [establishSession],
+  );
+
   const logout = useCallback(async () => {
     await setAuthToken(null);
     // Forget the Google account too, so the picker shows on the next sign in.
@@ -188,11 +197,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login,
       signup,
       loginWithGoogle,
+      completePasswordReset,
       logout,
       refreshMe,
       updateUser,
     }),
-    [user, status, bootstrap, login, signup, loginWithGoogle, logout, refreshMe, updateUser],
+    [
+      user,
+      status,
+      bootstrap,
+      login,
+      signup,
+      loginWithGoogle,
+      completePasswordReset,
+      logout,
+      refreshMe,
+      updateUser,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

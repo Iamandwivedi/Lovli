@@ -143,6 +143,23 @@ export const authSignup = async (name: string, email: string, password: string) 
   return data;
 };
 
+// Password reset, step 1. The backend always answers 200 so nobody can learn
+// whether an email has an account. The UI moves to the code step regardless.
+export const requestPasswordReset = async (email: string): Promise<void> => {
+  await api.post("/auth/forgot-password", { email });
+};
+
+// Password reset, step 2. On success the user is signed in: same AuthResponse
+// shape as login, so the caller hands it to establishSession like any sign in.
+export const resetPassword = async (email: string, code: string, new_password: string) => {
+  const { data } = await api.post<AuthResponse>("/auth/reset-password", {
+    email,
+    code,
+    new_password,
+  });
+  return data;
+};
+
 // Dev-only auto sign-in. Backend 404s unless ALLOW_TEST_LOGIN=true (never in production).
 export const authTestLogin = async () => {
   const { data } = await api.post<AuthResponse>("/auth/test-login");
