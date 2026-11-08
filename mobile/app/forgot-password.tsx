@@ -3,13 +3,13 @@
 // the user in through the same session path as every other sign in.
 import React, { useCallback, useEffect, useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { isAxiosError } from "axios";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Screen } from "@/src/components/Screen";
 import { LovliLogo } from "@/src/components/LovliLogo";
 import { Input } from "@/src/components/Input";
 import { PrimaryButton } from "@/src/components/PrimaryButton";
-import { SecondaryButton } from "@/src/components/SecondaryButton";
 import { GlassCard } from "@/src/components/GlassCard";
 import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
@@ -60,16 +60,20 @@ export default function ForgotPasswordScreen() {
     setSending(true);
     try {
       await requestPasswordReset(cleaned);
-    } catch {
-      // The endpoint always answers 200. A network failure must not reveal
-      // anything either, so the flow carries on and the user can resend.
-    } finally {
-      setSending(false);
+    } catch (err) {
+      // The endpoint is designed to always answer 200, so any response at all
+      // (even a 4xx or 5xx) is treated the same and the flow moves on. Only a
+      // request that never reached the server keeps the user on this step.
+      if (!isAxiosError(err) || !err.response) {
+        toast.error("Check your connection and try again.");
+        setSending(false);
+        return;
+      }
     }
+    setSending(false);
     setEmail(cleaned);
     setStep("code");
     setCooldown(RESEND_SECONDS);
-    toast.show("If that email has a Lovli account, the code is on its way.");
   }, [email, toast]);
 
   const submit = async () => {
@@ -151,15 +155,29 @@ export default function ForgotPasswordScreen() {
             </View>
 
             <Text style={styles.note}>
-              Signed up with Google? There is no password to reset. Go back and tap Continue
-              with Google.
+              Signed up with Google? Go back and tap Continue with Google.
             </Text>
           </>
         ) : (
           <>
             <Text style={styles.h1}>Check your email</Text>
             <Text style={styles.sub}>
-              I sent a code to {email}. It works for 15 minutes.
+              If that email has a Lovli account, a code is on its way to {email}. It works for
+              15 minutes.{" "}
+              {cooldown > 0 ? (
+                <Text style={styles.resendWaiting} testID="forgot-resend-button">
+                  Resend in {cooldown}s
+                </Text>
+              ) : (
+                <Text
+                  style={styles.resendLink}
+                  onPress={sending ? undefined : sendCode}
+                  accessibilityRole="button"
+                  testID="forgot-resend-button"
+                >
+                  Resend code
+                </Text>
+              )}
             </Text>
 
             <View style={styles.form}>
@@ -208,16 +226,6 @@ export default function ForgotPasswordScreen() {
               />
             </View>
 
-            <SecondaryButton
-              variant="ghost"
-              label={cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
-              onPress={sendCode}
-              disabled={cooldown > 0 || sending}
-              loading={sending}
-              style={styles.resend}
-              testID="forgot-resend-button"
-            />
-
             <View style={styles.bottomRow}>
               <Pressable onPress={changeEmail} hitSlop={8} testID="forgot-change-email-link">
                 <Text style={styles.link}>Use a different email</Text>
@@ -262,11 +270,19 @@ const styles = StyleSheet.create({
     marginTop: space.l,
     textAlign: "center",
   },
-  resend: { marginTop: space.s },
+  resendWaiting: {
+    ...typography.body.base,
+    color: colors.textFaint,
+  },
+  resendLink: {
+    ...typography.body.base,
+    color: colors.text,
+    textDecorationLine: "underline",
+  },
   bottomRow: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: space.s,
+    marginTop: space.l,
   },
   link: {
     ...typography.body.base,
