@@ -13,8 +13,8 @@
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://api.lovli.in",
         "EXPO_PUBLIC_DEV_AUTO_LOGIN": "false",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "REPLACE_ME.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "REPLACE_ME.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "135204619232-9nq4vgt21od36mkvrs3emst9ng491u4m.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "135204619232-b4k0u587d4nosf7tvn60j34gj41e68te.apps.googleusercontent.com"
       }
     },
     "simulator": {
@@ -26,8 +26,8 @@
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://api.lovli.in",
         "EXPO_PUBLIC_DEV_AUTO_LOGIN": "false",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "REPLACE_ME.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "REPLACE_ME.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "135204619232-9nq4vgt21od36mkvrs3emst9ng491u4m.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "135204619232-b4k0u587d4nosf7tvn60j34gj41e68te.apps.googleusercontent.com"
       }
     },
     "preview": {
@@ -35,8 +35,8 @@
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://api.lovli.in",
         "EXPO_PUBLIC_DEV_AUTO_LOGIN": "false",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "REPLACE_ME.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "REPLACE_ME.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "135204619232-9nq4vgt21od36mkvrs3emst9ng491u4m.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "135204619232-b4k0u587d4nosf7tvn60j34gj41e68te.apps.googleusercontent.com"
       }
     },
     "production": {
@@ -44,8 +44,8 @@
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://api.lovli.in",
         "EXPO_PUBLIC_DEV_AUTO_LOGIN": "false",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "REPLACE_ME.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "REPLACE_ME.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "135204619232-9nq4vgt21od36mkvrs3emst9ng491u4m.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "135204619232-b4k0u587d4nosf7tvn60j34gj41e68te.apps.googleusercontent.com"
       }
     }
   },
