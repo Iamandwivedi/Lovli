@@ -54,8 +54,8 @@ export async function syncNotifications(prefs: NotifPrefs, cards: MemoryCard[]) 
     for (const u of upcomingWithDates(cards)) {
       await Notifications.scheduleNotificationAsync({
         content: prefs.details
-          ? { title: `${u.title}: ${u.nickname} ✦`, body: "Today. You've got this." }
-          : { title: "You've got something today ✦", body: "Open Lovli to see what's coming up." },
+          ? { title: `${u.title}: ${u.nickname}`, body: "Today. You've got this." }
+          : { title: "You've got something today", body: "Open Lovli to see what's coming up." },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
           date: u.fireAt,

@@ -18,7 +18,6 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-import { Sparkle } from "@/src/components/Sparkle";
 import { haptic } from "@/src/lib/haptics";
 import { REDUCED_FADE_MS, SPRING, useReduceMotion } from "@/src/hooks/useReduceMotion";
 import { colors, radii, typography } from "@/src/theme";
@@ -199,7 +198,6 @@ export const ReplyCard: React.FC<Props> = ({
               style={({ pressed }) => [styles.styleChip, pressed && { opacity: 0.85 }]}
               testID={`reply-style-chip-${index}`}
             >
-              <Sparkle size={10} color={colors.lavender} />
               <Text style={styles.styleChipText}>In your style</Text>
               <Ionicons name={styleOpen ? "chevron-up" : "chevron-down"} size={11} color={colors.lavenderText} />
             </Pressable>

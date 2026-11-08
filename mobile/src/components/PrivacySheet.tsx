@@ -83,7 +83,6 @@ export const PrivacySheet: React.FC<Props> = ({ visible, onClose, primaryLabel =
         </ScrollView>
         <PrimaryButton
           label={primaryLabel}
-          withSparkle={false}
           onPress={() => {
             haptic.selection();
             (onPrimary || onClose)();

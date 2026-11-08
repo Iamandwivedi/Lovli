@@ -180,7 +180,7 @@ export default function SettingsScreen() {
           </LinearGradient>
           <Text style={styles.email} numberOfLines={1}>{user?.email || ""}</Text>
           {isPro ? (
-            <View style={styles.proBadge}><Text style={styles.proBadgeText}>✦ PREMIUM</Text></View>
+            <View style={styles.proBadge}><Text style={styles.proBadgeText}>PREMIUM</Text></View>
           ) : (
             <Text style={styles.chevron}>›</Text>
           )}

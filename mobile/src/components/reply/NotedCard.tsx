@@ -6,7 +6,6 @@
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Sparkle } from "@/src/components/Sparkle";
 import { haptic } from "@/src/lib/haptics";
 import type { MemoryFact } from "@/src/api/endpoints";
 import { colors, radii, typography } from "@/src/theme";
@@ -62,7 +61,6 @@ export const NotedCard: React.FC<Props> = ({ personName, suggestions, onKeep, on
   return (
     <View style={styles.card} testID="noted-card">
       <View style={styles.row}>
-        <Sparkle size={12} color={colors.lavender} />
         <Text style={styles.text} numberOfLines={3}>
           <Text style={styles.label}>Noted: </Text>
           {current.kind === "avoid" ? `avoid: ${current.text}` : current.text}

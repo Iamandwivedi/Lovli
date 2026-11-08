@@ -14,7 +14,6 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { AmbientGlow } from "@/src/components/AmbientGlow";
-import { Sparkle } from "@/src/components/Sparkle";
 import { useReduceMotion } from "@/src/hooks/useReduceMotion";
 import { colors, typography } from "@/src/theme";
 
@@ -51,8 +50,8 @@ export const StagedLoader: React.FC<Props> = ({
     <View style={styles.root} testID="staged-loader">
       <View style={styles.heroArea}>
         <AmbientGlow size={360} style={styles.glow} />
-        <View style={styles.sparkleWrap}>
-          <Sparkle size={34} color={colors.lavender} glow animated={!reduceMotion} />
+        <View style={styles.ringWrap}>
+          <PulseRing pulse={!reduceMotion} />
         </View>
         <Text style={styles.title}>{title}</Text>
       </View>
@@ -88,6 +87,25 @@ export const StagedLoader: React.FC<Props> = ({
       </View>
     </View>
   );
+};
+
+// Soft pulsing lavender ring: 34px, 2px border, scale 1.0 to 1.08 and opacity
+// 1.0 to 0.6 on a 900 ms loop. Static when reduce motion is on.
+const PulseRing: React.FC<{ pulse: boolean }> = ({ pulse }) => {
+  const t = useSharedValue(0);
+  useEffect(() => {
+    if (!pulse) return;
+    t.value = withRepeat(
+      withTiming(1, { duration: 900, easing: Easing.inOut(Easing.quad) }),
+      -1,
+      true,
+    );
+  }, [pulse, t]);
+  const aStyle = useAnimatedStyle(() => ({
+    opacity: 1 - t.value * 0.4,
+    transform: [{ scale: 1 + t.value * 0.08 }],
+  }));
+  return <Animated.View style={[styles.ring, aStyle]} testID="loader-ring" />;
 };
 
 const ActiveDot: React.FC<{ pulse: boolean }> = ({ pulse }) => {
@@ -126,7 +144,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     alignSelf: "center",
   },
-  sparkleWrap: {
+  ringWrap: {
     width: 96,
     height: 96,
     borderRadius: 999,
@@ -135,6 +153,13 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(5,5,9,0.42)",
     borderWidth: 1,
     borderColor: "rgba(167,139,250,0.18)",
+  },
+  ring: {
+    width: 34,
+    height: 34,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: colors.lavender,
   },
   title: {
     fontFamily: typography.fonts.displayBold,

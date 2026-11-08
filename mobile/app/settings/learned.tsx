@@ -6,7 +6,6 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import { Screen } from "@/src/components/Screen";
-import { Sparkle } from "@/src/components/Sparkle";
 import { useToast } from "@/src/context/ToastContext";
 import { extractErrorMessage } from "@/src/api/client";
 import {
@@ -99,7 +98,6 @@ export default function LearnedScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.heroRow}>
-          <Sparkle size={14} color={colors.lavender} />
           <Text style={styles.heroText}>
             Lovli quietly learns how you text from what you copy, edit, and skip,
             so replies sound like you, not a bot.

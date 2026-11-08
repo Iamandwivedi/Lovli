@@ -4,7 +4,7 @@
 // inactive on iOS and would loop.
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, AppStateStatus, Platform, Pressable, StyleSheet, Text, View } from "react-native";
-import { Sparkle } from "@/src/components/Sparkle";
+import { LovliLogo } from "@/src/components/LovliLogo";
 import { storage } from "@/src/utils/storage";
 import { PREFS_KEY } from "@/src/config/storage-keys";
 import { shouldLock, LockTransition } from "@/src/utils/lock-logic";
@@ -71,7 +71,7 @@ export const AppLockGate: React.FC<{ children: React.ReactNode }> = ({ children 
       {children}
       {locked ? (
         <View style={styles.overlay} testID="app-lock-overlay">
-          <Sparkle size={26} color={colors.lavender} glow />
+          <LovliLogo size={32} />
           <Text style={styles.title}>Lovli is locked</Text>
           <Text style={styles.sub}>Your chats stay yours.</Text>
           <Pressable onPress={unlock} style={styles.cta} testID="app-lock-unlock">

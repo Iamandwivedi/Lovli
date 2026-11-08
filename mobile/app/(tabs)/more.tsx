@@ -8,7 +8,6 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Screen } from "@/src/components/Screen";
 import { AppHeader } from "@/src/components/AppHeader";
-import { Sparkle } from "@/src/components/Sparkle";
 import { useAuth } from "@/src/context/AuthContext";
 import { RecentResult, listRecentResults } from "@/src/api/endpoints";
 import { FEATURE_CONFIG } from "@/src/constants/feature-config";
@@ -19,7 +18,7 @@ type Tool = {
   id: string;
   title: string;
   sub: string;
-  icon: IoniconName | "sparkle";
+  icon: IoniconName;
   rose?: boolean;
   decode?: boolean;
   /** PR4: routes to /feature/[featureId] when set */
@@ -38,7 +37,7 @@ const SECTIONS: { label: string; tools: Tool[] }[] = [
   {
     label: "MAKE A MOVE",
     tools: [
-      { id: "glow_reply", title: "Glow up my reply", sub: "Make my draft land better.", icon: "sparkle", featureId: "glow_up_reply" },
+      { id: "glow_reply", title: "Glow up my reply", sub: "Make my draft land better.", icon: "trending-up-outline", featureId: "glow_up_reply" },
       { id: "what_to_do", title: "What should I do?", sub: "Your next move, mapped.", icon: "compass-outline", featureId: "what_should_i_do" },
     ],
   },
@@ -120,15 +119,11 @@ export default function MoreScreen() {
                   style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
                 >
                   <View style={[styles.iconTile, t.rose && styles.iconTileRose]}>
-                    {t.icon === "sparkle" ? (
-                      <Sparkle size={15} color={colors.lavender} />
-                    ) : (
-                      <Ionicons
-                        name={t.icon as IoniconName}
-                        size={17}
-                        color={t.rose ? colors.redFlag : colors.lavender}
-                      />
-                    )}
+                    <Ionicons
+                      name={t.icon}
+                      size={17}
+                      color={t.rose ? colors.redFlag : colors.lavender}
+                    />
                   </View>
                   <Text style={styles.cardTitle} numberOfLines={1}>{t.title}</Text>
                   <Text style={styles.cardSub} numberOfLines={2}>{t.sub}</Text>

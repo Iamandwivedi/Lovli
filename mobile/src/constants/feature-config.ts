@@ -8,16 +8,16 @@ export type FeatureUiConfig = {
   resultTitle: string;  // result-phase header
   intro: string;        // sub copy under the header
   kicker: string;       // section label above the serif verdict
-  pointsLabel: string;  // section label for the ✦ bullets
+  pointsLabel: string;  // section label for the bullet points
   cta: string;          // primary button label
   stages: string[];     // staged-loader lines
   pastePlaceholder: string;
-  /** user-voice suffix for the "✦ Ask Lovli about this" handoff message */
+  /** user-voice suffix for the "Ask Lovli about this" handoff message */
   askSuffix: string;
   /** tier-aware override: used instead of askSuffix when the verdict is the
    * safety tier (red_flag_check) — never invites the user to minimize */
   askSuffixSevere?: string;
-  /** offer the chained "✦ Glow up this reply" action on reply cards */
+  /** offer the chained "Glow up this reply" action on reply cards */
   chainGlowUp?: boolean;
   /** glow_up: required draft field; paste/upload become optional context */
   wantsDraft?: boolean;

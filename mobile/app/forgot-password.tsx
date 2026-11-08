@@ -149,7 +149,6 @@ export default function ForgotPasswordScreen() {
                 label={sending ? "Sending…" : "Send code"}
                 onPress={sendCode}
                 loading={sending}
-                withSparkle={false}
                 testID="forgot-send-button"
               />
             </View>

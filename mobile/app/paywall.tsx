@@ -9,7 +9,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AmbientGlow } from "@/src/components/AmbientGlow";
 import { PrimaryButton } from "@/src/components/PrimaryButton";
-import { Sparkle } from "@/src/components/Sparkle";
 import { Price, Rupee } from "@/src/components/Price";
 import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
@@ -66,7 +65,6 @@ export default function PremiumScreen() {
             <Ionicons name="close" size={17} color={colors.textMuted} />
           </Pressable>
           <View style={styles.brandRow}>
-            <Sparkle size={13} color={colors.lavender} />
             <Text style={styles.brand}>LOVLI PREMIUM</Text>
           </View>
         </View>
@@ -115,7 +113,6 @@ export default function PremiumScreen() {
         {/* CTA / confirmation */}
         {joined ? (
           <View style={styles.confirm} testID="paywall-confirmation">
-            <Sparkle size={16} color={colors.lavender} glow />
             <Text style={styles.confirmTitle}>{"You're on the list."}</Text>
             <Text style={styles.confirmSub}>
               {"I'll ping you the moment Premium opens up. You're near the front."}

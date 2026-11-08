@@ -1,10 +1,9 @@
-// Top header — V3 spark squircle, amber credits chip, profile avatar.
+// Top header — Lovli wordmark, amber credits chip, profile avatar.
 import React from "react";
 import { Pressable, StyleSheet, View, Text } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { LovliLogo } from "@/src/components/LovliLogo";
-import { Sparkle } from "@/src/components/Sparkle";
 import { useAuth } from "@/src/context/AuthContext";
 import { colors, radii, space, typography } from "@/src/theme";
 
@@ -35,7 +34,6 @@ export const AppHeader: React.FC<Props> = ({ showSettings = true, rightElement, 
               credits.tone === "pro" && styles.creditsChipPro,
             ]}
           >
-            {credits.tone !== "pro" ? <Sparkle size={10} color={colors.amber} /> : null}
             <Text
               style={[
                 styles.creditsText,

@@ -5,7 +5,6 @@ import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Chip } from "@/src/components/Chip";
-import { Sparkle } from "@/src/components/Sparkle";
 import { haptic } from "@/src/lib/haptics";
 import { colors, radii, typography } from "@/src/theme";
 
@@ -27,7 +26,7 @@ export const ResultActions: React.FC<Props> = ({ personName, canSave, onAskLovli
     <View style={styles.wrap} testID="result-actions">
       <View style={styles.row}>
         <ActionPill
-          icon={<Sparkle size={12} color={colors.lavender} />}
+          icon={<Ionicons name="chatbubble-ellipses-outline" size={12} color={colors.lavender} />}
           label="Ask Lovli about this"
           onPress={onAskLovli}
           testID="action-ask-lovli"

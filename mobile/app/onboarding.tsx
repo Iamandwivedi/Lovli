@@ -122,7 +122,6 @@ export default function OnboardingScreen() {
 
       <PrimaryButton
         label="Continue"
-        withSparkle={false}
         onPress={() => finish(false)}
         loading={saving}
         testID="onboarding-continue-button"

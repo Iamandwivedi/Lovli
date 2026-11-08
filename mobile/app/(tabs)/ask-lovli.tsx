@@ -1,5 +1,5 @@
 // Ask Lovli — V3 glass chat tab.
-// Lovli bubbles left (✦ avatar w/ glow), user bubbles right (lavender tint).
+// Lovli bubbles left (L monogram avatar), user bubbles right (lavender tint).
 // Starter chips send as user messages and hide once the thread starts.
 // Typing indicator while waiting; failed sends get a retry affordance.
 // Thread persists locally (AsyncStorage) — no thread-reset UI in this PR.
@@ -16,7 +16,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { Screen } from "@/src/components/Screen";
-import { Sparkle } from "@/src/components/Sparkle";
 import { useToast } from "@/src/context/ToastContext";
 import { askLovli, AskLovliTurn } from "@/src/api/endpoints";
 import { extractErrorMessage } from "@/src/api/client";
@@ -162,7 +161,6 @@ export default function AskLovliScreen() {
     <Screen scroll={false} bottomTabSpacing keyboardAvoiding testID="ask-lovli-page">
       {/* Header */}
       <View style={styles.header}>
-        <Sparkle size={19} color={colors.lavender} glow />
         <Text style={styles.headerTitle}>Ask Lovli</Text>
       </View>
 
@@ -256,7 +254,7 @@ export default function AskLovliScreen() {
 const LovliBubble: React.FC<{ text: string }> = ({ text }) => (
   <View style={styles.lovliRow}>
     <View style={styles.lovliAvatar}>
-      <Sparkle size={13} color={colors.lavender} />
+      <Text style={styles.lovliAvatarText} allowFontScaling={false}>L</Text>
     </View>
     <View style={styles.lovliBubble}>
       <Text style={styles.lovliBubbleText}>{text}</Text>
@@ -279,7 +277,7 @@ const TypingBubble: React.FC = () => {
   return (
     <View style={styles.lovliRow} testID="typing-indicator">
       <Animated.View style={[styles.lovliAvatar, { opacity: pulse }]}>
-        <Sparkle size={13} color={colors.lavender} />
+        <Text style={styles.lovliAvatarText} allowFontScaling={false}>L</Text>
       </Animated.View>
       <View style={[styles.lovliBubble, styles.typingBubble]}>
         <Animated.Text style={[styles.typingDots, { opacity: pulse }]}>…</Animated.Text>
@@ -317,7 +315,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 999,
-    backgroundColor: colors.surfaceSoft,
+    backgroundColor: colors.violetTint,
     borderWidth: 1,
     borderColor: "rgba(167,139,250,0.35)",
     alignItems: "center",
@@ -327,6 +325,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 3,
+  },
+  lovliAvatarText: {
+    fontFamily: typography.fonts.displayBold,
+    fontSize: 15,
+    lineHeight: 18,
+    color: colors.lavenderText,
   },
   lovliBubble: {
     backgroundColor: colors.surfaceSoft,

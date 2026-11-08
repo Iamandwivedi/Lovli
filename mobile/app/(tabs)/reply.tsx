@@ -2,7 +2,7 @@
 //   home → intent → generating → results
 // home:       "Kya scene hai?" + person picker + continuity strip + two equal
 //             capture targets (Paste · Screenshot) + a one-line "Private" note
-//             + situation chips + always-visible note + feeling check-in + ✦ Get replies
+//             + situation chips + always-visible note + feeling check-in + Get replies
 // intent:     "Got it. I read the chat." + chat preview + WHAT DO YOU WANT? /
 //             HOW SHOULD IT LAND? / REPLY LANGUAGE (last intent per person recalled)
 // generating: four truthful stages timed to the real request (StagedLoader)
@@ -23,7 +23,7 @@ import { Input } from "@/src/components/Input";
 import { PrimaryButton } from "@/src/components/PrimaryButton";
 import { PersonChip } from "@/src/components/PersonChip";
 import { PrivacySheet } from "@/src/components/PrivacySheet";
-import { Sparkle } from "@/src/components/Sparkle";
+import { Bullet } from "@/src/components/Bullet";
 import { ChatPreview } from "@/src/components/reply/ChatPreview";
 import { ContinuityStrip } from "@/src/components/reply/ContinuityStrip";
 import { InsightCard } from "@/src/components/reply/InsightCard";
@@ -799,7 +799,6 @@ const HomePhase: React.FC<{
         testID="try-sample-chip"
         style={({ pressed }) => [styles.sampleChip, pressed && { opacity: 0.85 }]}
       >
-        <Sparkle size={11} color={colors.lavender} />
         <Text style={styles.sampleChipText}>Not sure yet? Try with a sample chat</Text>
       </Pressable>
     ) : null}
@@ -882,7 +881,6 @@ const RememberedChip: React.FC<{ person: MemoryCard; onEdit: () => void }> = ({ 
         style={({ pressed }) => [styles.memoryPill, pressed && { opacity: 0.85 }]}
         hitSlop={6}
       >
-        <Sparkle size={11} color={colors.lavender} />
         <Text style={styles.memoryPillText}>Remembered · {person.nickname}</Text>
         <Ionicons name={open ? "chevron-up" : "chevron-down"} size={12} color={colors.lavenderText} />
       </Pressable>
@@ -985,7 +983,7 @@ const ReadCard: React.FC<{ read: ReplyRead }> = ({ read }) => {
         <View style={styles.readSection}>
           {read.signals.map((s, i) => (
             <View key={`sig-${i}`} style={styles.bulletRow}>
-              <Sparkle size={11} color={colors.lavender} />
+              <Bullet color={colors.lavender} lineHeight={20} />
               <Text style={styles.bulletText}>{s}</Text>
             </View>
           ))}

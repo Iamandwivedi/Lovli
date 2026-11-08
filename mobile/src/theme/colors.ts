@@ -35,9 +35,8 @@ export const colors = {
   gradientEnd: "#8B5CF6",
 
   // -- Accents --
-  sparkle: "#A78BFA",         // Lovli's ✦ signature
   violet: "#A78BFA",          // accent lavender (alias)
-  violetDeep: "#8B5CF6",      // deep violet — gradients, ✦ inside white CTA
+  violetDeep: "#8B5CF6",      // deep violet — gradient end
   lavender: "#A78BFA",
   lavenderSoft: "#C4B5FD",    // lavender TEXT
   lavenderText: "#C4B5FD",    // alias, explicit

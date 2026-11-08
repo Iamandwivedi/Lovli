@@ -29,7 +29,7 @@ type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
 const TAB_ICON: Record<string, { active: IoniconName; inactive: IoniconName; label: string }> = {
   reply: { active: "chatbubble", inactive: "chatbubble-outline", label: "Reply" },
-  "ask-lovli": { active: "sparkles", inactive: "sparkles-outline", label: "Ask Lovli" },
+  "ask-lovli": { active: "chatbubble-ellipses", inactive: "chatbubble-ellipses-outline", label: "Ask Lovli" },
   memory: { active: "heart", inactive: "heart-outline", label: "Memory" },
   more: { active: "grid", inactive: "grid-outline", label: "More" },
 };

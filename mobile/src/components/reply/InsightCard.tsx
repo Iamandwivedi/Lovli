@@ -7,7 +7,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { GlassCard } from "@/src/components/GlassCard";
-import { Sparkle } from "@/src/components/Sparkle";
+import { Bullet } from "@/src/components/Bullet";
 import { REDUCED_FADE_MS, SPRING, useReduceMotion } from "@/src/hooks/useReduceMotion";
 import type { ReplyInsight } from "@/src/api/endpoints";
 import { colors, typography } from "@/src/theme";
@@ -66,7 +66,7 @@ export const InsightCard: React.FC<{ insight: ReplyInsight }> = ({ insight }) =>
       <View style={styles.noticing}>
         {insight.noticing.map((n, i) => (
           <View key={i} style={styles.noticeRow}>
-            <Sparkle size={11} color={colors.lavender} />
+            <Bullet color={colors.lavender} lineHeight={19} />
             <Text style={styles.noticeText}>{n}</Text>
           </View>
         ))}

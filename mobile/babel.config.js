@@ -1,7 +1,7 @@
 // mobile/babel.config.js
 // Required for Expo Router + react-native-reanimated/worklets.
 // babel-preset-expo auto-injects the react-native-worklets plugin (reanimated v4)
-// when reanimated is installed — so worklets like Sparkle's useAnimatedStyle work.
+// when reanimated is installed — so useAnimatedStyle worklets work.
 module.exports = function (api) {
   api.cache(true);
   return {

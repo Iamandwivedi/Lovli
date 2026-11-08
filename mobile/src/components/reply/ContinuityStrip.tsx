@@ -5,7 +5,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Sparkle } from "@/src/components/Sparkle";
 import { haptic } from "@/src/lib/haptics";
 import type { MemoryCard } from "@/src/api/endpoints";
 import { continuityLine } from "@/src/utils/reply-logic";
@@ -24,7 +23,6 @@ export const ContinuityStrip: React.FC<{ card: MemoryCard; onPress: () => void }
       testID="continuity-strip"
       style={({ pressed }) => [styles.strip, pressed && styles.pressed]}
     >
-      <Sparkle size={11} color={colors.lavender} />
       <View style={{ flex: 1 }}>
         <Text style={styles.text} numberOfLines={2}>
           <Text style={styles.name}>{card.nickname}</Text>

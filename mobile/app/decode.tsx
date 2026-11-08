@@ -11,7 +11,7 @@ import { Input } from "@/src/components/Input";
 import { PrimaryButton } from "@/src/components/PrimaryButton";
 import { PersonChip } from "@/src/components/PersonChip";
 import { Chip } from "@/src/components/Chip";
-import { Sparkle } from "@/src/components/Sparkle";
+import { Bullet } from "@/src/components/Bullet";
 import { StagedLoader } from "@/src/components/reply/StagedLoader";
 import { useToast } from "@/src/context/ToastContext";
 import {
@@ -267,7 +267,7 @@ export default function DecodeScreen() {
                     <Text style={styles.sectionLabel}>POSITIVE SIGNS</Text>
                     {result.positive_signs.map((s, i) => (
                       <View key={i} style={styles.bulletRow}>
-                        <Sparkle size={13} color={colors.lavender} />
+                        <Bullet color={colors.lavender} lineHeight={19} />
                         <Text style={styles.bulletText}>{s}</Text>
                       </View>
                     ))}
@@ -279,7 +279,7 @@ export default function DecodeScreen() {
                     <Text style={styles.sectionLabel}>WATCH-OUTS</Text>
                     {result.watch_outs.map((s, i) => (
                       <View key={i} style={styles.bulletRow}>
-                        <Sparkle size={13} color={colors.pink} />
+                        <Bullet color={colors.pink} lineHeight={19} />
                         <Text style={styles.bulletText}>{s}</Text>
                       </View>
                     ))}
@@ -319,7 +319,7 @@ export default function DecodeScreen() {
                     <Text style={styles.footerSave}>{saved ? "Saved" : "Save to Memory"}</Text>
                   </Pressable>
                   <Pressable onPress={askLovliAboutThis} style={styles.footerBtn} testID="decode-ask-lovli">
-                    <Sparkle size={13} color={colors.lavender} />
+                    <Ionicons name="chatbubble-ellipses-outline" size={13} color={colors.lavender} />
                     <Text style={styles.footerAsk}>Ask Lovli about this</Text>
                   </Pressable>
                 </View>

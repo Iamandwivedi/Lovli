@@ -1,6 +1,6 @@
 // Primary CTA — V3 white iOS pill.
 // White fill, 1px #E5E7EB border, dark label, lavender halo shadow.
-// Leading ✦ glyph in deep violet #8B5CF6 (withSparkle, default true).
+// Label only, centred.
 // Press → scale 0.96 spring + Haptics.Medium + shadow tightens.
 import React, { useRef } from "react";
 import {
@@ -9,12 +9,10 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  View,
   ViewStyle,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { colors, radii, typography } from "@/src/theme";
-import { Sparkle } from "./Sparkle";
 
 type Props = {
   label: string;
@@ -23,8 +21,6 @@ type Props = {
   disabled?: boolean;
   style?: ViewStyle;
   testID?: string;
-  /** ✦ leads primary CTAs by convention. Pass false for e.g. onboarding "Continue". */
-  withSparkle?: boolean;
 };
 
 export const PrimaryButton: React.FC<Props> = ({
@@ -34,7 +30,6 @@ export const PrimaryButton: React.FC<Props> = ({
   disabled,
   style,
   testID,
-  withSparkle = true,
 }) => {
   const isDisabled = disabled || loading;
   // 0 = resting, 1 = pressed.
@@ -89,10 +84,7 @@ export const PrimaryButton: React.FC<Props> = ({
         {loading ? (
           <ActivityIndicator color={colors.ctaText} size="small" />
         ) : (
-          <View style={styles.row}>
-            {withSparkle ? <Sparkle size={15} color={colors.violetDeep} /> : null}
-            <Text style={styles.label} numberOfLines={1}>{label}</Text>
-          </View>
+          <Text style={styles.label} numberOfLines={1}>{label}</Text>
         )}
       </Pressable>
     </Animated.View>
@@ -117,7 +109,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 22,
   },
-  row: { flexDirection: "row", alignItems: "center", gap: 8 },
   label: {
     ...typography.body.bodyBold,
     color: colors.ctaText,

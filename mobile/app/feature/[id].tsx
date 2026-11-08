@@ -12,7 +12,7 @@ import { Input } from "@/src/components/Input";
 import { PrimaryButton } from "@/src/components/PrimaryButton";
 import { PersonChip } from "@/src/components/PersonChip";
 import { Chip } from "@/src/components/Chip";
-import { Sparkle } from "@/src/components/Sparkle";
+import { Bullet } from "@/src/components/Bullet";
 import { StagedLoader } from "@/src/components/reply/StagedLoader";
 import { useToast } from "@/src/context/ToastContext";
 import { useAuth } from "@/src/context/AuthContext";
@@ -42,7 +42,7 @@ const TONE_COLOR: Record<FeaturePointTone, string> = {
 };
 
 export default function FeatureScreen() {
-  // `draft` + `person` params: prefilled by the chained "✦ Glow up this reply"
+  // `draft` + `person` params: prefilled by the chained "Glow up this reply"
   // hand-off from settle_the_fight / what_should_i_do. Never auto-runs.
   // `gen` param: re-open a stored result read-only (RECENT strip, PR4c).
   const params = useLocalSearchParams<{ id: string; draft?: string; person?: string; gen?: string }>();
@@ -331,7 +331,7 @@ export default function FeatureScreen() {
                     <Text style={styles.sectionLabel}>{cfg.pointsLabel}</Text>
                     {result.points.map((p, i) => (
                       <View key={i} style={styles.bulletRow}>
-                        <Sparkle size={13} color={TONE_COLOR[p.tone] || colors.textFaint} />
+                        <Bullet color={TONE_COLOR[p.tone] || colors.textFaint} lineHeight={19} />
                         <Text style={styles.bulletText}>{p.text}</Text>
                       </View>
                     ))}
@@ -366,7 +366,6 @@ export default function FeatureScreen() {
                               hitSlop={8}
                               testID={`feature-glow-${i}`}
                             >
-                              <Sparkle size={12} color={colors.lavender} />
                               <Text style={styles.copyText}>Glow up this reply</Text>
                             </Pressable>
                           ) : (
@@ -411,7 +410,7 @@ export default function FeatureScreen() {
                     <Text style={styles.footerSave}>{saved ? "Saved" : "Save to Memory"}</Text>
                   </Pressable>
                   <Pressable onPress={askLovliAboutThis} style={styles.footerBtn} testID="feature-ask-lovli">
-                    <Sparkle size={13} color={colors.lavender} />
+                    <Ionicons name="chatbubble-ellipses-outline" size={13} color={colors.lavender} />
                     <Text style={styles.footerAsk}>Ask Lovli about this</Text>
                   </Pressable>
                 </View>
