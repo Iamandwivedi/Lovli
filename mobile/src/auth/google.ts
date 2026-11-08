@@ -30,6 +30,11 @@ const ensureConfigured = () => {
 // mint an id_token, so the button stays hidden.
 export const isGoogleConfigured = (): boolean => webClientId.length > 0;
 
+// Dev builds say why the button is missing, once per launch. Release builds stay silent.
+if (__DEV__ && !isGoogleConfigured()) {
+  console.warn("Google sign in is hidden: EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID is empty.");
+}
+
 // Resolves to the id_token, or null when the user dismissed the sheet.
 // Throws GoogleSignInError for anything else, with the raw SDK error logged only.
 export const signInWithGoogle = async (): Promise<string | null> => {
