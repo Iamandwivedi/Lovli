@@ -4,7 +4,7 @@ Real values live ONLY in Railway / Vercel / local `.env` files. The committed `.
 
 ## Backend (Railway → service → Variables tab)
 
-Minimum required (11):
+Minimum required (13):
 
 | Variable | Example | Notes |
 |---|---|---|
@@ -19,6 +19,7 @@ Minimum required (11):
 | `GOOGLE_IOS_CLIENT_ID` | `xxxxx.apps.googleusercontent.com` | iOS OAuth client (bundle `in.lovli.app`). Public ID, not a secret. Accepted as an id_token audience by `/api/auth/google/token` alongside `GOOGLE_CLIENT_ID`. Optional. |
 | `CORS_ORIGINS` | `https://app.lovli.in,https://lovli.in` | Comma-separated frontend origins. |
 | `ALLOW_TEST_LOGIN` | `false` | NEVER `true` in production. |
+| `RESEND_API_KEY` | `re_xxxxx` | Transactional email (password reset) via Resend. Required in production (the server refuses to boot without it there). Leave empty locally and reset codes are printed to the server log instead. |
 | `PYTHONUNBUFFERED` | `1` | For real-time Railway logs. |
 
 Optional (defaults in code, set only if you need to override):
@@ -31,6 +32,7 @@ Optional (defaults in code, set only if you need to override):
 | `CLAUDE_MODEL` | `claude-sonnet-4-5` | Override only if A/B testing. |
 | `EMERGENT_LLM_KEY` | empty | Optional Emergent fallback. Leave empty for portable Railway deploy. |
 | `ENVIRONMENT` | `production` | |
+| `EMAIL_FROM` | `Lovli <hello@lovli.in>` | Sender for transactional email (password reset). The domain must be verified in Resend. |
 | `MEMORY_ENGINE_ENABLED` | `false` (off) | PR-M5 read-side gate for the memory engine: set `true` to turn ON personalized prompts, reply reranking, and `memory_used` response fields. Event capture + learning run regardless (dark). Flip on Railway without a deploy. |
 | `DB_TENANT_GUARD` | `enforce` | Per-user isolation enforcement (`backend/db/guards.py`). `enforce` raises on any query that touches a user-owned collection without a `user_id` filter; `warn` logs instead; `off` disables. **Production must stay `enforce`.** |
 | `MONGO_MAX_POOL_SIZE` | `100` | Mongo connection pool ceiling. Requests are I/O-bound, so this is the real concurrency limit. Atlas M10 allows 1500 total across instances. |
@@ -54,7 +56,7 @@ Optional (defaults in code, set only if you need to override):
 
 ## Variables that must NEVER appear in frontend or mobile bundles
 
-`MONGO_URL`, `JWT_SECRET`, `ADMIN_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_CLIENT_SECRET`, `EMERGENT_LLM_KEY`. Anthropic / Mongo / admin calls go through the backend.
+`MONGO_URL`, `JWT_SECRET`, `ADMIN_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_CLIENT_SECRET`, `EMERGENT_LLM_KEY`, `RESEND_API_KEY`. Anthropic / Mongo / admin calls go through the backend.
 
 ## Rotation
 

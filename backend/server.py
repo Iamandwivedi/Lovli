@@ -24,10 +24,13 @@ Key endpoints (all prefixed with /api):
 from __future__ import annotations
 
 import base64
+import hashlib
 import logging
 import os
 import re
-from datetime import datetime, timezone
+import secrets
+import uuid
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List, Optional
 
@@ -72,6 +75,7 @@ from db.guards import TenantScopeError, guard_status, tenant_guarded, unscoped
 from db.indexes import describe_indexes, sync_indexes
 from db.migrations import get_schema_version, run_migrations
 from db.schema import CURRENT_SCHEMA_VERSION, USER_OWNED_COLLECTIONS
+from email_service import send_google_account_notice, send_password_reset_email
 from engine.memory import (
     CLIENT_EVENT_TYPES,
     MEMORY_SCHEMA_VERSION,
@@ -109,11 +113,13 @@ from models import (
     GoogleCodeRequest,
     GoogleSessionRequest,  # noqa: F401  (kept for import compatibility)
     GoogleTokenRequest,
+    ForgotPasswordRequest,
     LoginRequest,
     MemoryCard,
     MemoryCardCreate,
     MemoryCardUpdate,
     OnboardingRequest,
+    ResetPasswordRequest,
     PublicUser,
     SettingsUpdateRequest,
     SignupRequest,
@@ -334,6 +340,150 @@ async def login(req: LoginRequest):
     return AuthResponse(access_token=token, user=_public_user(user))
 
 
+# ---- Password reset (6 digit emailed code) ----------------------------------
+RESET_CODE_TTL_MINUTES = 15
+RESET_CODE_MAX_ATTEMPTS = 5
+RESET_RATE_WINDOW_MINUTES = 60
+RESET_RATE_MAX_PER_WINDOW = 3
+RESET_RATE_MIN_GAP_SECONDS = 60
+# One message for every failure so the client learns nothing about which check
+# tripped (no code, expired, burned, wrong digits, account has no password).
+RESET_CODE_REJECTED = "That code is not right or has expired. Request a new one."
+
+
+def _hash_reset_code(code: str) -> str:
+    """sha256(code + JWT_SECRET) as hex. The raw code is never stored."""
+    secret = os.environ.get("JWT_SECRET", "lovli-dev-secret-change-me")
+    return hashlib.sha256((code + secret).encode("utf-8")).hexdigest()
+
+
+def _as_utc(value) -> datetime:
+    """Accept a BSON date (naive UTC from Motor) or an ISO string; return aware UTC."""
+    if isinstance(value, datetime):
+        dt = value
+    else:
+        dt = datetime.fromisoformat(str(value))
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+async def _mark_reset_used(reset_id: str, email: str) -> None:
+    await db.password_resets.update_one(
+        {"id": reset_id, "email": email}, {"$set": {"used": True}}
+    )
+
+
+async def _send_quietly(coro, what: str) -> None:
+    """Email problems are logged and swallowed: they must never reach the client,
+    and they must never change the response of /auth/forgot-password."""
+    try:
+        await coro
+    except Exception:
+        logger.exception("%s email failed", what)
+
+
+@api.post("/auth/forgot-password")
+async def forgot_password(req: ForgotPasswordRequest):
+    """Always 200 {"ok": true}. Whether the account exists, is Google only, is
+    rate limited, or the email failed, the answer is the same."""
+    email = req.email.lower()
+    now = datetime.now(timezone.utc)
+
+    # Both lookups run on every call so timing does not depend on the outcome.
+    user = await db.users.find_one({"email": email}, {"_id": 0})
+    recent = (
+        await db.password_resets.find({"email": email}, {"_id": 0})
+        .sort("created_at", -1)
+        .limit(RESET_RATE_MAX_PER_WINDOW)
+        .to_list(RESET_RATE_MAX_PER_WINDOW)
+    )
+
+    window_start = now - timedelta(minutes=RESET_RATE_WINDOW_MINUTES)
+    in_window = [r for r in recent if _as_utc(r["created_at"]) >= window_start]
+    if len(in_window) >= RESET_RATE_MAX_PER_WINDOW:
+        return {"ok": True}
+    if recent and (now - _as_utc(recent[0]["created_at"])).total_seconds() < RESET_RATE_MIN_GAP_SECONDS:
+        return {"ok": True}
+
+    if not user:
+        return {"ok": True}
+
+    if not user.get("hashed_password"):
+        # Google account: nothing to reset, and no reset document is created.
+        await _send_quietly(
+            send_google_account_notice(email, user.get("name") or ""), "google account notice"
+        )
+        return {"ok": True}
+
+    code = f"{secrets.randbelow(1_000_000):06d}"
+    await db.password_resets.update_many(
+        {"email": email, "used": False}, {"$set": {"used": True}}
+    )
+    await db.password_resets.insert_one(
+        {
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "email": email,
+            "code_hash": _hash_reset_code(code),
+            # Real BSON date: the TTL index in db/schema.py keys on it.
+            "expires_at": now + timedelta(minutes=RESET_CODE_TTL_MINUTES),
+            "attempts": 0,
+            "used": False,
+            "created_at": now.isoformat(),
+        }
+    )
+    await _send_quietly(
+        send_password_reset_email(email, user.get("name") or "", code), "password reset"
+    )
+    return {"ok": True}
+
+
+@api.post("/auth/reset-password", response_model=AuthResponse)
+async def reset_password(req: ResetPasswordRequest):
+    """Check the code, set the new password, and sign the user in."""
+    email = req.email.lower()
+    rejected = HTTPException(status_code=400, detail=RESET_CODE_REJECTED)
+
+    candidates = (
+        await db.password_resets.find({"email": email, "used": False}, {"_id": 0})
+        .sort("created_at", -1)
+        .limit(1)
+        .to_list(1)
+    )
+    if not candidates:
+        raise rejected
+    reset = candidates[0]
+
+    if _as_utc(reset["expires_at"]) <= datetime.now(timezone.utc):
+        await _mark_reset_used(reset["id"], email)
+        raise rejected
+    if int(reset.get("attempts") or 0) >= RESET_CODE_MAX_ATTEMPTS:
+        await _mark_reset_used(reset["id"], email)
+        raise rejected
+
+    await db.password_resets.update_one(
+        {"id": reset["id"], "email": email}, {"$inc": {"attempts": 1}}
+    )
+    if not secrets.compare_digest(_hash_reset_code(req.code), reset["code_hash"]):
+        raise rejected
+
+    user = await db.users.find_one({"id": reset["user_id"], "email": email}, {"_id": 0})
+    if not user or not user.get("hashed_password"):
+        # Defence in depth: a Google only account never gets a reset document.
+        await _mark_reset_used(reset["id"], email)
+        raise rejected
+
+    now = datetime.now(timezone.utc).isoformat()
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"hashed_password": hash_password(req.new_password), "updated_at": now}},
+    )
+    await _mark_reset_used(reset["id"], email)
+    await _touch_last_login(user["id"])
+    user["last_login_at"] = now
+    token = create_jwt(user["id"], user["email"])
+    return AuthResponse(access_token=token, user=_public_user(user))
+
+
 # ---- Dev-only auto sign-in ---------------------------------------------------
 # Guardrail: refuse to boot if the dev bypass is flagged on in production.
 if (
@@ -341,6 +491,14 @@ if (
     and os.environ.get("ALLOW_TEST_LOGIN", "").lower() == "true"
 ):
     raise RuntimeError("ALLOW_TEST_LOGIN must not be enabled when ENVIRONMENT=production")
+
+# Guardrail: a production deploy that cannot email reset codes is a silent
+# failure for every locked out user. Fail the boot instead.
+if (
+    os.environ.get("ENVIRONMENT", "development").lower() == "production"
+    and not (os.environ.get("RESEND_API_KEY") or "").strip()
+):
+    raise RuntimeError("RESEND_API_KEY is required when ENVIRONMENT=production")
 
 
 @api.post("/auth/test-login", response_model=AuthResponse, include_in_schema=False)

@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 import uuid
 from datetime import datetime, timezone
-from typing import List, Literal, Optional
+from typing import Annotated, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
@@ -71,15 +71,32 @@ class PublicUser(BaseModel):
     last_login_at: Optional[datetime] = None
 
 
+# One password rule for the whole app: signup and password reset share it, so
+# a password set through either path is accepted by the other.
+PasswordStr = Annotated[str, Field(min_length=6, max_length=128)]
+
+
 class SignupRequest(BaseModel):
     name: str = Field(min_length=1, max_length=80)
     email: EmailStr
-    password: str = Field(min_length=6, max_length=128)
+    password: PasswordStr
 
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    """Second step of the reset flow: the 6 digit emailed code plus the new password."""
+
+    email: EmailStr
+    code: str = Field(min_length=6, max_length=6, pattern=r"^[0-9]{6}$")
+    new_password: PasswordStr
 
 
 class GoogleSessionRequest(BaseModel):

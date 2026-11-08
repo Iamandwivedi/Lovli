@@ -86,6 +86,28 @@ COLLECTIONS: tuple[CollectionSpec, ...] = (
             IndexSpec((("created_at", ASC),), "users_created_at"),
         ),
     ),
+    CollectionSpec(
+        name="password_resets",
+        tenancy=Tenancy.IDENTITY,
+        purpose=(
+            "One document per emailed password reset code. Stores only a hash "
+            "of the code. Looked up by email, never listed."
+        ),
+        identity_keys=("email", "user_id"),
+        indexes=(
+            # Serves both reads: the newest unused code for an email, and the
+            # per-email rate limit (codes issued in the last hour).
+            IndexSpec((("email", ASC), ("created_at", DESC)), "password_resets_email_created"),
+            # expires_at is a real BSON date (codes die 15 minutes after issue).
+            # Documents are kept one hour past expiry so the 60 minute rate
+            # limit can still count them before Mongo sweeps them away.
+            IndexSpec(
+                (("expires_at", ASC),),
+                "password_resets_ttl",
+                expire_after_seconds=60 * 60,
+            ),
+        ),
+    ),
     # ---- per-user product data ---------------------------------------------
     CollectionSpec(
         name="user_preferences",
