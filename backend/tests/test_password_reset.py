@@ -129,6 +129,7 @@ class TestForgotPassword:
         assert doc["code_hash"] == expected
         assert code not in str({k: v for k, v in doc.items() if k != "code_hash"})
         assert doc["email"] == EMAIL
+        assert doc["kind"] == "code"
         assert doc["used"] is False and doc["attempts"] == 0
         assert isinstance(doc["expires_at"], datetime)
         ttl = doc["expires_at"] - datetime.fromisoformat(doc["created_at"])
@@ -140,12 +141,41 @@ class TestForgotPassword:
         assert _resets(db)[0]["email"] == EMAIL
         assert mailbox.reset_calls[0][0] == EMAIL
 
-    def test_google_only_user_gets_notice_and_no_document(self, client, db, mailbox):
+    def test_google_only_user_gets_notice_and_a_marker_document(self, client, db, mailbox):
         r = _forgot(client, GOOGLE_EMAIL)
         assert r.status_code == 200 and r.json() == {"ok": True}
         assert mailbox.notice_calls == [(GOOGLE_EMAIL, "Gauri")]
         assert mailbox.reset_calls == []
-        assert _resets(db) == []
+        docs = _resets(db)
+        assert len(docs) == 1
+        marker = docs[0]
+        assert marker["kind"] == "google_notice"
+        assert marker["used"] is True
+        assert "code_hash" not in marker
+        assert marker["email"] == GOOGLE_EMAIL
+        assert isinstance(marker["expires_at"], datetime)
+
+    def test_google_notice_is_rate_limited_like_a_code(self, client, db, mailbox):
+        _forgot(client, GOOGLE_EMAIL)
+        _forgot(client, GOOGLE_EMAIL)  # within 60 seconds: nothing happens
+        assert len(mailbox.notice_calls) == 1
+        assert len(_resets(db)) == 1
+        for i in range(2):
+            _backdate(_resets(db)[-1], seconds=(2 - i) * 300)
+            _forgot(client, GOOGLE_EMAIL)
+        assert len(mailbox.notice_calls) == 3
+        assert len(_resets(db)) == 3
+        _backdate(_resets(db)[-1], seconds=120)
+        _forgot(client, GOOGLE_EMAIL)  # fourth in the hour: nothing happens
+        assert len(mailbox.notice_calls) == 3
+        assert len(_resets(db)) == 3
+
+    def test_marker_document_cannot_be_redeemed(self, client, db, mailbox):
+        _forgot(client, GOOGLE_EMAIL)
+        r = _reset(client, "123456", email=GOOGLE_EMAIL)
+        assert r.status_code == 400
+        assert r.json()["detail"] == srv.RESET_CODE_REJECTED
+        assert _resets(db)[0]["attempts"] == 0
 
     def test_second_request_within_60_seconds_inserts_nothing(self, client, db, mailbox):
         _forgot(client)

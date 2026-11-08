@@ -408,7 +408,22 @@ async def forgot_password(req: ForgotPasswordRequest):
         return {"ok": True}
 
     if not user.get("hashed_password"):
-        # Google account: nothing to reset, and no reset document is created.
+        # Google account: nothing to reset, so no code. A marker document is
+        # still written (already used, no code_hash) so the same per email
+        # rate limit covers the notice email too. reset-password only reads
+        # documents with used == False, so a marker can never be redeemed.
+        await db.password_resets.insert_one(
+            {
+                "id": str(uuid.uuid4()),
+                "user_id": user["id"],
+                "email": email,
+                "kind": "google_notice",
+                "expires_at": now + timedelta(minutes=RESET_CODE_TTL_MINUTES),
+                "attempts": 0,
+                "used": True,
+                "created_at": now.isoformat(),
+            }
+        )
         await _send_quietly(
             send_google_account_notice(email, user.get("name") or ""), "google account notice"
         )
@@ -423,6 +438,7 @@ async def forgot_password(req: ForgotPasswordRequest):
             "id": str(uuid.uuid4()),
             "user_id": user["id"],
             "email": email,
+            "kind": "code",
             "code_hash": _hash_reset_code(code),
             # Real BSON date: the TTL index in db/schema.py keys on it.
             "expires_at": now + timedelta(minutes=RESET_CODE_TTL_MINUTES),

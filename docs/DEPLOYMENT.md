@@ -39,7 +39,7 @@
 | Healthcheck Path | `/health` |
 | Healthcheck Timeout | 30s |
 
-Paste the **11 env vars** from `ENVIRONMENT_VARIABLES.md` into Variables → Raw Editor.
+Paste the **13 env vars** from `ENVIRONMENT_VARIABLES.md` into Variables → Raw Editor.
 
 After green deploy → Settings → Networking → **Generate Domain** → copy URL.
 Smoke test: open `https://YOUR-RAILWAY-URL/health` → must return `{"status":"ok","service":"lovli"}`.
