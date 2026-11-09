@@ -1,16 +1,19 @@
 // Reply tab — V3 glass flow as a phase machine:
 //   home → intent → generating → results
-// home:       "Kya scene hai?" + person picker + continuity strip + two equal
-//             capture targets (Paste · Screenshot) + a one-line "Private" note
-//             + situation chips + always-visible note + feeling check-in + Get replies
-// intent:     "Got it. I read the chat." + chat preview + WHAT DO YOU WANT? /
-//             HOW SHOULD IT LAND? / REPLY LANGUAGE (last intent per person recalled)
+// home:       "Hey Aman / What's going on?" greeting + subline, a flexible
+//             spacer, then the utility zone pinned low: PersonCard (sample
+//             chat / who are we texting / selected person), the Composer
+//             (text field, paste + screenshot buttons, send) and the centred
+//             "Private" line. No scroll on an iPhone 16 class screen.
+// intent:     "Got it. I read the chat." + chat preview + HOW ARE YOU FEELING? /
+//             ANYTHING LOVLI SHOULD KNOW? / WHAT DO YOU WANT? / HOW SHOULD IT
+//             LAND? / REPLY LANGUAGE (last intent per person recalled)
 // generating: four truthful stages timed to the real request (StagedLoader)
 // results:    the read FIRST, then three labelled cards (middle emphasised),
 //             "Noted" fact proposal, Ask / Save / Report actions, tone chips.
 // Research doc: "Lovli UI/UX Research — What to Build", §5, §7, §11, §12.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
@@ -19,15 +22,16 @@ import { Screen } from "@/src/components/Screen";
 import { AppHeader } from "@/src/components/AppHeader";
 import { GlassCard } from "@/src/components/GlassCard";
 import { Chip } from "@/src/components/Chip";
-import { Input } from "@/src/components/Input";
 import { PrimaryButton } from "@/src/components/PrimaryButton";
-import { PersonChip } from "@/src/components/PersonChip";
 import { PrivacySheet } from "@/src/components/PrivacySheet";
 import { Bullet } from "@/src/components/Bullet";
 import { ChatPreview } from "@/src/components/reply/ChatPreview";
-import { ContinuityStrip } from "@/src/components/reply/ContinuityStrip";
+import { Composer } from "@/src/components/reply/Composer";
+import { Greeting } from "@/src/components/reply/Greeting";
 import { InsightCard } from "@/src/components/reply/InsightCard";
 import { NotedCard } from "@/src/components/reply/NotedCard";
+import { PersonCard } from "@/src/components/reply/PersonCard";
+import { PersonPickerSheet } from "@/src/components/reply/PersonPickerSheet";
 import { ReplyCard, REPLY_LABEL_FALLBACK } from "@/src/components/reply/ReplyCard";
 import { ResultActions } from "@/src/components/reply/ResultActions";
 import { SituationSection, buildUserNote } from "@/src/components/reply/SituationChips";
@@ -37,6 +41,7 @@ import { storage } from "@/src/utils/storage";
 import { ASK_PENDING_KEY, GOAL_KEY, LAST_INTENT_KEY, PREFS_KEY } from "@/src/config/storage-keys";
 import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
+import { useKeyboardVisible } from "@/src/hooks/useKeyboardVisible";
 import { haptic } from "@/src/lib/haptics";
 import { compressForUpload } from "@/src/lib/image-compress";
 import { trackEvent } from "@/src/lib/memory-events";
@@ -89,10 +94,19 @@ const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const niceToday = () =>
   new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 
+/** Axios surfaces an unreachable server as an error with no response. */
+const isNetworkFailure = (err: unknown): boolean => {
+  const e = err as { response?: unknown; code?: string; message?: string };
+  if (!e || typeof e !== "object") return false;
+  if (e.response) return false;
+  return e.code === "ERR_NETWORK" || e.code === "ECONNABORTED" || /network/i.test(e.message || "");
+};
+
 export default function ReplyScreen() {
   const { user, updateUser } = useAuth();
   const toast = useToast();
   const router = useRouter();
+  const keyboardVisible = useKeyboardVisible();
 
   const [phase, setPhase] = useState<Phase>("home");
   const [image, setImage] = useState<Pick | null>(null);
@@ -122,6 +136,9 @@ export default function ReplyScreen() {
     (user?.language_preference as Language) || "Hinglish",
   );
   const [memoryId, setMemoryId] = useState<string | null>(null);
+  // "Skip" on the person card: nobody selected on purpose. Resets with memoryId.
+  const [personSkipped, setPersonSkipped] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [memoryCards, setMemoryCards] = useState<MemoryCard[]>([]);
   const [usage, setUsage] = useState({
     daily_generation_count: user?.daily_generation_count ?? 0,
@@ -197,8 +214,8 @@ export default function ReplyScreen() {
   );
 
   const acceptAsset = (asset: Pick) => {
-    if (asset.fileSize && asset.fileSize > MAX_IMAGE_BYTES) {
-      toast.error("This image is too large.");
+    if (!asset.uri || (asset.fileSize && asset.fileSize > MAX_IMAGE_BYTES)) {
+      toast.error("That screenshot is too big. Try one under 8MB.");
       return;
     }
     setImage(asset);
@@ -246,13 +263,11 @@ export default function ReplyScreen() {
   };
 
   const goToIntent = async () => {
-    if (!image && !manual.trim()) {
-      toast.error("Show me the conversation first. Screenshot or paste.");
-      return;
-    }
+    // The send button is disabled without a screenshot or text; this is only a guard.
+    if (!image && !manual.trim()) return;
     if (usage.plan !== "pro" && remaining <= 0) {
       haptic.warning();
-      toast.error("That's today's free replies. Back tomorrow, or go Pro.");
+      router.push("/paywall");
       return;
     }
     setLanguage(defaultLanguage);
@@ -330,7 +345,13 @@ export default function ReplyScreen() {
       }
       setPhase("results");
     } catch (err) {
-      toast.error(extractErrorMessage(err, "Something went wrong. Try again."));
+      // No response at all means the request never reached Lovli. The toast
+      // utility has no action slot, so this is copy only (no Retry button).
+      toast.error(
+        isNetworkFailure(err)
+          ? "Couldn't reach Lovli. Check your connection and try again."
+          : extractErrorMessage(err, "Something went wrong. Try again."),
+      );
       setPhase("intent");
     }
   };
@@ -450,38 +471,51 @@ export default function ReplyScreen() {
 
   const resetFlow = () => {
     setMemoryId(null);
+    setPersonSkipped(false);
     setSituation(null);
     setNote("");
     setIntentRecalled(false);
     setPhase("home");
   };
 
+  const outOfCredits = usage.plan !== "pro" && remaining <= 0;
   const creditsText =
     usage.plan === "pro" ? "Pro" : remaining <= 0 ? "Back tomorrow, or go Pro" : `${remaining} left today`;
+  const firstName = (user?.name || "").trim().split(/\s+/)[0] || null;
+  const subline = outOfCredits
+    ? `You've used today's ${usage.daily_limit} reads. Back at midnight, or go Pro now.`
+    : memoryCards.length === 0
+      ? "Paste a chat or try a sample. I'll read it with you."
+      : "Paste their last text. I'll read it with you.";
 
   return (
     <Screen
       testID="reply-page"
       bottomTabSpacing
-      scroll={phase === "home" || phase === "results"}
+      scroll={phase === "results"}
+      contentStyle={phase === "home" && keyboardVisible ? styles.homeKeyboardContent : undefined}
     >
       {phase === "home" ? (
         <HomePhase
+          keyboardVisible={keyboardVisible}
           image={image}
           manual={manual}
-          feeling={feeling}
-          situation={situation}
-          note={note}
           memoryCards={memoryCards}
-          memoryId={memoryId}
           person={person}
-          onToggleMemory={(id) => setMemoryId((cur) => (cur === id ? null : id))}
-          onOpenPerson={(id) => router.push(`/memory/${id}`)}
+          personSkipped={personSkipped}
+          firstName={firstName}
+          subline={subline}
+          sublineColor={outOfCredits ? colors.amber : undefined}
+          onSelectPerson={(id) => {
+            setMemoryId(id);
+            setPersonSkipped(false);
+          }}
+          onSkipPerson={() => {
+            setMemoryId(null);
+            setPersonSkipped(true);
+          }}
+          onOpenPicker={() => setPickerOpen(true)}
           onChangeManual={setManual}
-          onToggleFeeling={(f) => setFeeling((cur) => (cur === f ? null : f))}
-          onSkipFeeling={() => setFeeling(null)}
-          onSituation={setSituation}
-          onNote={setNote}
           onPickImage={pickImage}
           onPaste={pasteFromClipboard}
           onOpenPrivacy={() => setPrivacyOpen(true)}
@@ -489,7 +523,6 @@ export default function ReplyScreen() {
           onTrySample={() => router.push("/sample")}
           onContinue={goToIntent}
           creditsText={creditsText}
-          outOfCredits={usage.plan !== "pro" && remaining <= 0}
         />
       ) : null}
 
@@ -502,6 +535,35 @@ export default function ReplyScreen() {
             showsVerticalScrollIndicator={false}
           >
             <ChatPreview messages={parsedMessages} imageUri={image?.uri} />
+
+            {/* Emotional check-in: optional, single-select toggle */}
+            <View testID="feeling-section">
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionLabel}>HOW ARE YOU FEELING?</Text>
+                <Pressable
+                  onPress={() => setFeeling(null)}
+                  hitSlop={10}
+                  testID="feeling-skip"
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.skipText}>Skip</Text>
+                </Pressable>
+              </View>
+              <View style={styles.chipsRow}>
+                {FEELINGS.map((f) => (
+                  <Chip
+                    key={f.label}
+                    label={f.label}
+                    selected={feeling === f.label}
+                    onPress={() => setFeeling((cur) => (cur === f.label ? null : f.label))}
+                    leading={<View style={[styles.feelingDot, { backgroundColor: f.color }]} />}
+                    testID={`feeling-${f.label}`}
+                  />
+                ))}
+              </View>
+            </View>
+
+            <SituationSection situation={situation} onSituation={setSituation} note={note} onNote={setNote} />
 
             <View>
               <View style={styles.sectionHeader}>
@@ -642,27 +704,44 @@ export default function ReplyScreen() {
       ) : null}
 
       <PrivacySheet visible={privacyOpen} onClose={() => setPrivacyOpen(false)} />
+      <PersonPickerSheet
+        visible={pickerOpen}
+        cards={memoryCards}
+        selectedId={memoryId}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(id) => {
+          setMemoryId(id);
+          setPersonSkipped(false);
+        }}
+        onSomeoneNew={() => router.push("/memory/add")}
+        onNoOne={() => {
+          setMemoryId(null);
+          setPersonSkipped(true);
+        }}
+      />
     </Screen>
   );
 }
 
 // --- Home phase ---
+// Greeting at the top, a flexible spacer, then the utility zone (person card,
+// composer, privacy line) pinned toward the bottom. The ScrollView's content
+// grows to fill the viewport so nothing scrolls on an iPhone 16 class screen;
+// on a smaller phone or with large Dynamic Type it scrolls instead of clipping.
 const HomePhase: React.FC<{
+  keyboardVisible: boolean;
   image: Pick | null;
   manual: string;
-  feeling: string | null;
-  situation: string | null;
-  note: string;
   memoryCards: MemoryCard[];
-  memoryId: string | null;
   person: MemoryCard | null;
-  onToggleMemory: (id: string) => void;
-  onOpenPerson: (id: string) => void;
+  personSkipped: boolean;
+  firstName: string | null;
+  subline: string;
+  sublineColor?: string;
+  onSelectPerson: (id: string) => void;
+  onSkipPerson: () => void;
+  onOpenPicker: () => void;
   onChangeManual: (v: string) => void;
-  onToggleFeeling: (f: string) => void;
-  onSkipFeeling: () => void;
-  onSituation: (s: string | null) => void;
-  onNote: (v: string) => void;
   onPickImage: () => void;
   onPaste: () => void;
   onOpenPrivacy: () => void;
@@ -670,23 +749,20 @@ const HomePhase: React.FC<{
   onTrySample: () => void;
   onContinue: () => void;
   creditsText: string;
-  outOfCredits: boolean;
 }> = ({
+  keyboardVisible,
   image,
   manual,
-  feeling,
-  situation,
-  note,
   memoryCards,
-  memoryId,
   person,
-  onToggleMemory,
-  onOpenPerson,
+  personSkipped,
+  firstName,
+  subline,
+  sublineColor,
+  onSelectPerson,
+  onSkipPerson,
+  onOpenPicker,
   onChangeManual,
-  onToggleFeeling,
-  onSkipFeeling,
-  onSituation,
-  onNote,
   onPickImage,
   onPaste,
   onOpenPrivacy,
@@ -694,175 +770,101 @@ const HomePhase: React.FC<{
   onTrySample,
   onContinue,
   creditsText,
-  outOfCredits,
 }) => (
   <>
     <AppHeader credits={{ text: creditsText, tone: creditsText === "Pro" ? "pro" : "default" }} />
 
-    <View style={{ marginTop: space.s }}>
-      <Text style={styles.h1} testID="reply-heading">
-        Kya scene hai?
-      </Text>
-      <Text style={styles.sub}>{"Overthinking their last text? Paste it. I'll read it with you."}</Text>
-    </View>
-
-    {/* Person picker — hidden entirely when no memory cards. Never blocks. */}
-    {memoryCards.length > 0 ? (
-      <View testID="person-section" style={{ gap: 10 }}>
-        <View>
-          <Text style={styles.sectionLabel}>{"WHO'S THIS ABOUT?"}</Text>
-          <View style={styles.chipsRow}>
-            <Chip
-              label="No one"
-              selected={memoryId === null}
-              onPress={() => memoryId !== null && onToggleMemory(memoryId)}
-              testID="person-none"
-            />
-            {memoryCards.map((c) => (
-              <PersonChip
-                key={c.id}
-                name={c.nickname}
-                selected={memoryId === c.id}
-                onPress={() => {
-                  haptic.selection();
-                  onToggleMemory(c.id);
-                }}
-                testID={`person-${c.id}`}
-              />
-            ))}
-          </View>
-        </View>
-        {person ? <ContinuityStrip card={person} onPress={() => onOpenPerson(person.id)} /> : null}
-      </View>
-    ) : null}
-
-    {/* Hero input: two equal capture targets, no dropdown */}
-    {image ? (
-      <View style={styles.preview} testID="upload-preview">
-        <Image source={{ uri: image.uri }} style={styles.previewImg} resizeMode="cover" />
-        <Pressable
-          onPress={onRemoveImage}
-          testID="upload-remove-button"
-          accessibilityRole="button"
-          accessibilityLabel="Remove screenshot"
-          style={({ pressed }) => [styles.removeBtn, pressed && { opacity: 0.8 }]}
-          hitSlop={10}
-        >
-          <Ionicons name="close" size={18} color={colors.text} />
-        </Pressable>
-      </View>
-    ) : (
-      <View style={styles.targets} testID="capture-targets">
-        <CaptureTarget icon="clipboard-outline" label="Paste text" onPress={onPaste} testID="capture-paste" />
-        <CaptureTarget icon="images-outline" label="Screenshot" onPress={onPickImage} testID="upload-area" primary />
-      </View>
-    )}
-
-    {/* Paste field — always visible so a tapped Paste has somewhere to land */}
-    <Input
-      placeholder="Or type what they said…"
-      multiline
-      numberOfLines={2}
-      value={manual}
-      onChangeText={onChangeManual}
-      inputTestID="manual-text-input"
-      style={{ minHeight: 52 }}
-    />
-
-    {/* Quiet privacy line — the full six-card sheet is one tap away */}
-    <Pressable
-      onPress={() => {
-        haptic.selection();
-        onOpenPrivacy();
-      }}
-      accessibilityRole="button"
-      accessibilityLabel="Private. Your screenshot is read once and never saved. Opens how Lovli handles your chats."
-      testID="privacy-line"
-      style={({ pressed }) => [styles.privacyLine, pressed && { opacity: 0.7 }]}
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={styles.homeContent}
+      keyboardShouldPersistTaps="handled"
+      alwaysBounceVertical={false}
+      showsVerticalScrollIndicator={false}
+      testID="home-phase"
     >
-      <Ionicons name="lock-closed" size={11} color={colors.textFaint} />
-      <Text style={styles.privacyText} numberOfLines={1}>
-        <Text style={styles.privacyLabel}>PRIVATE</Text>
-        {"  Read once, never saved. "}
-        <Text style={styles.privacyLink}>How it works</Text>
-      </Text>
-    </Pressable>
+      {/* Keyboard open: one h2 line, no subline, person as a pill */}
+      <View style={{ marginTop: space.s }}>
+        <Greeting
+          firstName={firstName}
+          compact={keyboardVisible}
+          subline={keyboardVisible ? null : subline}
+          sublineColor={sublineColor}
+        />
+      </View>
 
-    {/* Empty state: play-first beats explain-first */}
-    {!image && !manual.trim() && memoryCards.length === 0 ? (
-      <Pressable
-        onPress={() => {
-          haptic.selection();
-          onTrySample();
-        }}
-        accessibilityRole="button"
-        testID="try-sample-chip"
-        style={({ pressed }) => [styles.sampleChip, pressed && { opacity: 0.85 }]}
-      >
-        <Text style={styles.sampleChipText}>Not sure yet? Try with a sample chat</Text>
-      </Pressable>
-    ) : null}
+      {/* Keyboard open: the selected person sits under the greeting as a pill
+          (PersonCard renders nothing here when nobody is selected). */}
+      {keyboardVisible ? (
+        <View style={styles.personPillRow}>
+          <PersonCard
+            cards={memoryCards}
+            person={person}
+            skipped={personSkipped}
+            compact
+            onSelect={onSelectPerson}
+            onSkip={onSkipPerson}
+            onOpenPicker={onOpenPicker}
+            onTrySample={onTrySample}
+          />
+        </View>
+      ) : null}
 
-    <SituationSection situation={situation} onSituation={onSituation} note={note} onNote={onNote} />
+      {/* Flexible spacer: pins the utility zone low (just above the keyboard when
+          it is open), collapses when space is short */}
+      <View style={[styles.homeSpacer, keyboardVisible && styles.homeSpacerKeyboard]} />
 
-    {/* Emotional check-in — optional, single-select toggle */}
-    <View testID="feeling-section">
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionLabel}>HOW ARE YOU FEELING?</Text>
-        <Pressable onPress={onSkipFeeling} hitSlop={10} testID="feeling-skip" accessibilityRole="button">
-          <Text style={styles.skipText}>Skip</Text>
+      <View style={styles.utilityZone}>
+        {keyboardVisible ? null : (
+          <PersonCard
+            cards={memoryCards}
+            person={person}
+            skipped={personSkipped}
+            onSelect={onSelectPerson}
+            onSkip={onSkipPerson}
+            onOpenPicker={onOpenPicker}
+            onTrySample={onTrySample}
+          />
+        )}
+
+        <Composer
+          value={manual}
+          onChangeText={onChangeManual}
+          imageUri={image?.uri ?? null}
+          canSend={!!image || manual.trim().length > 0}
+          onPaste={onPaste}
+          onPickImage={onPickImage}
+          onRemoveImage={onRemoveImage}
+          onSend={onContinue}
+        />
+
+        {/* Quiet privacy line: the full six-card sheet is one tap away */}
+        <Pressable
+          onPress={() => {
+            haptic.selection();
+            onOpenPrivacy();
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Private. Your screenshot is read once and never saved. Opens how Lovli handles your chats."
+          testID="privacy-line"
+          style={({ pressed }) => [
+            styles.privacyLine,
+            keyboardVisible && styles.privacyLineKeyboard,
+            pressed && { opacity: 0.7 },
+          ]}
+        >
+          <Ionicons name="lock-closed" size={11} color={colors.textFaint} />
+          <Text style={styles.privacyText} numberOfLines={1}>
+            <Text style={styles.privacyLabel}>PRIVATE</Text>
+            {"  Read once, never saved. "}
+            <Text style={styles.privacyLink}>How it works</Text>
+          </Text>
         </Pressable>
       </View>
-      <View style={styles.chipsRow}>
-        {FEELINGS.map((f) => (
-          <Chip
-            key={f.label}
-            label={f.label}
-            selected={feeling === f.label}
-            onPress={() => onToggleFeeling(f.label)}
-            leading={<View style={[styles.feelingDot, { backgroundColor: f.color }]} />}
-            testID={`feeling-${f.label}`}
-          />
-        ))}
-      </View>
-    </View>
-
-    <View style={{ marginTop: space.s, gap: 8 }}>
-      <PrimaryButton label="Get replies" onPress={onContinue} testID="generate-replies-button" />
-      {outOfCredits ? (
-        <Text style={styles.creditsHint} testID="credits-hint">
-          Free replies reset at midnight. Pro has no limit.
-        </Text>
-      ) : null}
-    </View>
+    </ScrollView>
   </>
 );
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
-
-const CaptureTarget: React.FC<{
-  icon: IoniconName;
-  label: string;
-  onPress: () => void;
-  primary?: boolean;
-  testID?: string;
-}> = ({ icon, label, onPress, primary, testID }) => (
-  <Pressable
-    onPress={() => {
-      haptic.selection();
-      onPress();
-    }}
-    testID={testID}
-    accessibilityRole="button"
-    accessibilityLabel={label}
-    style={({ pressed }) => [styles.target, primary && styles.targetPrimary, pressed && styles.targetPressed]}
-  >
-    <Ionicons name={icon} size={20} color={colors.lavender} />
-    <Text style={styles.targetLabel} numberOfLines={1}>
-      {label}
-    </Text>
-  </Pressable>
-);
 
 // "Remembered" chip (research §5 / §7): shows memory being used — the facts
 // that were in context for this generation. Tappable to correct.
@@ -1005,20 +1007,13 @@ const ReadCard: React.FC<{ read: ReplyRead }> = ({ read }) => {
 };
 
 const styles = StyleSheet.create({
-  h1: {
-    fontFamily: typography.fonts.displayBold,
-    fontSize: 33,
-    lineHeight: 37,
-    letterSpacing: 0,
-    color: colors.text,
-  },
-  sub: {
-    ...typography.body.base,
-    fontSize: 15,
-    color: colors.textMuted,
-    marginTop: 8,
-    maxWidth: 300,
-  },
+  homeContent: { flexGrow: 1 },
+  // Keyboard open: the composer sits just above it, privacy line 8pt below.
+  homeKeyboardContent: { paddingBottom: space.s },
+  homeSpacer: { flex: 1, minHeight: space.xl },
+  homeSpacerKeyboard: { minHeight: space.l },
+  personPillRow: { marginTop: space.m },
+  utilityZone: { gap: space.l },
   sectionLabel: {
     fontFamily: typography.fonts.bodyBold,
     fontSize: 12,
@@ -1047,72 +1042,22 @@ const styles = StyleSheet.create({
   },
   chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   feelingDot: { width: 6, height: 6, borderRadius: 999 },
-  // Three equal capture targets
-  targets: { flexDirection: "row", gap: 8 },
-  // Icon over label so "Screenshot" never truncates on narrow phones.
-  target: {
-    flex: 1,
-    minHeight: 60,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-    borderWidth: 1,
-    borderColor: "rgba(167,139,250,0.28)",
-    borderRadius: 18,
-    backgroundColor: colors.surfaceSoft,
-    paddingHorizontal: 6,
-    paddingVertical: 9,
-  },
-  targetPrimary: {
-    borderStyle: "dashed",
-    borderWidth: 1.5,
-    borderColor: "rgba(167,139,250,0.45)",
-    backgroundColor: colors.violetTint,
-  },
-  targetPressed: { backgroundColor: "rgba(255,255,255,0.12)", borderColor: colors.lavender },
-  targetLabel: { ...typography.body.bodySemibold, fontSize: 12.5, color: colors.text, textAlign: "center" },
+  // Centred, 12pt under the composer (the zone gap is 16, so pull up 4).
   privacyLine: {
     minHeight: 32,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
     gap: 6,
-    marginTop: -6,
+    marginTop: -4,
     paddingHorizontal: 4,
   },
+  // 8pt under the composer while the keyboard is up (zone gap 16, minus 8).
+  privacyLineKeyboard: { marginTop: -8 },
   privacyText: { ...typography.body.caption, fontSize: 12, color: colors.textFaint, flexShrink: 1 },
   privacyLabel: { fontFamily: typography.fonts.bodyBold, fontSize: 10.5, letterSpacing: 1.1, color: colors.textFaint },
   privacyLink: { fontFamily: typography.fonts.bodySemibold, fontSize: 12, color: colors.lavenderText },
-  sampleChip: {
-    minHeight: 44,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 7,
-    alignSelf: "center",
-    paddingHorizontal: 14,
-  },
-  sampleChipText: { ...typography.body.bodySemibold, fontSize: 13, color: colors.lavenderText },
-  creditsHint: { ...typography.body.caption, fontSize: 12, color: colors.textFaint, textAlign: "center" },
-  preview: {
-    position: "relative",
-    borderRadius: radii.lg,
-    overflow: "hidden",
-    backgroundColor: colors.bg,
-  },
-  previewImg: { width: "100%", height: 200 },
-  removeBtn: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    width: 36,
-    height: 36,
-    borderRadius: 999,
-    backgroundColor: "rgba(5, 5, 9, 0.7)",
-    borderColor: colors.border,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   backHeader: {
     flexDirection: "row",
     alignItems: "center",
