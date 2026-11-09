@@ -31,6 +31,7 @@ import { Greeting } from "@/src/components/reply/Greeting";
 import { InsightCard } from "@/src/components/reply/InsightCard";
 import { NotedCard } from "@/src/components/reply/NotedCard";
 import { PersonCard } from "@/src/components/reply/PersonCard";
+import { PersonPickerSheet } from "@/src/components/reply/PersonPickerSheet";
 import { ReplyCard, REPLY_LABEL_FALLBACK } from "@/src/components/reply/ReplyCard";
 import { ResultActions } from "@/src/components/reply/ResultActions";
 import { SituationSection, buildUserNote } from "@/src/components/reply/SituationChips";
@@ -91,6 +92,14 @@ const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
 const niceToday = () =>
   new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+
+/** Axios surfaces an unreachable server as an error with no response. */
+const isNetworkFailure = (err: unknown): boolean => {
+  const e = err as { response?: unknown; code?: string; message?: string };
+  if (!e || typeof e !== "object") return false;
+  if (e.response) return false;
+  return e.code === "ERR_NETWORK" || e.code === "ECONNABORTED" || /network/i.test(e.message || "");
+};
 
 export default function ReplyScreen() {
   const { user, updateUser } = useAuth();
@@ -203,8 +212,8 @@ export default function ReplyScreen() {
   );
 
   const acceptAsset = (asset: Pick) => {
-    if (asset.fileSize && asset.fileSize > MAX_IMAGE_BYTES) {
-      toast.error("This image is too large.");
+    if (!asset.uri || (asset.fileSize && asset.fileSize > MAX_IMAGE_BYTES)) {
+      toast.error("That screenshot is too big. Try one under 6MB.");
       return;
     }
     setImage(asset);
@@ -334,7 +343,13 @@ export default function ReplyScreen() {
       }
       setPhase("results");
     } catch (err) {
-      toast.error(extractErrorMessage(err, "Something went wrong. Try again."));
+      // No response at all means the request never reached Lovli. The toast
+      // utility has no action slot, so this is copy only (no Retry button).
+      toast.error(
+        isNetworkFailure(err)
+          ? "Couldn't reach Lovli. Check your connection and try again."
+          : extractErrorMessage(err, "Something went wrong. Try again."),
+      );
       setPhase("intent");
     }
   };
@@ -681,6 +696,21 @@ export default function ReplyScreen() {
       ) : null}
 
       <PrivacySheet visible={privacyOpen} onClose={() => setPrivacyOpen(false)} />
+      <PersonPickerSheet
+        visible={pickerOpen}
+        cards={memoryCards}
+        selectedId={memoryId}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(id) => {
+          setMemoryId(id);
+          setPersonSkipped(false);
+        }}
+        onSomeoneNew={() => router.push("/memory/add")}
+        onNoOne={() => {
+          setMemoryId(null);
+          setPersonSkipped(true);
+        }}
+      />
     </Screen>
   );
 }
