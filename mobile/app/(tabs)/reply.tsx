@@ -215,7 +215,7 @@ export default function ReplyScreen() {
 
   const acceptAsset = (asset: Pick) => {
     if (!asset.uri || (asset.fileSize && asset.fileSize > MAX_IMAGE_BYTES)) {
-      toast.error("That screenshot is too big. Try one under 6MB.");
+      toast.error("That screenshot is too big. Try one under 8MB.");
       return;
     }
     setImage(asset);
