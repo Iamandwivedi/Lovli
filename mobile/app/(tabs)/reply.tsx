@@ -41,6 +41,7 @@ import { storage } from "@/src/utils/storage";
 import { ASK_PENDING_KEY, GOAL_KEY, LAST_INTENT_KEY, PREFS_KEY } from "@/src/config/storage-keys";
 import { useAuth } from "@/src/context/AuthContext";
 import { useToast } from "@/src/context/ToastContext";
+import { useKeyboardVisible } from "@/src/hooks/useKeyboardVisible";
 import { haptic } from "@/src/lib/haptics";
 import { compressForUpload } from "@/src/lib/image-compress";
 import { trackEvent } from "@/src/lib/memory-events";
@@ -105,6 +106,7 @@ export default function ReplyScreen() {
   const { user, updateUser } = useAuth();
   const toast = useToast();
   const router = useRouter();
+  const keyboardVisible = useKeyboardVisible();
 
   const [phase, setPhase] = useState<Phase>("home");
   const [image, setImage] = useState<Pick | null>(null);
@@ -487,9 +489,15 @@ export default function ReplyScreen() {
       : "Paste their last text. I'll read it with you.";
 
   return (
-    <Screen testID="reply-page" bottomTabSpacing scroll={phase === "results"}>
+    <Screen
+      testID="reply-page"
+      bottomTabSpacing
+      scroll={phase === "results"}
+      contentStyle={phase === "home" && keyboardVisible ? styles.homeKeyboardContent : undefined}
+    >
       {phase === "home" ? (
         <HomePhase
+          keyboardVisible={keyboardVisible}
           image={image}
           manual={manual}
           memoryCards={memoryCards}
@@ -721,6 +729,7 @@ export default function ReplyScreen() {
 // grows to fill the viewport so nothing scrolls on an iPhone 16 class screen;
 // on a smaller phone or with large Dynamic Type it scrolls instead of clipping.
 const HomePhase: React.FC<{
+  keyboardVisible: boolean;
   image: Pick | null;
   manual: string;
   memoryCards: MemoryCard[];
@@ -741,6 +750,7 @@ const HomePhase: React.FC<{
   onContinue: () => void;
   creditsText: string;
 }> = ({
+  keyboardVisible,
   image,
   manual,
   memoryCards,
@@ -772,23 +782,49 @@ const HomePhase: React.FC<{
       showsVerticalScrollIndicator={false}
       testID="home-phase"
     >
+      {/* Keyboard open: one h2 line, no subline, person as a pill */}
       <View style={{ marginTop: space.s }}>
-        <Greeting firstName={firstName} subline={subline} sublineColor={sublineColor} />
+        <Greeting
+          firstName={firstName}
+          compact={keyboardVisible}
+          subline={keyboardVisible ? null : subline}
+          sublineColor={sublineColor}
+        />
       </View>
 
-      {/* Flexible spacer: pins the utility zone low, collapses when space is short */}
-      <View style={styles.homeSpacer} />
+      {/* Keyboard open: the selected person sits under the greeting as a pill
+          (PersonCard renders nothing here when nobody is selected). */}
+      {keyboardVisible ? (
+        <View style={styles.personPillRow}>
+          <PersonCard
+            cards={memoryCards}
+            person={person}
+            skipped={personSkipped}
+            compact
+            onSelect={onSelectPerson}
+            onSkip={onSkipPerson}
+            onOpenPicker={onOpenPicker}
+            onTrySample={onTrySample}
+          />
+        </View>
+      ) : null}
+
+      {/* Flexible spacer: pins the utility zone low (just above the keyboard when
+          it is open), collapses when space is short */}
+      <View style={[styles.homeSpacer, keyboardVisible && styles.homeSpacerKeyboard]} />
 
       <View style={styles.utilityZone}>
-        <PersonCard
-          cards={memoryCards}
-          person={person}
-          skipped={personSkipped}
-          onSelect={onSelectPerson}
-          onSkip={onSkipPerson}
-          onOpenPicker={onOpenPicker}
-          onTrySample={onTrySample}
-        />
+        {keyboardVisible ? null : (
+          <PersonCard
+            cards={memoryCards}
+            person={person}
+            skipped={personSkipped}
+            onSelect={onSelectPerson}
+            onSkip={onSkipPerson}
+            onOpenPicker={onOpenPicker}
+            onTrySample={onTrySample}
+          />
+        )}
 
         <Composer
           value={manual}
@@ -810,7 +846,11 @@ const HomePhase: React.FC<{
           accessibilityRole="button"
           accessibilityLabel="Private. Your screenshot is read once and never saved. Opens how Lovli handles your chats."
           testID="privacy-line"
-          style={({ pressed }) => [styles.privacyLine, pressed && { opacity: 0.7 }]}
+          style={({ pressed }) => [
+            styles.privacyLine,
+            keyboardVisible && styles.privacyLineKeyboard,
+            pressed && { opacity: 0.7 },
+          ]}
         >
           <Ionicons name="lock-closed" size={11} color={colors.textFaint} />
           <Text style={styles.privacyText} numberOfLines={1}>
@@ -968,7 +1008,11 @@ const ReadCard: React.FC<{ read: ReplyRead }> = ({ read }) => {
 
 const styles = StyleSheet.create({
   homeContent: { flexGrow: 1 },
+  // Keyboard open: the composer sits just above it, privacy line 8pt below.
+  homeKeyboardContent: { paddingBottom: space.s },
   homeSpacer: { flex: 1, minHeight: space.xl },
+  homeSpacerKeyboard: { minHeight: space.l },
+  personPillRow: { marginTop: space.m },
   utilityZone: { gap: space.l },
   sectionLabel: {
     fontFamily: typography.fonts.bodyBold,
@@ -1009,6 +1053,8 @@ const styles = StyleSheet.create({
     marginTop: -4,
     paddingHorizontal: 4,
   },
+  // 8pt under the composer while the keyboard is up (zone gap 16, minus 8).
+  privacyLineKeyboard: { marginTop: -8 },
   privacyText: { ...typography.body.caption, fontSize: 12, color: colors.textFaint, flexShrink: 1 },
   privacyLabel: { fontFamily: typography.fonts.bodyBold, fontSize: 10.5, letterSpacing: 1.1, color: colors.textFaint },
   privacyLink: { fontFamily: typography.fonts.bodySemibold, fontSize: 12, color: colors.lavenderText },
